@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tranquilim · orientação em saúde infantil feita por médicos</title>
+<meta name="description" content="Orientação em saúde infantil escrita e revisada por médicos, da gestação aos 6 anos. Para mães, pais e quem cuida. Em breve.">
+<meta name="theme-color" content="#1E2A47">
+<meta property="og:title" content="Tranquilim">
+<meta property="og:description" content="A dúvida da madrugada tem resposta. Orientação em saúde infantil feita por médicos. Em breve.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://tranquilim.com.br/">
+<meta property="og:locale" content="pt_BR">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+:root{
+  --noite:#1E2A47; --noite-2:#26345A; --luz:#F2A93B; --pluma:#F6EFE4; --folha:#4F8A6E; --nevoa:#E7EAF1;
+  --ink:#1E2A47; --muted:#5D6378; --line:#E2DACB; --bg:#FBF7F0;
+  --casa:#2F7D5B; --ubs:#B87700; --ps:#C0392B;
+  --f-d:"Fredoka", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-b:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-b);font-size:17px;line-height:1.55}
+a{color:inherit}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(20px, env(safe-area-inset-left));padding-right:max(20px, env(safe-area-inset-right))}
+h1,h2,h3{font-family:var(--f-d);font-weight:600;line-height:1.1;margin:0;text-wrap:balance}
+p{margin:0}
+
+/* topo */
+.hero{background:var(--noite);color:var(--pluma);position:relative;overflow:hidden}
+.stars{position:absolute;inset:0;pointer-events:none;opacity:.55}
+.top{display:flex;align-items:center;justify-content:space-between;padding-block:20px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand svg{width:44px;height:44px}
+.brand span{font-family:var(--f-d);font-weight:600;font-size:26px;color:var(--pluma)}
+.soon{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--noite);background:var(--luz);padding:6px 12px;border-radius:999px}
+.hero-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:32px;align-items:center;padding-block:32px 72px;position:relative}
+.hero h1{font-size:clamp(38px,6.4vw,64px)}
+.hero h1 em{font-style:normal;color:var(--luz)}
+.hero .sub{margin-top:18px;font-size:clamp(17px,2vw,20px);color:#D3D8EA;max-width:34em}
+.pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.pill-row span{font-size:14px;padding:7px 13px;border-radius:999px;border:1px solid #3A4772;color:#E6E9F4}
+.hero-art{display:flex;justify-content:center}
+.hero-art svg{width:min(320px,70vw);height:auto;filter:drop-shadow(0 20px 40px rgba(0,0,0,.25))}
+
+/* seções */
+section{padding-block:64px}
+.kicker{font-size:13px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#A86A06}
+.sec-head{display:flex;flex-direction:column;gap:10px;max-width:40em;margin-bottom:32px}
+.sec-head h2{font-size:clamp(28px,4vw,40px)}
+.sec-head p{color:var(--muted);font-size:18px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:10px}
+.card .ic{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;font-family:var(--f-d);font-weight:600;font-size:22px}
+.card h3{font-size:21px}
+.card p{color:var(--muted)}
+.tri{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.tri span{font-size:14px;font-weight:700;color:#fff;border-radius:10px;padding:7px 10px}
+
+.trust{background:var(--pluma)}
+.trust-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.cmp{border-radius:20px;padding:24px;display:flex;flex-direction:column;gap:12px}
+.cmp h3{font-size:20px}
+.cmp ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px}
+.cmp.gen{background:transparent;border:1.5px dashed #D3C6AE;color:var(--muted)}
+.cmp.tq{background:var(--noite);color:var(--pluma)}
+.cmp.tq li::marker{color:var(--luz)}
+
+.ped{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:24px;padding:28px}
+.ped svg{width:88px;height:88px}
+.ped h2{font-size:clamp(24px,3.2vw,32px)}
+.ped p{color:var(--muted);margin-top:8px}
+
+.sos{background:#FCE9E7;border:1px solid #F3C4BF;border-radius:16px;padding:16px 20px;display:flex;gap:14px;align-items:center;margin-top:24px}
+.sos b{font-family:var(--f-d);font-size:28px;color:var(--ps);line-height:1}
+.sos p{color:#7A1F17}
+
+footer{background:var(--noite);color:#AEB6D0;font-size:14px;padding-block:28px}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+footer b{color:var(--pluma);font-family:var(--f-d);font-weight:600}
+
+@media (max-width:820px){
+  .hero-grid{grid-template-columns:1fr;padding-block:8px 56px}
+  .hero-art{order:-1}
+  .hero-art svg{width:min(220px,60vw)}
+  .cards,.trust-grid{grid-template-columns:1fr}
+  .ped{grid-template-columns:1fr}
+  section{padding-block:48px}
+}
+@media (prefers-reduced-motion:no-preference){
+  .hero-art svg{animation:breathe 6s ease-in-out infinite}
+  @keyframes breathe{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="owl" viewBox="0 0 120 120">
+ <path d="M24 46 C22 32 25 22 29 12 L44 27 C52 24 62 24 70 27 L85 12 C89 22 92 32 90 46 C96 62 94 84 80 98 C70 108 44 108 34 98 C20 84 18 62 24 46 Z" fill="var(--o-b,#1E2A47)"/>
+ <circle cx="44" cy="52" r="13" fill="var(--o-e,#fff)"/><circle cx="70" cy="52" r="13" fill="var(--o-e,#fff)"/>
+ <path d="M36.5 52 Q44 59.5 51.5 52" fill="none" stroke="#1E2A47" stroke-width="3.6" stroke-linecap="round"/>
+ <path d="M62.5 52 Q70 59.5 77.5 52" fill="none" stroke="#1E2A47" stroke-width="3.6" stroke-linecap="round"/>
+ <path d="M53.5 64 L60.5 64 L57 71 Z" fill="#F2A93B"/>
+ <path d="M73 82 C72 76 74 72 76 68 L82 74 C85 73 89 73 92 74 L98 68 C100 72 102 76 101 82 C104 90 102 99 95 104 C90 108 83 108 78 104 C71 99 70 90 73 82 Z" fill="#F2A93B" stroke="var(--o-s,#F6EFE4)" stroke-width="3.5" paint-order="stroke"/>
+ <circle cx="82" cy="86" r="5" fill="#fff"/><circle cx="92" cy="86" r="5" fill="#fff"/>
+ <path d="M79 86 Q82 89.5 85 86" fill="none" stroke="#1E2A47" stroke-width="2" stroke-linecap="round"/>
+ <path d="M89 86 Q92 89.5 95 86" fill="none" stroke="#1E2A47" stroke-width="2" stroke-linecap="round"/>
+ <path d="M85.5 92 L88.5 92 L87 95 Z" fill="#1E2A47"/>
+ <path d="M104 14 A11 11 0 1 0 112 30 A8.5 8.5 0 1 1 104 14 Z" fill="#F2A93B"/>
+</symbol></defs></svg>
+
+<header class="hero">
+  <svg class="stars" viewBox="0 0 1000 500" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <g fill="#F6EFE4"><circle cx="80" cy="60" r="1.6"/><circle cx="210" cy="140" r="1.2"/><circle cx="330" cy="40" r="1.8"/><circle cx="460" cy="110" r="1.1"/><circle cx="560" cy="30" r="1.5"/><circle cx="690" cy="90" r="1.2"/><circle cx="820" cy="50" r="1.7"/><circle cx="930" cy="140" r="1.3"/><circle cx="140" cy="300" r="1.1"/><circle cx="420" cy="420" r="1.4"/><circle cx="760" cy="380" r="1.2"/><circle cx="900" cy="300" r="1.5"/></g>
+  </svg>
+  <div class="wrap top">
+    <a class="brand" href="/" aria-label="Tranquilim"><svg style="--o-b:#F6EFE4;--o-e:#F6EFE4;--o-s:#1E2A47"><use href="#owl"/></svg><span>Tranquilim</span></a>
+    <span class="soon">Em breve</span>
+  </div>
+  <div class="wrap hero-grid">
+    <div>
+      <h1>A dúvida da madrugada <em>tem resposta.</em></h1>
+      <p class="sub">Orientação em saúde infantil escrita e revisada por médicos, da gestação aos 6 anos. Para mães, pais e quem cuida, na hora em que a dúvida aparece.</p>
+      <div class="pill-row"><span>Gestação aos 6 anos</span><span>Feito por médicos</span><span>Linguagem simples</span></div>
+    </div>
+    <div class="hero-art"><svg viewBox="0 0 120 120" role="img" aria-label="Duas corujas tranquilas, uma adulta e um filhote, sob a lua" style="--o-b:#F6EFE4;--o-e:#F6EFE4;--o-s:#1E2A47"><use href="#owl"/></svg></div>
+  </div>
+</header>
+
+<main>
+  <section>
+    <div class="wrap">
+      <div class="sec-head"><span class="kicker">O que vem aí</span><h2>Tudo que a família precisa, num lugar só</h2><p>Sem curso comprado no impulso, sem grupo de WhatsApp, sem pesquisa às 3 da manhã.</p></div>
+      <div class="cards">
+        <div class="card">
+          <span class="ic" style="background:#FCE9E7;color:var(--ps)">?</span>
+          <h3>Vai ao PS, liga ou espera?</h3>
+          <p>Uma pergunta por vez, para as dúvidas que mais levam ao pronto-socorro: febre, tosse, vômito, queda, manchas. No fim, o que fazer.</p>
+          <div class="tri"><span style="background:var(--casa)">Pode cuidar em casa</span><span style="background:var(--ubs)">Procure a UBS ou o pediatra</span><span style="background:var(--ps)">Vá ao pronto-socorro agora</span></div>
+        </div>
+        <div class="card">
+          <span class="ic" style="background:#FBEBD0;color:#A86A06">▶</span>
+          <h3>Trilhas em vídeo</h3>
+          <p>Amamentação, sono, introdução alimentar, engasgo, desfralde. Aulas curtas, passo a passo com fotos, liberadas na idade certa do seu filho.</p>
+        </div>
+        <div class="card">
+          <span class="ic" style="background:var(--nevoa);color:var(--noite)">✓</span>
+          <h3>Caderneta na palma da mão</h3>
+          <p>Vacinas com lembrete, curva de crescimento, diário de mamadas e fraldas e os marcos do desenvolvimento. Para todo mundo que cuida da criança.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="trust">
+    <div class="wrap">
+      <div class="sec-head"><span class="kicker">Por que confiar</span><h2>Informação guiada por médicos, não por algoritmo</h2><p>Em saúde infantil, errar para os dois lados custa caro: tranquilizar quando havia sinal de alarme, ou assustar quando não havia nada.</p></div>
+      <div class="trust-grid">
+        <div class="cmp gen"><h3>Pesquisa na internet ou IA genérica</h3><ul><li>Responde qualquer coisa, sem fonte conferida</li><li>Não sabe a idade, o peso nem as vacinas da criança</li><li>Quando não sabe, inventa com a mesma segurança</li><li>Ninguém responde pela orientação</li></ul></div>
+        <div class="cmp tq"><h3>Tranquilim</h3><ul><li>Cada orientação é escrita e revisada por médicos</li><li>Baseada nas orientações do Ministério da Saúde</li><li>Sinais de alarme em fluxo fixo, iguais para todos</li><li>Organizado pela idade do seu filho</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="ped">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><use href="#owl"/></svg>
+        <div><span class="kicker">Para consultórios</span><h2>É pediatra? Em breve, o Tranquilim com o seu nome.</h2><p>Seus pacientes recebem as orientações dentro do app, com você como o pediatra da família. Curva, diário e vacinas chegam prontos na consulta.</p></div>
+      </div>
+      <div class="sos"><b>192</b><p><strong>Em emergência, não espere:</strong> ligue para o SAMU (192) ou vá ao pronto-socorro mais próximo. O Tranquilim orienta e não substitui a consulta médica.</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap"><span><b>Tranquilim</b> · orientação em saúde infantil feita por médicos</span><span>Em desenvolvimento · 2026</span></div>
+</footer>
+</body>
+</html>

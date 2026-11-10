@@ -73,6 +73,7 @@ export function App() {
           <Onboarding onSalvar={(crianca) => atualizar((d) => ({ ...d, crianca }))} />
           <ColarConvite />
           <a className="link-192" href="tel:192">Emergência: ligar 192</a>
+          <a className="voltar" style={{ alignSelf: "center", textDecoration: "none", display: "inline-flex", alignItems: "center" }} href={ROTA_PAINEL}>Área do pediatra ›</a>
         </main>
       </div>
     );

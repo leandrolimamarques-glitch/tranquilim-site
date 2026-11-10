@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { andar, type Fluxo, type Resposta } from "../lib/fluxo";
 import { FEBRE } from "../conteudo/febre";
+import { linkLigar, linkWhatsApp, type Medico } from "../lib/convite";
+import type { Dados } from "../lib/store";
 
 const FLUXOS: Fluxo[] = [FEBRE];
 const EM_BREVE = ["Tosse e falta de ar", "Vômito e diarreia", "Queda e batida na cabeça", "Manchas na pele", "Engasgo"];
 
 const ROTULO_NIVEL = { ps: "Agora", hoje: "Hoje", casa: "Em casa" } as const;
 
-export function VaiAoPS() {
+export function VaiAoPS({ dados }: { dados: Dados }) {
   const [fluxo, setFluxo] = useState<Fluxo | null>(null);
 
-  if (fluxo) return <Executar fluxo={fluxo} sair={() => setFluxo(null)} />;
+  if (fluxo) return <Executar fluxo={fluxo} sair={() => setFluxo(null)} medico={dados.medico} nomeCrianca={dados.crianca?.nome ?? ""} />;
 
   return (
     <>
@@ -31,7 +33,7 @@ export function VaiAoPS() {
   );
 }
 
-function Executar({ fluxo, sair }: { fluxo: Fluxo; sair: () => void }) {
+function Executar({ fluxo, sair, medico, nomeCrianca }: { fluxo: Fluxo; sair: () => void; medico: Medico | null; nomeCrianca: string }) {
   const [respostas, setRespostas] = useState<Resposta[]>([]);
   const [marcados, setMarcados] = useState<string[]>([]);
   const estado = andar(fluxo, respostas);
@@ -57,6 +59,19 @@ function Executar({ fluxo, sair }: { fluxo: Fluxo; sair: () => void }) {
           <h2>{d.titulo}</h2>
         </div>
         {d.nivel === "ps" && <a className="btn ps bloco" href="tel:192">Ligar 192</a>}
+        {d.nivel !== "ps" && medico?.whatsapp && (
+          <a
+            className="btn sec bloco"
+            href={linkWhatsApp(medico.whatsapp, `Olá! Sou responsável por ${nomeCrianca}. No Tranquilim (${fluxo.titulo}), o resultado foi: ${d.titulo}. Pode me orientar?`)}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Mandar mensagem para {medico.nome}
+          </a>
+        )}
+        {d.nivel === "hoje" && !medico?.whatsapp && medico && linkLigar(medico.telefone) && (
+          <a className="btn sec bloco" href={linkLigar(medico.telefone)!}>Ligar para {medico.nome}</a>
+        )}
         <div className="card">
           <h3>O que fazer</h3>
           <ul className="lista">{d.oQueFazer.map((t) => <li key={t}>{t}</li>)}</ul>

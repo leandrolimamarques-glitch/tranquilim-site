@@ -29,7 +29,7 @@ export function Trilhas({ dados, atualizar }: { dados: Dados; atualizar: Atualiz
         <button className="voltar" onClick={() => setAulaIdx(null)}>‹ {trilha.titulo}</button>
         <span className="muted pequeno" style={{ fontWeight: 700 }}>Aula {aulaIdx + 1} de {trilha.aulas.length}</span>
         <h1 style={{ fontSize: 26 }}>{a.titulo}</h1>
-        <div className="video">Vídeo com o pediatra em gravação.<br />Por enquanto, o conteúdo da aula está abaixo.</div>
+        <div className="video">Vídeo da aula em gravação.<br />Por enquanto, o conteúdo da aula está abaixo.</div>
         <p style={{ fontFamily: "var(--f-d)", fontSize: 19, fontWeight: 500, color: "var(--hoje)" }}>{a.gancho}</p>
         <div className="card">
           <ul className="lista">{a.pontos.map((p) => <li key={p}>{p}</li>)}</ul>

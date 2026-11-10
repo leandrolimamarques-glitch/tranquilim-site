@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Sexo } from "./oms";
+import type { Medico } from "./convite";
 
 // Tudo fica só neste aparelho (localStorage). Nada é enviado a servidor.
 
@@ -16,11 +17,13 @@ export type Dados = {
   medidas: Medida[];
   diario: Registro[];
   aulasVistas: string[];
+  /** Médico que convidou a família pelo painel; null se a família entrou sozinha. */
+  medico: Medico | null;
 };
 
 const CHAVE = "tranquilim:v1";
 
-export const VAZIO: Dados = { versao: 1, crianca: null, vacinasAplicadas: [], medidas: [], diario: [], aulasVistas: [] };
+export const VAZIO: Dados = { versao: 1, crianca: null, vacinasAplicadas: [], medidas: [], diario: [], aulasVistas: [], medico: null };
 
 export function carregar(): Dados {
   try {

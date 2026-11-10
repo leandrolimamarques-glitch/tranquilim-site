@@ -122,3 +122,70 @@ describe("trilha de amamentação", () => {
     for (const a of AMAMENTACAO.aulas) expect(a.alerta.length).toBeGreaterThan(20);
   });
 });
+
+import { codificarConvite, extrairCodigo, formatarTelefone, lerConvite, linkWhatsApp, mensagemConvite, telefoneBr, type Medico } from "./convite";
+import { juntar, lerCopia, PAINEL_VAZIO } from "./painel";
+
+describe("convite do pediatra", () => {
+  const medico: Medico = { nome: "Dra. Joana Exemplo", registro: "CRM-SP 000001", titulo: "Pediatra", whatsapp: "(11) 98765-4321", local: "Rua A, 10 · São Paulo" };
+  const crianca = { nome: "Ana Júlia", nascimento: "2026-09-01", sexo: "menina" as const };
+
+  it("vai e volta pelo link sem perder acento", () => {
+    const lido = lerConvite(codificarConvite(medico, crianca), "2026-11-10");
+    expect(lido?.crianca).toEqual(crianca);
+    expect(lido?.medico.nome).toBe("Dra. Joana Exemplo");
+    expect(lido?.medico.whatsapp).toBe("11987654321");
+    expect(lido?.medico.local).toBe("Rua A, 10 · São Paulo");
+  });
+  it("acha o convite colado junto com a mensagem", () => {
+    const codigo = codificarConvite(medico, crianca);
+    const msg = mensagemConvite(medico, crianca, "", `https://tranquilim.com.br/app/#/convite/${codigo}`);
+    expect(extrairCodigo(msg)).toBe(codigo);
+    expect(extrairCodigo("bom dia")).toBeNull();
+  });
+  it("só usa caracteres seguros em link", () => {
+    expect(codificarConvite(medico, crianca)).toMatch(/^[A-Za-z0-9_-]+$/);
+  });
+  it("recusa convite cortado, adulterado ou com data impossível", () => {
+    const bom = codificarConvite(medico, crianca);
+    expect(lerConvite(bom.slice(0, -6), "2026-11-10")).toBeNull();
+    expect(lerConvite("lixo", "2026-11-10")).toBeNull();
+    expect(lerConvite(codificarConvite(medico, { ...crianca, nascimento: "2026-12-01" }), "2026-11-10")).toBeNull();
+    expect(lerConvite(codificarConvite(medico, { ...crianca, nascimento: "2026-02-30" }), "2026-11-10")).toBeNull();
+    expect(lerConvite(codificarConvite({ ...medico, registro: "" }, crianca), "2026-11-10")).toBeNull();
+  });
+  it("entende telefone brasileiro e monta o link do WhatsApp", () => {
+    expect(telefoneBr("(11) 98765-4321")).toBe("5511987654321");
+    expect(telefoneBr("011 3456-7890")).toBe("551134567890");
+    expect(telefoneBr("+55 11 98765-4321")).toBe("5511987654321");
+    expect(telefoneBr("98765-4321")).toBeNull();
+    expect(formatarTelefone("11987654321")).toBe("(11) 98765-4321");
+    expect(linkWhatsApp("11987654321", "Olá, tudo bem?")).toBe("https://wa.me/5511987654321?text=Ol%C3%A1%2C%20tudo%20bem%3F");
+    expect(linkWhatsApp("", "oi")).toBe("https://wa.me/?text=oi");
+  });
+  it("a mensagem do convite leva o link e não fala em dose", () => {
+    const m = mensagemConvite(medico, crianca, "Mariana Souza", "https://exemplo/app/#/convite/x");
+    expect(m).toContain("Olá, Mariana!");
+    expect(m).toContain("Ana Júlia");
+    expect(m.endsWith("https://exemplo/app/#/convite/x")).toBe(true);
+    expect(m).not.toMatch(/\d\s?(mg|ml|gotas)/i);
+  });
+});
+
+describe("cópia de segurança do painel", () => {
+  const p1 = { id: "a", crianca: { nome: "Ana", nascimento: "2026-01-01", sexo: "menina" as const }, responsavel: "", whatsapp: "", criadoEm: "2026-11-10" };
+  const p2 = { ...p1, id: "b", crianca: { ...p1.crianca, nome: "Bia" } };
+  it("lê a própria cópia e descarta paciente inválido", () => {
+    const texto = JSON.stringify({ versao: 1, medico: null, pacientes: [p1, { id: "x", crianca: { nome: "X", nascimento: "ontem", sexo: "menina" } }] });
+    expect(lerCopia(texto)?.pacientes.map((p) => p.id)).toEqual(["a"]);
+    expect(lerCopia("{}")).toBeNull();
+    expect(lerCopia("não é json")).toBeNull();
+  });
+  it("juntar não apaga ninguém e a cópia vence no mesmo paciente", () => {
+    const atual = { ...PAINEL_VAZIO, pacientes: [p1] };
+    const importado = { ...PAINEL_VAZIO, pacientes: [{ ...p1, responsavel: "Mãe" }, p2] };
+    const r = juntar(atual, importado);
+    expect(r.pacientes.map((p) => p.id).sort()).toEqual(["a", "b"]);
+    expect(r.pacientes.find((p) => p.id === "a")?.responsavel).toBe("Mãe");
+  });
+});

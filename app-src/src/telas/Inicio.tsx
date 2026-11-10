@@ -7,6 +7,7 @@ import { novoId } from "../lib/store";
 import { situacaoDasVacinas } from "../lib/vacinas";
 import { TRILHAS } from "../conteudo/trilhas";
 import { contarHoje, ROTULOS_REGISTRO } from "./Caderneta";
+import { linhaRegistro, linkLigar, linkWhatsApp } from "../lib/convite";
 
 export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar: Atualizar; navegar: Navegar }) {
   const c = dados.crianca!;
@@ -36,6 +37,23 @@ export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar:
         <div className="linha"><h2>{c.nome}</h2><span className="chip">{idadeTexto(c.nascimento, hoje)}</span></div>
         <p className="muted">Nasceu em {dataBr(c.nascimento)}</p>
       </div>
+
+      {dados.medico && (
+        <div className="card">
+          <span className="muted pequeno" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Quem acompanha {c.nome}</span>
+          <h3>{dados.medico.nome}</h3>
+          <p className="muted">{linhaRegistro(dados.medico)}</p>
+          {dados.medico.local && <p className="muted pequeno">{dados.medico.local}</p>}
+          {(dados.medico.whatsapp || linkLigar(dados.medico.telefone)) && (
+            <div className={dados.medico.whatsapp && linkLigar(dados.medico.telefone) ? "grade2" : ""}>
+              {dados.medico.whatsapp && (
+                <a className="btn sec bloco" href={linkWhatsApp(dados.medico.whatsapp, `Olá! Sou responsável por ${c.nome}.`)} target="_blank" rel="noopener noreferrer">WhatsApp</a>
+              )}
+              {linkLigar(dados.medico.telefone) && <a className="btn sec bloco" href={linkLigar(dados.medico.telefone)!}>Ligar</a>}
+            </div>
+          )}
+        </div>
+      )}
 
       <button className="card" style={{ textAlign: "left", cursor: "pointer", borderWidth: 2, borderColor: "var(--noite)" }} onClick={() => navegar("ps")}>
         <div className="linha">

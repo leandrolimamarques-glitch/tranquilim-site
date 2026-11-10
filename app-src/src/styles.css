@@ -43,9 +43,9 @@ p { margin: 0; }
 button { font: inherit; color: inherit; }
 
 .app { max-width: 560px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
-.faixa { position: sticky; top: 0; z-index: 10; background: var(--noite); color: #F6EFE4; font-size: 13px; padding: calc(6px + env(safe-area-inset-top)) 16px 6px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-.faixa a { color: #fff; font-weight: 800; text-decoration: none; background: var(--ps); border-radius: 999px; padding: 4px 12px; min-height: 32px; display: inline-flex; align-items: center; }
-.conteudo { flex: 1; padding: 16px 16px calc(96px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; }
+.conteudo { flex: 1; padding: calc(16px + env(safe-area-inset-top)) 16px calc(96px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 14px; }
+.conteudo.sem-abas { padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
+.link-192 { align-self: center; color: var(--ps); font-weight: 800; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
 
 .topo { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .marca { display: flex; align-items: center; gap: 8px; }
@@ -76,11 +76,14 @@ button { font: inherit; color: inherit; }
 .grade4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
 
 .abas { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10; background: var(--card); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); }
-.abas div { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr); }
+.abas div { max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: repeat(4, 1fr) 0.8fr; }
 .abas button { border: 0; background: transparent; min-height: 60px; font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
 .abas button .ic { font-size: 20px; line-height: 1; }
 .abas button.ativa { color: var(--ink); }
 .abas button.ativa .ic { color: var(--luz); }
+.abas a.sos { min-height: 60px; font-size: 13px; font-weight: 800; color: var(--ps); text-decoration: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+.abas a.sos .ic { font-size: 20px; line-height: 1; }
+.item-lista { display: flex; gap: 12px; align-items: center; width: 100%; text-align: left; min-height: 60px; border: 0; background: transparent; cursor: pointer; padding: 10px 0; color: var(--ink); }
 
 .segmento { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; background: var(--nevoa); border-radius: 14px; padding: 4px; gap: 4px; }
 .segmento button { border: 0; background: transparent; min-height: 44px; border-radius: 10px; font-weight: 700; cursor: pointer; color: var(--muted); }

@@ -1,0 +1,103 @@
+import { Coruja } from "../Coruja";
+import type { Navegar } from "../App";
+import { dataBr, hojeIso, idadeEmMesesDecimal, idadeTexto } from "../lib/idade";
+import { descreverPercentil, IDADE_MAXIMA_CURVA_MESES, percentil } from "../lib/oms";
+import type { Atualizar, Dados, TipoRegistro } from "../lib/store";
+import { novoId } from "../lib/store";
+import { situacaoDasVacinas } from "../lib/vacinas";
+import { TRILHAS } from "../conteudo/trilhas";
+import { contarHoje, ROTULOS_REGISTRO } from "./Caderneta";
+
+export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar: Atualizar; navegar: Navegar }) {
+  const c = dados.crianca!;
+  const hoje = hojeIso();
+  const meses = idadeEmMesesDecimal(c.nascimento, hoje);
+  const vacinas = situacaoDasVacinas(c.nascimento, hoje, new Set(dados.vacinasAplicadas));
+  const pendentes = vacinas.filter((v) => v.situacao === "pendente");
+  const proximas = vacinas.filter((v) => v.situacao === "proxima");
+  const trilha = TRILHAS.find((t) => meses >= t.deMeses && meses <= t.ateMeses);
+  const vistas = trilha ? trilha.aulas.filter((a) => dados.aulasVistas.includes(a.id)).length : 0;
+  const ultimaComPeso = [...dados.medidas].filter((m) => m.pesoKg).sort((a, b) => b.data.localeCompare(a.data))[0];
+  const mesesMedida = ultimaComPeso ? idadeEmMesesDecimal(c.nascimento, ultimaComPeso.data) : -1;
+  const pPeso = ultimaComPeso && mesesMedida >= 0 && mesesMedida <= IDADE_MAXIMA_CURVA_MESES ? percentil(c.sexo, "peso", mesesMedida, ultimaComPeso.pesoKg!) : null;
+  const contagem = contarHoje(dados.diario, hoje);
+
+  const registrar = (tipo: TipoRegistro) =>
+    atualizar((d) => ({ ...d, diario: [{ id: novoId(), tipo, quando: new Date().toISOString() }, ...d.diario] }));
+
+  return (
+    <>
+      <div className="topo">
+        <div className="marca"><Coruja titulo="Tranquilim" /><span>Tranquilim</span></div>
+        <button className="icone-btn" aria-label="Ajustes" onClick={() => navegar("ajustes")}>⚙</button>
+      </div>
+
+      <div className="card">
+        <div className="linha"><h2>{c.nome}</h2><span className="chip">{idadeTexto(c.nascimento, hoje)}</span></div>
+        <p className="muted">Nasceu em {dataBr(c.nascimento)}</p>
+      </div>
+
+      <button className="card" style={{ textAlign: "left", cursor: "pointer", borderWidth: 2, borderColor: "var(--noite)" }} onClick={() => navegar("ps")}>
+        <div className="linha">
+          <h2>Vai ao PS, liga ou espera?</h2>
+          <span aria-hidden="true" style={{ display: "flex", gap: 4 }}>
+            <i style={{ width: 10, height: 10, borderRadius: 5, background: "var(--casa)" }} />
+            <i style={{ width: 10, height: 10, borderRadius: 5, background: "var(--hoje)" }} />
+            <i style={{ width: 10, height: 10, borderRadius: 5, background: "var(--ps)" }} />
+          </span>
+        </div>
+        <p className="muted">Uma pergunta por vez. No fim, o que fazer: cuidar em casa, procurar atendimento hoje ou ir agora.</p>
+      </button>
+
+      <button className="card noite" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => navegar("caderneta", { secao: "vacinas" })}>
+        <span className="muted pequeno" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Vacinas</span>
+        {pendentes.length > 0 ? (
+          <>
+            <h3>{pendentes.length === 1 ? "1 vacina para conferir" : `${pendentes.length} vacinas para conferir`}</h3>
+            <p className="muted">A idade já chegou e ainda não foram marcadas como aplicadas. Confira com a caderneta física.</p>
+          </>
+        ) : proximas.length > 0 ? (
+          <>
+            <h3>Próximas em {dataBr(proximas[0].dataPrevista)}</h3>
+            <p className="muted">{proximas.map((v) => v.nome).join(" · ")}</p>
+          </>
+        ) : (
+          <h3>Tudo em dia pelo calendário</h3>
+        )}
+      </button>
+
+      {trilha && (
+        <button className="card" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => navegar("trilhas")}>
+          <span className="muted pequeno" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Trilha desta fase</span>
+          <h3>{trilha.titulo}</h3>
+          <p className="muted">{vistas} de {trilha.aulas.length} aulas vistas</p>
+        </button>
+      )}
+
+      <div className="card">
+        <div className="linha"><h3>Diário de hoje</h3><button className="btn contorno" style={{ minHeight: 36, padding: "4px 12px" }} onClick={() => navegar("caderneta", { secao: "diario" })}>Ver tudo</button></div>
+        <div className="grade4">
+          {(Object.keys(ROTULOS_REGISTRO) as TipoRegistro[]).map((t) => (
+            <button key={t} className="contador" style={{ border: 0, cursor: "pointer" }} onClick={() => registrar(t)} aria-label={`Registrar ${ROTULOS_REGISTRO[t]}`}>
+              <b>{contagem[t]}</b>
+              <span>{ROTULOS_REGISTRO[t]} +</span>
+            </button>
+          ))}
+        </div>
+        <p className="muted pequeno">Toque para registrar agora.</p>
+      </div>
+
+      <button className="card" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => navegar("caderneta", { secao: "crescimento" })}>
+        <span className="muted pequeno" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Crescimento</span>
+        {ultimaComPeso ? (
+          <>
+            <h3>{ultimaComPeso.pesoKg!.toLocaleString("pt-BR")} kg em {dataBr(ultimaComPeso.data)}</h3>
+            {pPeso !== null && <p className="muted">Peso {descreverPercentil(pPeso)} para a idade (curva da OMS).</p>}
+          </>
+        ) : (
+          <h3>Registrar o primeiro peso</h3>
+        )}
+      </button>
+    </>
+  );
+}

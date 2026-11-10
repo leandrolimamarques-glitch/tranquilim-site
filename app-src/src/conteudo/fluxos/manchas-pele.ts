@@ -269,7 +269,7 @@ export const MANCHAS_PELE: Fluxo = {
     "Sociedade Brasileira de Pediatria. Picadas de inseto: prurigo estrófulo ou urticária papular. Documento Científico nº 12, 2022.",
     "Sociedade Brasileira de Pediatria. Síndrome mão-pé-boca. Documento Científico, 2019; e Tratamento da doença mão-pé-boca em crianças. Nota de Alerta nº 219, 2025.",
     "NICE NG240. Meningitis (bacterial) and meningococcal disease: recognition, diagnosis and management. 2024.",
-    "NICE NG143. Fever in under 5s: assessment and initial management. 2019, mantida em 2025.",
+    "NICE NG143. Fever in under 5s: assessment and initial management. 2019, atualizada em 2021.",
     "World Allergy Organization. Anaphylaxis guidance 2020.",
     "British Association of Dermatologists. Guidelines for the management of Stevens-Johnson syndrome/toxic epidermal necrolysis in children and young people. 2018.",
     "American Heart Association. Update on diagnosis and management of Kawasaki disease. Scientific statement, 2024.",

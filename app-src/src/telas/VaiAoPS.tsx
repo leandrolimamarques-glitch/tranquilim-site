@@ -1,11 +1,9 @@
 import { useState } from "react";
 import { andar, type Fluxo, type Resposta } from "../lib/fluxo";
-import { FEBRE } from "../conteudo/febre";
+import { FLUXOS } from "../conteudo";
 import { linkLigar, linkWhatsApp, type Medico } from "../lib/convite";
 import type { Dados } from "../lib/store";
 
-const FLUXOS: Fluxo[] = [FEBRE];
-const EM_BREVE = ["Tosse e falta de ar", "Vômito e diarreia", "Queda e batida na cabeça", "Manchas na pele", "Engasgo"];
 
 const ROTULO_NIVEL = { ps: "Agora", hoje: "Hoje", casa: "Em casa" } as const;
 
@@ -20,15 +18,11 @@ export function VaiAoPS({ dados }: { dados: Dados }) {
       <p className="muted">Escolha o que está acontecendo. Uma pergunta por vez, e no fim o que fazer.</p>
       <a className="btn ps bloco" href="tel:192">Emergência agora: ligar 192</a>
       {FLUXOS.map((f) => (
-        <button key={f.id} className="opcao" onClick={() => setFluxo(f)}>
+        <button key={f.id} className="opcao" style={f.id === "engasgo" ? { borderColor: "var(--ps)" } : undefined} onClick={() => setFluxo(f)}>
           {f.titulo}
           <span className="muted" style={{ display: "block", fontWeight: 500, fontSize: 14 }}>{f.resumo}</span>
         </button>
       ))}
-      <div className="card">
-        <h3>Em breve</h3>
-        <p className="muted">{EM_BREVE.join(" · ")}</p>
-      </div>
     </>
   );
 }

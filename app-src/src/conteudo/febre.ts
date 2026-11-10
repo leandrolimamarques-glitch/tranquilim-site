@@ -2,7 +2,7 @@ import type { Fluxo } from "../lib/fluxo";
 
 // Febre: rascunho para revisão médica (Leandro e Chicão) antes de divulgar.
 // Definição de febre e conduta em casa: SBP, Manejo da Febre Aguda (2021).
-// Sinais de alarme e de atenção: NICE NG143, tabela semáforo (2019, mantida na revisão de 2025).
+// Sinais de alarme e de atenção: NICE NG143, tabela semáforo (2019, atualizada em 2021).
 
 const SINAIS_DE_ALARME = [
   "Não acorda, ou acorda e não consegue ficar acordada",
@@ -130,6 +130,6 @@ export const FEBRE: Fluxo = {
   },
   fontes: [
     "Sociedade Brasileira de Pediatria. Manejo da Febre Aguda. Documento científico, 2021.",
-    "NICE NG143. Fever in under 5s: assessment and initial management. 2019, mantida em 2025.",
+    "NICE NG143. Fever in under 5s: assessment and initial management. 2019, atualizada em 2021.",
   ],
 };

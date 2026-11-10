@@ -6,7 +6,7 @@ import { VaiAoPS } from "./telas/VaiAoPS";
 import { Trilhas } from "./telas/Trilhas";
 import { Caderneta, type SecaoCaderneta } from "./telas/Caderneta";
 import { Ajustes } from "./telas/Ajustes";
-import { Painel } from "./telas/Painel";
+import { Painel } from "./telas/painel/Painel";
 import { Convite } from "./telas/Convite";
 import { extrairCodigo, ROTA_PAINEL } from "./lib/convite";
 
@@ -37,7 +37,7 @@ function useHash(): [string, () => void] {
 }
 
 export function App() {
-  const [dados, atualizar] = useDados();
+  const [dados, atualizar, controle] = useDados();
   const [hash, limparHash] = useHash();
   const [aba, setAba] = useState<Aba>("inicio");
   const [secao, setSecao] = useState<SecaoCaderneta>("vacinas");
@@ -51,7 +51,7 @@ export function App() {
   if (hash.startsWith(ROTA_PAINEL)) {
     return (
       <div className="app">
-        <main className="conteudo sem-abas"><Painel sair={limparHash} /></main>
+        <Painel sair={limparHash} />
       </div>
     );
   }
@@ -60,7 +60,7 @@ export function App() {
     return (
       <div className="app">
         <main className="conteudo sem-abas">
-          <Convite codigo={hash.slice("#/convite/".length)} dados={dados} atualizar={atualizar} concluir={() => { setAba("inicio"); limparHash(); }} />
+          <Convite token={hash.slice("#/convite/".length)} dados={dados} controle={controle} concluir={() => { setAba("inicio"); limparHash(); }} />
         </main>
       </div>
     );
@@ -85,8 +85,8 @@ export function App() {
         {aba === "inicio" && <Inicio dados={dados} atualizar={atualizar} navegar={navegar} />}
         {aba === "ps" && <VaiAoPS dados={dados} />}
         {aba === "trilhas" && <Trilhas dados={dados} atualizar={atualizar} />}
-        {aba === "caderneta" && <Caderneta dados={dados} atualizar={atualizar} secao={secao} setSecao={setSecao} />}
-        {aba === "ajustes" && <Ajustes dados={dados} atualizar={atualizar} navegar={navegar} />}
+        {aba === "caderneta" && <Caderneta dados={dados} atualizar={atualizar} secao={secao} setSecao={setSecao} modo={{ quem: "familia", carteira: !!dados.vinculo }} />}
+        {aba === "ajustes" && <Ajustes dados={dados} atualizar={atualizar} navegar={navegar} controle={controle} />}
       </main>
       <nav className="abas" aria-label="Seções do app">
         <div>

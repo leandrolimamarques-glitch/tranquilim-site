@@ -140,4 +140,3 @@ export const AMAMENTACAO: Trilha = {
   ],
 };
 
-export const TRILHAS: readonly Trilha[] = [AMAMENTACAO];

@@ -1,0 +1,137 @@
+import type { Trilha } from "../trilhas";
+
+// Trilha "Introdução alimentar": rascunho para revisão médica (pediatra e médico) antes de divulgar.
+// Fontes conferidas em novembro de 2026. Onde o Ministério da Saúde e a SBP divergem (sal, mel,
+// leite de vaca, idade dos alergênicos), o texto diz as duas posições; detalhes e pontos para o
+// pediatra decidir: revisao/aulas-a.md.
+
+export const INTRODUCAO_ALIMENTAR: Trilha = {
+  id: "introducao-alimentar",
+  titulo: "Introdução alimentar",
+  faixa: "dos 5 meses a 1 ano",
+  deMeses: 5,
+  ateMeses: 12,
+  aulas: [
+    {
+      id: "ia1",
+      titulo: "Quando começar: 6 meses e os sinais de que ele está pronto",
+      gancho: "Os 6 meses estão chegando e a ansiedade aumenta. O próprio bebê mostra quando está pronto.",
+      pontos: [
+        "Até os 6 meses, só leite materno, sem água, chá ou suco. Aos 6 meses entram os outros alimentos, e o peito continua até os 2 anos ou mais.",
+        "Sinais de que está pronto: senta com pouco ou nenhum apoio, firma bem a cabeça, leva as coisas à boca e já não empurra tudo para fora com a língua.",
+        "Cuspir a comida nos primeiros dias é normal e não quer dizer que ele não gostou: ainda está aprendendo a usar a língua.",
+        "No começo ele come pouco, e o leite materno continua sendo o principal alimento. Quem regula a quantidade é o bebê.",
+        "Na hora de comer, o bebê fica sentado, reto e bem apoiado, nunca deitado ou reclinado, e sempre com um adulto junto.",
+        "Bebê que não mama no peito, que nasceu prematuro ou que tem alguma doença: o pediatra orienta quando e como começar.",
+      ],
+      alerta: "Bebê com mais de 6 meses que ainda não firma a cabeça ou não senta nem com apoio: converse com o pediatra.",
+    },
+    {
+      id: "ia2",
+      titulo: "O prato: comida de verdade, amassada com garfo",
+      gancho: "A papinha não precisa vir de pote nem passar no liquidificador. É a comida da família, amassada.",
+      pontos: [
+        "No almoço, e depois também no jantar, um alimento de cada grupo: cereal ou raiz (arroz, milho, batata, mandioca), feijão ou outro grão, legumes e verduras, e carne ou ovo.",
+        "Amasse com garfo e deixe cada alimento separado no prato. Não bata no liquidificador nem passe na peneira: o bebê precisa aprender a mastigar.",
+        "Fruta nos lanches: raspada, amassada ou em pedaços, e não em forma de suco.",
+        "Tempere com cebola, alho, cheiro-verde e outras ervas. Caldo e tempero prontos ficam de fora. Sal: a Sociedade Brasileira de Pediatria orienta não colocar sal na comida do bebê antes de 1 ano, e o Ministério da Saúde, usar o mínimo possível.",
+        "Carne e ovo sempre bem cozidos, nunca crus ou malpassados.",
+        "Lave as mãos antes de preparar e de dar a comida. Comida que sobrou no prato do bebê vai fora; o que não foi servido pode ficar na geladeira por até 24 horas.",
+      ],
+      alerta: "Bebê que recusa quase tudo por muitos dias, perde peso ou parece doente: procure o pediatra ou a UBS.",
+    },
+    {
+      id: "ia3",
+      titulo: "Do amassado ao pedaço: consistência e BLW",
+      gancho: "O bebê precisa de textura para aprender a mastigar, mesmo sem dentes.",
+      pontos: [
+        "Aos 6 meses: tudo amassado com garfo, numa papa firme que não escorre da colher.",
+        "Entre 7 e 8 meses: menos amassado, com pedacinhos, e alguns pedaços macios e grandes para ele pegar com a mão.",
+        "Entre 9 e 11 meses: picado e desfiado, já perto da comida da família. Perto de 1 ano, come a comida da casa, cortando o que for grande.",
+        "Não espere os dentes: a gengiva amassa alimentos macios. Bebê que só recebe comida batida ou líquida tem mais dificuldade de aceitar pedaços depois.",
+        "BLW é quando o próprio bebê come sozinho, com pedaços na mão. A Sociedade Brasileira de Pediatria não recomenda usar só esse método, porque ainda faltam estudos sobre ferro, calorias e segurança. O recomendado é misturar: comida amassada na colher e pedaços macios para ele explorar com as mãos.",
+        "Ao oferecer pedaços: grandes e macios, que ele consiga segurar e que desmanchem fácil (prove antes); um alimento rico em ferro em toda refeição; nada redondo, em rodela ou duro.",
+      ],
+      alerta: "Engasga ou vomita em quase toda refeição, ou perto dos 10 meses ainda só aceita comida batida ou líquida: converse com o pediatra.",
+    },
+    {
+      id: "ia4",
+      titulo: "Água sim. Mel, açúcar e ultraprocessados, não",
+      gancho: "O que fica fora do prato no primeiro ano importa tanto quanto o que entra.",
+      pontos: [
+        "Água: comece junto com a comida, aos 6 meses. Ofereça no copo, várias vezes ao dia, entre as refeições, porque o bebê não sabe pedir. Use água filtrada ou fervida.",
+        "Suco, nem o natural, antes de 1 ano: ofereça a fruta. Água de coco, chá e refrigerante não substituem a água.",
+        "Mel: nunca antes de 1 ano, pelo risco de botulismo. O Ministério da Saúde orienta esperar até os 2 anos, porque mel também é açúcar.",
+        "Açúcar e adoçante: nada até os 2 anos, nem na fruta, no mingau ou no suco. Isso inclui açúcar mascavo, demerara, melado e rapadura.",
+        "Ultraprocessados ficam de fora: biscoito, salgadinho, macarrão instantâneo, salsicha, iogurte com sabor, achocolatado, gelatina, caldo pronto e suco de caixinha.",
+        "Leite de vaca puro não substitui o peito. Se o bebê não mama no peito, o pediatra orienta qual leite usar.",
+      ],
+      alerta: "Bebê que ficou molinho, com dificuldade para mamar ou engolir, depois de comer mel: pronto-socorro. Olhos fundos, choro sem lágrimas e pouco xixi: procure atendimento no mesmo dia.",
+    },
+    {
+      id: "ia5",
+      titulo: "Ânsia ou engasgo? Saber a diferença",
+      gancho: "Fazer careta e ânsia com comida nova é normal. O engasgo grave é silencioso.",
+      pontos: [
+        "A ânsia (reflexo de gag) protege o bebê: ele faz careta, põe a língua para fora, tosse e às vezes vomita, mas continua respirando e fazendo barulho. Fique calmo e deixe ele resolver.",
+        "Com o tempo, esse reflexo vai para o fundo da boca e a ânsia diminui.",
+        "Engasgo grave é diferente: o bebê não consegue chorar, tossir nem respirar, fica sem som, pálido ou roxo. É emergência.",
+        "Se ele está tossindo com força, deixe tossir. Não tente tirar a comida com o dedo, porque pode empurrá-la mais para dentro.",
+        "Engasgo grave em bebê com menos de 1 ano: deite-o de bruços sobre o seu antebraço, com a cabeça mais baixa que o corpo, e dê 5 tapas firmes nas costas, entre as escápulas, com a base da mão. Vire de barriga para cima e faça 5 compressões no meio do peito, logo abaixo da linha dos mamilos, com dois dedos. Repita até sair. Peça para alguém ligar 192.",
+        "Para prevenir: bebê sempre sentado e com um adulto olhando. Uva e frutas pequenas cortadas em pedaços bem pequenos e sem semente; amendoim e castanhas só triturados; cenoura e maçã cruas raladas; nada de pipoca, bala ou salsicha.",
+      ],
+      alerta: "Bebê que perdeu a consciência: ligue 192 e comece a reanimação. Todo bebê que precisou da manobra, ou que depois do engasgo continua tossindo, com chiado ou com esforço para respirar, precisa ser avaliado no pronto-socorro.",
+    },
+    {
+      id: "ia6",
+      titulo: "Ovo, amendoim e outros alergênicos",
+      gancho: "Adiar ovo, peixe ou amendoim não protege contra alergia. A orientação atual é não atrasar.",
+      pontos: [
+        "Ovo inteiro (clara e gema), peixe e carne de porco podem entrar desde o começo, aos 6 meses, sempre bem cozidos.",
+        "A orientação mudou: antes se mandava esperar. Hoje a Sociedade Brasileira de Pediatria orienta não adiar os alimentos que mais causam alergia, como ovo, trigo, soja, amendoim, peixe e frutos do mar. Oferecer no primeiro ano pode ajudar a prevenir alergia, principalmente ao amendoim.",
+        "Ofereça um alimento novo desse grupo de cada vez, com alguns dias de intervalo, para perceber se houve reação.",
+        "Amendoim nunca inteiro: use pasta de amendoim pura, sem açúcar e sem sal, misturada na comida ou na fruta amassada, ou amendoim bem triturado.",
+        "Depois que o bebê aceitou bem, continue oferecendo esses alimentos com regularidade.",
+        "Bebê com eczema forte (dermatite atópica) ou que já teve alergia a algum alimento: converse com o pediatra antes, porque o momento e o jeito de oferecer podem ser diferentes.",
+      ],
+      alerta: "Manchas vermelhas que coçam ou vômitos depois de um alimento novo: pare de oferecer esse alimento e fale com o pediatra. Inchaço nos lábios, na língua ou nos olhos, chiado, falta de ar, palidez ou bebê molinho: ligue 192 ou vá ao pronto-socorro agora.",
+    },
+    {
+      id: "ia7",
+      titulo: "Ferro: o nutriente que mais falta",
+      gancho: "Depois dos 6 meses, só o leite materno não dá todo o ferro de que o bebê precisa.",
+      pontos: [
+        "A falta de ferro causa anemia, que deixa o bebê cansado e sem apetite e atrapalha o desenvolvimento e o aprendizado.",
+        "Carne ou ovo todos os dias: boi, frango, porco, peixe, fígado e outros miúdos. O ferro de origem animal é o mais bem aproveitado.",
+        "Feijão, lentilha, grão-de-bico e verduras verde-escuras também têm ferro. Na mesma refeição, ofereça uma fruta rica em vitamina C, como laranja, acerola, goiaba ou caju, para o corpo aproveitar melhor.",
+        "Café, chá-preto, chá-mate e refrigerante de cola atrapalham o aproveitamento do ferro e não devem ser dados à criança.",
+        "Leite de vaca em excesso também atrapalha e pode levar à anemia.",
+        "Suplemento de ferro: o Ministério da Saúde e a Sociedade Brasileira de Pediatria recomendam para os bebês. O pediatra indica a suplementação, quando começar e como dar.",
+      ],
+      alerta: "Bebê muito pálido, cansado e sem apetite: fale com o pediatra, que pode pedir exame de sangue.",
+    },
+    {
+      id: "ia8",
+      titulo: "Ele não quer comer: recusa sem briga",
+      gancho: "Recusar comida nova é normal. Pressionar costuma piorar.",
+      pontos: [
+        "Um alimento novo pode precisar ser oferecido de 8 a 10 vezes, em dias diferentes, até ser aceito. Varie o preparo: cozido, assado, amassado, em pedaços.",
+        "Respeite os sinais de que ele está satisfeito: vira o rosto, fecha a boca, empurra a colher, perde o interesse. Não force nem peça para raspar o prato.",
+        "Sem tela na refeição: TV, celular e tablet distraem e fazem o bebê comer no automático.",
+        "Não troque a refeição recusada por lanche, biscoito ou doce: ele aprende que, recusando, ganha outra coisa.",
+        "Nada de recompensa, ameaça ou castigo. Coma junto, mostre que gosta da comida e converse com ele.",
+        "Dentes nascendo, doença e mudanças em casa podem diminuir o apetite por alguns dias. Quem mostra se ele está comendo o suficiente é o crescimento, acompanhado na Caderneta.",
+      ],
+      alerta: "Recusa que dura muitos dias, perda de peso, engasgos ou vômitos frequentes nas refeições, ou peso parado na curva de crescimento: procure o pediatra ou a UBS.",
+    },
+  ],
+  fontes: [
+    "Ministério da Saúde. Guia Alimentar para Crianças Brasileiras Menores de 2 Anos. 2019.",
+    "Ministério da Saúde. Caderneta da Criança: Passaporte da Cidadania, 6ª edição. 2023.",
+    "Sociedade Brasileira de Pediatria. Manual de Alimentação: orientações para alimentação do lactente ao adolescente, na escola, na gestante, na prevenção de doenças e segurança alimentar, 5ª edição. 2024.",
+    "Sociedade Brasileira de Pediatria. A Alimentação Complementar e o Método BLW (Baby-Led Weaning). Guia prático de atualização nº 3, 2017.",
+    "Sociedade Brasileira de Pediatria. Obstrução de vias aéreas por corpo estranho e engasgo por líquidos: o que fazer? Guia prático de atualização nº 222, 2025.",
+    "Sociedade Brasileira de Pediatria e Associação Brasileira de Alergia e Imunologia. Consenso Brasileiro sobre Alergia Alimentar. 2018.",
+    "Organização Mundial da Saúde. WHO guideline for complementary feeding of infants and young children 6–23 months of age. 2023.",
+  ],
+};

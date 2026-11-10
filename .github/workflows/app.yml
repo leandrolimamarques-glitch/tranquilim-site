@@ -1,0 +1,78 @@
+name: App (Fly.io)
+
+# Testa o app a cada push na main que mexa em app-src/. Se os segredos existirem
+# (FLY_API_TOKEN, DATABASE_URL e, para a leitura da carteira, LLM_API_KEY),
+# publica em app.tranquilim.com.br.
+on:
+  push:
+    branches: [main]
+    paths: ["app-src/**", ".github/workflows/app.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: app-fly
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app-src
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app-src/package-lock.json
+      - run: npm ci
+      - name: Tipos
+        run: npx tsc --noEmit
+      - name: Testes
+        run: npx vitest run
+
+      - name: Conferir segredos
+        id: segredos
+        run: |
+          if [ -n "$FLY_API_TOKEN" ] && [ -n "$DATABASE_URL" ]; then
+            echo "pronto=sim" >> "$GITHUB_OUTPUT"
+          else
+            echo "pronto=nao" >> "$GITHUB_OUTPUT"
+            echo "::warning::Faltam FLY_API_TOKEN ou DATABASE_URL nos segredos do repositório: testes passaram, publicação pulada."
+          fi
+
+      - uses: superfly/flyctl-actions/setup-flyctl@1.5
+        if: steps.segredos.outputs.pronto == 'sim'
+
+      - name: Criar o app no Fly (só na primeira vez)
+        if: steps.segredos.outputs.pronto == 'sim'
+        run: |
+          if ! flyctl status -a tranquilim >/dev/null 2>&1; then
+            flyctl apps create tranquilim --org personal || flyctl apps create tranquilim --org "$(flyctl orgs list --json | jq -r 'keys[0]')"
+          fi
+
+      - name: Segredos do app
+        if: steps.segredos.outputs.pronto == 'sim'
+        run: |
+          if [ -n "$LLM_API_KEY" ]; then
+            flyctl secrets set --stage -a tranquilim DATABASE_URL="$DATABASE_URL" LLM_API_KEY="$LLM_API_KEY"
+          else
+            flyctl secrets set --stage -a tranquilim DATABASE_URL="$DATABASE_URL"
+          fi
+
+      - name: Publicar
+        if: steps.segredos.outputs.pronto == 'sim'
+        run: flyctl deploy --remote-only -a tranquilim
+
+      - name: Endereço app.tranquilim.com.br
+        if: steps.segredos.outputs.pronto == 'sim'
+        run: |
+          flyctl ips list -a tranquilim | grep -q "v4" || flyctl ips allocate-v4 --shared -a tranquilim
+          flyctl ips list -a tranquilim | grep -q "v6" || flyctl ips allocate-v6 -a tranquilim
+          flyctl certs show app.tranquilim.com.br -a tranquilim >/dev/null 2>&1 || flyctl certs add app.tranquilim.com.br -a tranquilim
+          curl -fsS https://tranquilim.fly.dev/api/saude

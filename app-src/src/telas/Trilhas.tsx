@@ -1,18 +1,33 @@
 import { useState } from "react";
-import { TRILHAS, type Trilha } from "../conteudo/trilhas";
+import { TRILHAS, trilhasDaIdade } from "../conteudo";
+import type { Trilha } from "../conteudo/trilhas";
+import { hojeIso, idadeEmMesesDecimal } from "../lib/idade";
 import type { Atualizar, Dados } from "../lib/store";
 
 export function Trilhas({ dados, atualizar }: { dados: Dados; atualizar: Atualizar }) {
-  const [trilha, setTrilha] = useState<Trilha | null>(TRILHAS.length === 1 ? TRILHAS[0] : null);
+  const [trilha, setTrilha] = useState<Trilha | null>(null);
   const [aulaIdx, setAulaIdx] = useState<number | null>(null);
 
   if (!trilha) {
+    const meses = dados.crianca ? idadeEmMesesDecimal(dados.crianca.nascimento, hojeIso()) : 0;
+    const daFase = trilhasDaIdade(meses);
+    const outras = TRILHAS.filter((t) => !daFase.includes(t));
+    const Item = ({ t }: { t: Trilha }) => {
+      const vistas = t.aulas.filter((a) => dados.aulasVistas.includes(a.id)).length;
+      return (
+        <button className="opcao" onClick={() => { setTrilha(t); window.scrollTo(0, 0); }}>
+          {t.titulo}
+          <span className="muted" style={{ display: "block", fontWeight: 500, fontSize: 14 }}>{t.faixa} · {vistas} de {t.aulas.length} aulas</span>
+        </button>
+      );
+    };
     return (
       <>
         <h1 style={{ fontSize: 28 }}>Trilhas</h1>
-        {TRILHAS.map((t) => (
-          <button key={t.id} className="opcao" onClick={() => setTrilha(t)}>{t.titulo}</button>
-        ))}
+        {daFase.length > 0 && <h3>Para a idade de {dados.crianca?.nome ?? "agora"}</h3>}
+        {daFase.map((t) => <Item key={t.id} t={t} />)}
+        {outras.length > 0 && <h3 style={{ marginTop: 8 }}>Outras fases</h3>}
+        {outras.map((t) => <Item key={t.id} t={t} />)}
       </>
     );
   }
@@ -52,6 +67,7 @@ export function Trilhas({ dados, atualizar }: { dados: Dados; atualizar: Atualiz
   const total = trilha.aulas.filter((a) => vista(a.id)).length;
   return (
     <>
+      <button className="voltar" onClick={() => setTrilha(null)}>‹ Trilhas</button>
       <h1 style={{ fontSize: 28 }}>{trilha.titulo}</h1>
       <p className="muted">{trilha.aulas.length} aulas · {trilha.faixa} · {total} vistas</p>
       <div className="card" style={{ gap: 0, padding: "4px 16px" }}>

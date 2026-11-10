@@ -3,6 +3,7 @@ import { dataBr, hojeIso, idadeEmMesesDecimal } from "../lib/idade";
 import { curva, descreverPercentil, IDADE_MAXIMA_CURVA_MESES, LINHAS_PERCENTIL, percentil, type Indicador, type Sexo } from "../lib/oms";
 import { novoId, type Atualizar, type Dados, type Medida, type Registro, type TipoRegistro } from "../lib/store";
 import { FONTE_CALENDARIO, situacaoDasVacinas, type VacinaComSituacao } from "../lib/vacinas";
+import { Carteira } from "./Carteira";
 
 export type SecaoCaderneta = "vacinas" | "crescimento" | "diario";
 
@@ -14,20 +15,24 @@ export function contarHoje(diario: readonly Registro[], hoje: string): Record<Ti
   return c;
 }
 
-type Props = { dados: Dados; atualizar: Atualizar; secao: SecaoCaderneta; setSecao: (s: SecaoCaderneta) => void };
+export type ModoCaderneta = { quem: "familia" | "medico"; carteira: boolean; pacienteId?: string };
 
-export function Caderneta({ dados, atualizar, secao, setSecao }: Props) {
+type Props = { dados: Dados; atualizar: Atualizar; secao: SecaoCaderneta; setSecao: (s: SecaoCaderneta) => void; modo?: ModoCaderneta };
+
+const MODO_FAMILIA: ModoCaderneta = { quem: "familia", carteira: false };
+
+export function Caderneta({ dados, atualizar, secao, setSecao, modo = MODO_FAMILIA }: Props) {
   return (
     <>
-      <h1 style={{ fontSize: 28 }}>Caderneta</h1>
+      {modo.quem === "familia" && <h1 style={{ fontSize: 28 }}>Caderneta</h1>}
       <div className="segmento" role="tablist">
         <button className={secao === "vacinas" ? "ativa" : ""} onClick={() => setSecao("vacinas")}>Vacinas</button>
         <button className={secao === "crescimento" ? "ativa" : ""} onClick={() => setSecao("crescimento")}>Crescimento</button>
         <button className={secao === "diario" ? "ativa" : ""} onClick={() => setSecao("diario")}>Diário</button>
       </div>
-      {secao === "vacinas" && <Vacinas dados={dados} atualizar={atualizar} />}
-      {secao === "crescimento" && <Crescimento dados={dados} atualizar={atualizar} />}
-      {secao === "diario" && <Diario dados={dados} atualizar={atualizar} />}
+      {secao === "vacinas" && <Vacinas dados={dados} atualizar={atualizar} modo={modo} />}
+      {secao === "crescimento" && <Crescimento dados={dados} atualizar={atualizar} modo={modo} />}
+      {secao === "diario" && <Diario dados={dados} atualizar={atualizar} modo={modo} />}
     </>
   );
 }
@@ -40,20 +45,34 @@ function rotuloIdade(m: number): string {
   return `${Math.floor(m / 12)} anos`;
 }
 
-function Vacinas({ dados, atualizar }: { dados: Dados; atualizar: Atualizar }) {
+const ORIGEM = { familia: "marcada pela família", medico: "marcada pelo consultório", carteira: "lida da carteira" } as const;
+
+function Vacinas({ dados, atualizar, modo }: { dados: Dados; atualizar: Atualizar; modo: ModoCaderneta }) {
   const c = dados.crianca!;
   const lista = situacaoDasVacinas(c.nascimento, hojeIso(), new Set(dados.vacinasAplicadas));
   const grupos = new Map<number, VacinaComSituacao[]>();
   for (const v of lista) grupos.set(v.idadeMeses, [...(grupos.get(v.idadeMeses) ?? []), v]);
+  const pendentes = lista.filter((v) => v.situacao === "pendente");
   const alternar = (id: string) =>
-    atualizar((d) => ({
-      ...d,
-      vacinasAplicadas: d.vacinasAplicadas.includes(id) ? d.vacinasAplicadas.filter((x) => x !== id) : [...d.vacinasAplicadas, id],
-    }));
+    atualizar((d) => {
+      if (d.vacinasAplicadas.includes(id)) {
+        const { [id]: _fora, ...vacinaInfo } = d.vacinaInfo;
+        return { ...d, vacinasAplicadas: d.vacinasAplicadas.filter((x) => x !== id), vacinaInfo };
+      }
+      return { ...d, vacinasAplicadas: [...d.vacinasAplicadas, id], vacinaInfo: { ...d.vacinaInfo, [id]: { origem: modo.quem } } };
+    });
+  const apagarOutra = (id: string) => atualizar((d) => ({ ...d, outrasVacinas: d.outrasVacinas.filter((o) => o.id !== id) }));
 
   return (
     <>
-      <p className="muted">Marque as vacinas que já estão na caderneta física. O app avisa as que faltam e as próximas.</p>
+      {modo.carteira && <Carteira dados={dados} atualizar={atualizar} pacienteId={modo.pacienteId} />}
+      {pendentes.length > 0 && (
+        <div className="alerta">
+          <b>{pendentes.length === 1 ? "1 vacina para conferir: " : `${pendentes.length} vacinas para conferir: `}</b>
+          {pendentes.slice(0, 4).map((v) => `${v.nome} (${v.dose})`).join(", ")}{pendentes.length > 4 ? ` e mais ${pendentes.length - 4}` : ""}. A idade já chegou e não estão marcadas.
+        </div>
+      )}
+      <p className="muted">{modo.carteira ? "Ou marque à mão as vacinas que já estão na caderneta física." : "Marque as vacinas que já estão na caderneta física. O app avisa as que faltam e as próximas."}</p>
       {[...grupos.entries()].map(([idade, vs]) => (
         <div className="card" key={idade}>
           <div className="linha"><h3>{rotuloIdade(idade)}</h3><span className="muted pequeno">{dataBr(vs[0].dataPrevista)}</span></div>
@@ -63,7 +82,12 @@ function Vacinas({ dados, atualizar }: { dados: Dados; atualizar: Atualizar }) {
                 <input type="checkbox" checked={v.situacao === "aplicada"} onChange={() => alternar(v.id)} />
                 <span>
                   <b style={{ fontWeight: 600 }}>{v.nome}</b> <span className="muted">· {v.dose}</span>
-                  {v.nota && <span className="muted pequeno" style={{ display: "block" }}>{v.nota}</span>}
+                  {dados.vacinaInfo[v.id]?.origem && (
+                    <span className="muted pequeno" style={{ display: "block" }}>
+                      {dados.vacinaInfo[v.id].data ? `Aplicada em ${dataBr(dados.vacinaInfo[v.id].data!)} · ` : ""}{ORIGEM[dados.vacinaInfo[v.id].origem!]}
+                    </span>
+                  )}
+                  {v.nota && v.situacao !== "aplicada" && <span className="muted pequeno" style={{ display: "block" }}>{v.nota}</span>}
                 </span>
                 {ROTULO_SITUACAO[v.situacao] && <span className={`chip ${v.situacao}`}>{ROTULO_SITUACAO[v.situacao]}</span>}
               </label>
@@ -71,6 +95,18 @@ function Vacinas({ dados, atualizar }: { dados: Dados; atualizar: Atualizar }) {
           </div>
         </div>
       ))}
+      {dados.outrasVacinas.length > 0 && (
+        <div className="card">
+          <h3>Outras vacinas</h3>
+          <p className="muted pequeno">Fora do calendário do SUS (clínica particular, campanhas, doses extras).</p>
+          {dados.outrasVacinas.map((o) => (
+            <div key={o.id} className="linha" style={{ borderTop: "1px solid var(--line)", paddingTop: 6 }}>
+              <span>{o.nome}<span className="muted pequeno" style={{ display: "block" }}>{o.data ? dataBr(o.data) : "sem data"}</span></span>
+              <button className="icone-btn" aria-label={`Apagar ${o.nome}`} onClick={() => apagarOutra(o.id)}>✕</button>
+            </div>
+          ))}
+        </div>
+      )}
       <p className="fontes">{FONTE_CALENDARIO}</p>
     </>
   );
@@ -81,7 +117,7 @@ function numero(texto: string): number | undefined {
   return Number.isFinite(n) && n > 0 ? n : undefined;
 }
 
-function Crescimento({ dados, atualizar }: { dados: Dados; atualizar: Atualizar }) {
+function Crescimento({ dados, atualizar, modo }: { dados: Dados; atualizar: Atualizar; modo: ModoCaderneta }) {
   const c = dados.crianca!;
   const [indicador, setIndicador] = useState<Indicador>("peso");
   const [data, setData] = useState(hojeIso());
@@ -94,7 +130,7 @@ function Crescimento({ dados, atualizar }: { dados: Dados; atualizar: Atualizar 
   const podeSalvar = (pesoN !== undefined || compN !== undefined) && !pesoForaDaFaixa && !compForaDaFaixa && data >= c.nascimento && data <= hojeIso();
 
   const salvar = () => {
-    const m: Medida = { id: novoId(), data, pesoKg: pesoN, comprimentoCm: compN };
+    const m: Medida = { id: novoId(), data, pesoKg: pesoN, comprimentoCm: compN, origem: modo.quem === "medico" ? "consulta" : "familia" };
     atualizar((d) => ({ ...d, medidas: [...d.medidas, m] }));
     setPeso("");
     setComprimento("");
@@ -131,7 +167,7 @@ function Crescimento({ dados, atualizar }: { dados: Dados; atualizar: Atualizar 
             return (
               <div key={m.id} className="linha" style={{ borderTop: "1px solid var(--line)", paddingTop: 8 }}>
                 <span>
-                  <b>{dataBr(m.data)}</b>
+                  <b>{dataBr(m.data)}</b>{m.origem === "consulta" && <span className="chip" style={{ marginLeft: 6 }}>consulta</span>}
                   <span className="muted pequeno" style={{ display: "block" }}>
                     {m.pesoKg !== undefined && `${m.pesoKg.toLocaleString("pt-BR")} kg${naCurva ? ` (${descreverPercentil(percentil(c.sexo, "peso", meses, m.pesoKg))})` : ""}`}
                     {m.pesoKg !== undefined && m.comprimentoCm !== undefined && " · "}
@@ -142,7 +178,7 @@ function Crescimento({ dados, atualizar }: { dados: Dados; atualizar: Atualizar 
               </div>
             );
           })}
-          <p className="muted pequeno">Fora da faixa esperada não quer dizer doença: mostre a curva ao pediatra na próxima consulta.</p>
+          {modo.quem === "familia" && <p className="muted pequeno">Fora da faixa esperada não quer dizer doença: mostre a curva ao pediatra na próxima consulta.</p>}
         </div>
       )}
       <p className="fontes">Curvas: padrões de crescimento da OMS (2006), do nascimento aos 2 anos.</p>
@@ -209,7 +245,7 @@ function Grafico({ sexo, indicador, nascimento, medidas }: { sexo: Sexo; indicad
   );
 }
 
-function Diario({ dados, atualizar }: { dados: Dados; atualizar: Atualizar }) {
+function Diario({ dados, atualizar, modo }: { dados: Dados; atualizar: Atualizar; modo: ModoCaderneta }) {
   const hoje = hojeIso();
   const contagem = contarHoje(dados.diario, hoje);
   const registrar = (tipo: TipoRegistro) =>
@@ -219,6 +255,9 @@ function Diario({ dados, atualizar }: { dados: Dados; atualizar: Atualizar }) {
 
   return (
     <>
+      {modo.quem === "medico" ? (
+        <ResumoDiario diario={dados.diario} />
+      ) : (
       <div className="card">
         <h3>Registrar agora</h3>
         <div className="grade4">
@@ -231,6 +270,7 @@ function Diario({ dados, atualizar }: { dados: Dados; atualizar: Atualizar }) {
         </div>
         <p className="muted pequeno">Números de hoje. A partir do quinto dia de vida, seis ou mais fraldas bem molhadas por dia é um bom sinal de que o bebê está mamando o suficiente.</p>
       </div>
+      )}
       {recentes.length > 0 && (
         <div className="card">
           <h3>Últimos registros</h3>
@@ -239,12 +279,42 @@ function Diario({ dados, atualizar }: { dados: Dados; atualizar: Atualizar }) {
             return (
               <div key={r.id} className="linha" style={{ borderTop: "1px solid var(--line)", paddingTop: 6 }}>
                 <span>{ROTULOS_REGISTRO[r.tipo]} <span className="muted pequeno">· {dataBr(hojeIso(d))} {d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span></span>
-                <button className="icone-btn" aria-label="Apagar registro" onClick={() => apagar(r.id)}>✕</button>
+                {modo.quem === "familia" && <button className="icone-btn" aria-label="Apagar registro" onClick={() => apagar(r.id)}>✕</button>}
               </div>
             );
           })}
         </div>
       )}
     </>
+  );
+}
+
+/** Para o médico: média por dia nos últimos 7 dias. */
+function ResumoDiario({ diario }: { diario: Registro[] }) {
+  const hoje = hojeIso();
+  const dias = Array.from({ length: 7 }, (_, i) => hojeIso(new Date(Date.now() - i * 86400_000)));
+  const conta: Record<TipoRegistro, number> = { mamada: 0, xixi: 0, coco: 0, sono: 0 };
+  let comRegistro = 0;
+  for (const d of dias) {
+    const c = contarHoje(diario, d);
+    if (Object.values(c).some((n) => n > 0)) comRegistro++;
+    for (const t of Object.keys(conta) as TipoRegistro[]) conta[t] += c[t];
+  }
+  return (
+    <div className="card">
+      <h3>Últimos 7 dias</h3>
+      {comRegistro === 0 ? (
+        <p className="muted">A família não registrou nada nesta semana.</p>
+      ) : (
+        <>
+          <div className="grade4">
+            {(Object.keys(ROTULOS_REGISTRO) as TipoRegistro[]).map((t) => (
+              <div key={t} className="contador"><b>{(conta[t] / comRegistro).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}</b><span>{ROTULOS_REGISTRO[t]}/dia</span></div>
+            ))}
+          </div>
+          <p className="muted pequeno">Média nos {comRegistro} {comRegistro === 1 ? "dia" : "dias"} com registro (até {dataBr(hoje)}).</p>
+        </>
+      )}
+    </div>
   );
 }

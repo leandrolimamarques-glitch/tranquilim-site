@@ -5,7 +5,7 @@ import { descreverPercentil, IDADE_MAXIMA_CURVA_MESES, percentil } from "../lib/
 import type { Atualizar, Dados, TipoRegistro } from "../lib/store";
 import { novoId } from "../lib/store";
 import { situacaoDasVacinas } from "../lib/vacinas";
-import { TRILHAS } from "../conteudo/trilhas";
+import { trilhasDaIdade } from "../conteudo";
 import { contarHoje, ROTULOS_REGISTRO } from "./Caderneta";
 import { linhaRegistro, linkLigar, linkWhatsApp } from "../lib/convite";
 
@@ -16,7 +16,7 @@ export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar:
   const vacinas = situacaoDasVacinas(c.nascimento, hoje, new Set(dados.vacinasAplicadas));
   const pendentes = vacinas.filter((v) => v.situacao === "pendente");
   const proximas = vacinas.filter((v) => v.situacao === "proxima");
-  const trilha = TRILHAS.find((t) => meses >= t.deMeses && meses <= t.ateMeses);
+  const trilha = trilhasDaIdade(meses).find((t) => t.aulas.some((a) => !dados.aulasVistas.includes(a.id))) ?? trilhasDaIdade(meses)[0];
   const vistas = trilha ? trilha.aulas.filter((a) => dados.aulasVistas.includes(a.id)).length : 0;
   const ultimaComPeso = [...dados.medidas].filter((m) => m.pesoKg).sort((a, b) => b.data.localeCompare(a.data))[0];
   const mesesMedida = ultimaComPeso ? idadeEmMesesDecimal(c.nascimento, ultimaComPeso.data) : -1;

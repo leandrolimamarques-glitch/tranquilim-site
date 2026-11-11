@@ -20,7 +20,7 @@ const leituraFalsa: LeituraCarteira = {
 
 beforeAll(async () => {
   banco = await bancoMemoria();
-  expect(await migrar(banco)).toBe(1);
+  expect(await migrar(banco)).toBe(2);
   expect(await migrar(banco)).toBe(0);
   const app = criarApp({ banco, cookieSeguro: false, cadastroAberto: true, leitor: async () => (leituras++, leituraFalsa) });
   servidor = app.listen(0);

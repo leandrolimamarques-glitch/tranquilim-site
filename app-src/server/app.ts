@@ -29,6 +29,8 @@ const MIMES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 const token = (n = 24) => randomBytes(n).toString("base64url");
 const iso = (v: unknown) => (v instanceof Date ? v.toISOString() : typeof v === "string" ? v : null);
+/** jsonb pode chegar como texto (registros antigos gravados entre aspas): devolve sempre o objeto. */
+const comoJson = <T>(v: unknown): T => (typeof v === "string" ? (JSON.parse(v) as T) : (v as T));
 const texto = (v: unknown, max: number) => (typeof v === "string" ? v.trim().replace(/\s+/g, " ").slice(0, max) : "");
 
 class Erro extends Error {
@@ -116,21 +118,22 @@ export function criarApp(o: Opcoes) {
   // ---------- documentos sincronizados ----------
   async function lerDoc(chave: string): Promise<Doc> {
     const [r] = await banco.q<{ doc: Doc }>(`select doc from documentos where chave = $1`, [chave]);
-    return r?.doc ?? {};
+    return r?.doc ? comoJson<Doc>(r.doc) : {};
   }
 
   async function juntarDoc(chave: string, entrada: Doc): Promise<Doc> {
     for (let tentativa = 0; tentativa < 6; tentativa++) {
       const [r] = await banco.q<{ doc: Doc; versao: number }>(`select doc, versao from documentos where chave = $1`, [chave]);
-      const junto = juntarDocs(r?.doc ?? {}, entrada);
-      if (r && JSON.stringify(junto) === JSON.stringify(r.doc)) return junto;
+      const atual = r ? comoJson<Doc>(r.doc) : {};
+      const junto = juntarDocs(atual, entrada);
+      if (r && JSON.stringify(junto) === JSON.stringify(atual) && typeof r.doc !== "string") return junto;
       const linhas = r
-        ? await banco.q(`update documentos set doc = $1::jsonb, versao = versao + 1, atualizado_em = now() where chave = $2 and versao = $3 returning chave`, [
+        ? await banco.q(`update documentos set doc = $1::text::jsonb, versao = versao + 1, atualizado_em = now() where chave = $2 and versao = $3 returning chave`, [
             JSON.stringify(junto),
             chave,
             r.versao,
           ])
-        : await banco.q(`insert into documentos (chave, doc) values ($1, $2::jsonb) on conflict (chave) do nothing returning chave`, [chave, JSON.stringify(junto)]);
+        : await banco.q(`insert into documentos (chave, doc) values ($1, $2::text::jsonb) on conflict (chave) do nothing returning chave`, [chave, JSON.stringify(junto)]);
       if (linhas.length) return junto;
     }
     throw new Erro(409, "Muitas mudanças ao mesmo tempo. Tente de novo.");
@@ -255,7 +258,7 @@ export function criarApp(o: Opcoes) {
     const hoje = hojeIso();
     return {
       pacientes: linhas.map((p) => {
-        const vista = docParaVista((p.doc as Doc) ?? {});
+        const vista = docParaVista(p.doc ? comoJson<Doc>(p.doc) : {});
         const vacinas = situacaoDasVacinas(String(p.nascimento), hoje, new Set(vista.vacinasAplicadas));
         const ultima = vista.medidas[vista.medidas.length - 1];
         const ultimoDiario = vista.diario[0];
@@ -406,7 +409,7 @@ export function criarApp(o: Opcoes) {
     try {
       if (!o.leitor) throw new Error("Leitura automática não configurada.");
       const leitura = await o.leitor({ mime, bytes }, { nascimento });
-      await banco.q(`update carteiras set leitura = $1::jsonb, erro = null where id = $2 and paciente_id = $3`, [JSON.stringify(leitura), id, pacienteId]);
+      await banco.q(`update carteiras set leitura = $1::text::jsonb, erro = null where id = $2 and paciente_id = $3`, [JSON.stringify(leitura), id, pacienteId]);
     } catch (e) {
       console.error("leitura da carteira falhou", e);
       await banco.q(`update carteiras set erro = $1 where id = $2`, [e instanceof Error ? e.message.slice(0, 200) : "Falha na leitura.", id]);
@@ -426,7 +429,7 @@ export function criarApp(o: Opcoes) {
   app.get("/api/carteira", rota(async (req) => {
     const alvo = await pacienteDaRequisicao(req);
     const linhas = await banco.q<Record<string, unknown>>(`select id, enviado_por, mime, tamanho, leitura, erro, criado_em from carteiras where paciente_id = $1 order by criado_em desc`, [alvo.id]);
-    return { carteiras: linhas.map((c) => ({ id: c.id, enviadoPor: c.enviado_por, mime: c.mime, tamanho: c.tamanho, leitura: c.leitura ?? null, erro: c.erro ?? null, criadoEm: iso(c.criado_em) })) };
+    return { carteiras: linhas.map((c) => ({ id: c.id, enviadoPor: c.enviado_por, mime: c.mime, tamanho: c.tamanho, leitura: c.leitura ? comoJson(c.leitura) : null, erro: c.erro ?? null, criadoEm: iso(c.criado_em) })) };
   }));
 
   app.get("/api/carteira/:id/arquivo", async (req, res, next) => {

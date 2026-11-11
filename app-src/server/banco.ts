@@ -81,6 +81,9 @@ const MIGRACOES: string[] = [
      criado_em timestamptz not null default now()
    );
    create index carteiras_paciente on carteiras(paciente_id);`,
+  // O postgres-js gravava o JSON como texto entre aspas; desfaz nos registros já gravados.
+  `update documentos set doc = (doc #>> '{}')::jsonb where jsonb_typeof(doc) = 'string';
+   update carteiras set leitura = (leitura #>> '{}')::jsonb where leitura is not null and jsonb_typeof(leitura) = 'string'`,
 ];
 
 export async function migrar(banco: Banco): Promise<number> {

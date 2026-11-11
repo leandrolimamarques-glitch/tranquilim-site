@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { bancoPostgres, migrar } from "./banco";
 import { criarApp } from "./app";
 import { criarLeitorClaude } from "./leitura";
+import { criarAssistenteClaude } from "./pergunta";
 
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 
@@ -18,9 +19,11 @@ async function iniciar() {
   const leitor = chave ? criarLeitorClaude(chave, process.env.LLM_MODEL ?? "claude-opus-5-5", esforco) : undefined;
   if (!leitor) console.warn("LLM_API_KEY ausente: leitura de carteira desligada.");
 
+  const assistente = chave ? criarAssistenteClaude(chave, process.env.LLM_MODELO_ASSISTENTE ?? "claude-haiku-5-5") : undefined;
   const app = criarApp({
     banco,
     leitor,
+    assistente,
     cookieSeguro: process.env.NODE_ENV === "production",
     pastaPublica: path.join(aqui, "public"),
     cadastroAberto: process.env.CADASTRO_ABERTO !== "0",

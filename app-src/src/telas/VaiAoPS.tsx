@@ -7,8 +7,8 @@ import type { Dados } from "../lib/store";
 
 const ROTULO_NIVEL = { ps: "Agora", hoje: "Hoje", casa: "Em casa" } as const;
 
-export function VaiAoPS({ dados }: { dados: Dados }) {
-  const [fluxo, setFluxo] = useState<Fluxo | null>(null);
+export function VaiAoPS({ dados, fluxoInicial }: { dados: Dados; fluxoInicial?: string | null }) {
+  const [fluxo, setFluxo] = useState<Fluxo | null>(() => FLUXOS.find((f) => f.id === fluxoInicial) ?? null);
 
   if (fluxo) return <Executar fluxo={fluxo} sair={() => setFluxo(null)} medico={dados.medico} nomeCrianca={dados.crianca?.nome ?? ""} />;
 

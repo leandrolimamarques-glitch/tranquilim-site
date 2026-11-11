@@ -55,6 +55,13 @@ export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar:
         </div>
       )}
 
+      {dados.vinculo && (
+        <button className="card" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => navegar("pergunta")}>
+          <h3>Pergunte ao Tranquilim</h3>
+          <p className="muted">Dúvida de amamentação, sono, comida, desenvolvimento? Escreva aqui.</p>
+        </button>
+      )}
+
       <button className="card" style={{ textAlign: "left", cursor: "pointer", borderWidth: 2, borderColor: "var(--noite)" }} onClick={() => navegar("ps")}>
         <div className="linha">
           <h2>Vai ao PS, liga ou espera?</h2>

@@ -5,15 +5,19 @@ import path from "node:path";
 import bcrypt from "bcryptjs";
 import type { Banco } from "./banco";
 import type { LeitorCarteira } from "./leitura";
+import { ehEmergencia, RESPOSTA_EMERGENCIA, type Assistente } from "./pergunta";
 import { docValido, juntarDocs, type Doc } from "../src/lib/sinc";
 import { docInicial, docParaVista, type Crianca } from "../src/lib/familia";
 import { situacaoDasVacinas } from "../src/lib/vacinas";
-import { hojeIso } from "../src/lib/idade";
+import { hojeIso, idadeTexto } from "../src/lib/idade";
 import { dataValida, telefoneBr } from "../src/lib/convite";
 
 export type Opcoes = {
   banco: Banco;
   leitor?: LeitorCarteira;
+  assistente?: Assistente;
+  /** Perguntas por criança por dia. */
+  limitePerguntas?: number;
   cookieSeguro: boolean;
   pastaPublica?: string;
   cadastroAberto: boolean;
@@ -449,6 +453,29 @@ export function criarApp(o: Opcoes) {
     const alvo = await pacienteDaRequisicao(req);
     await banco.q(`delete from carteiras where id = $1 and paciente_id = $2`, [req.params.id, alvo.id]);
     return { ok: true };
+  }));
+
+  // ---------- Pergunte ao Tranquilim ----------
+  app.post("/api/pergunta", json, rota(async (req) => {
+    const alvo = await pacienteDaRequisicao(req);
+    const pergunta = texto((req.body as { pergunta?: unknown })?.pergunta, 500);
+    if (pergunta.length < 3) throw new Erro(400, "Escreva a sua dúvida.");
+    const [{ n }] = await banco.q<{ n: number }>(`select count(*)::int as n from perguntas where paciente_id = $1 and criado_em > now() - interval '1 day'`, [alvo.id]);
+    if (Number(n) >= (o.limitePerguntas ?? 20)) throw new Erro(429, "Chegou ao limite de perguntas de hoje. Para dúvidas sobre a criança, fale com o consultório.");
+    let r = RESPOSTA_EMERGENCIA;
+    if (!ehEmergencia(pergunta)) {
+      if (!o.assistente) throw new Erro(503, "O assistente não está ligado agora.");
+      const [p] = await banco.q<{ nome: string; nascimento: string }>(`select nome, nascimento::text as nascimento from pacientes where id = $1`, [alvo.id]);
+      r = await o.assistente(pergunta, { nome: p.nome, idadeTexto: idadeTexto(p.nascimento, hojeIso()) });
+    }
+    await banco.q(`insert into perguntas (id, paciente_id, pergunta, tipo, resposta, fluxo) values ($1,$2,$3,$4,$5,$6)`, [randomUUID(), alvo.id, pergunta, r.tipo, r.resposta, r.fluxo]);
+    return r;
+  }));
+
+  app.get("/api/perguntas", rota(async (req) => {
+    const alvo = await pacienteDaRequisicao(req);
+    const linhas = await banco.q<Record<string, unknown>>(`select pergunta, tipo, resposta, fluxo, criado_em from perguntas where paciente_id = $1 order by criado_em desc limit 50`, [alvo.id]);
+    return { perguntas: linhas.map((l) => ({ pergunta: l.pergunta, tipo: l.tipo, resposta: l.resposta, fluxo: l.fluxo, criadoEm: iso(l.criado_em) })) };
   }));
 
   app.use("/api", (_req, _res, next) => next(new Erro(404, "Rota não encontrada.")));

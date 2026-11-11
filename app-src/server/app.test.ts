@@ -20,7 +20,7 @@ const leituraFalsa: LeituraCarteira = {
 
 beforeAll(async () => {
   banco = await bancoMemoria();
-  expect(await migrar(banco)).toBe(2);
+  expect(await migrar(banco)).toBe(3);
   expect(await migrar(banco)).toBe(0);
   const app = criarApp({ banco, cookieSeguro: false, cadastroAberto: true, leitor: async () => (leituras++, leituraFalsa) });
   servidor = app.listen(0);
@@ -150,5 +150,39 @@ describe("servidor", () => {
   it("sair encerra a sessão", async () => {
     await medico("POST", "/api/sair", { tipo: "medico" });
     expect((await medico("GET", "/api/medico/eu")).status).toBe(401);
+  });
+});
+
+describe("assistente", () => {
+  it("emergência não passa pela IA, dose escapada vira pediatra, limite por dia", async () => {
+    const { ehEmergencia, validarResposta, corpoDeReferencia } = await import("./pergunta");
+    expect(ehEmergencia("meu filho está roxo e não respira")).toBe(true);
+    expect(ehEmergencia("Ele engoliu uma pilha de relógio")).toBe(true);
+    expect(ehEmergencia("como fazer introdução alimentar")).toBe(false);
+    expect(validarResposta({ tipo: "orientacao", resposta: "Dê 10 gotas de dipirona", fluxo: "" }).tipo).toBe("medico");
+    expect(validarResposta({ tipo: "fluxo", resposta: "Veja o fluxo.", fluxo: "inventado" }).fluxo).toBe("");
+    expect(corpoDeReferencia()).toContain("Engasgo");
+
+    let chamadas = 0;
+    const b2 = await bancoMemoria();
+    await migrar(b2);
+    const app = criarApp({ banco: b2, cookieSeguro: false, cadastroAberto: true, limitePerguntas: 2, assistente: async () => (chamadas++, { tipo: "orientacao", resposta: "ok", fluxo: "" }) });
+    const s = app.listen(0);
+    const antigo = base;
+    base = `http://127.0.0.1:${(s.address() as AddressInfo).port}`;
+    const m = navegador();
+    const f = navegador();
+    await m("POST", "/api/medico/cadastro", { ...PERFIL, email: "x@y.com", senha: "segredo123" });
+    const { corpo } = await m("POST", "/api/medico/pacientes", { crianca: { nome: "Lia", nascimento: "2026-01-01", sexo: "menina" } });
+    const conv = (await m("GET", "/api/medico/pacientes")).corpo.pacientes[0].convite;
+    await f("POST", `/api/convite/${conv}/aceitar`, { consentimento: true });
+    expect((await f("POST", "/api/pergunta", { pergunta: "ela convulsionou agora" })).corpo.tipo).toBe("emergencia");
+    expect(chamadas).toBe(0);
+    expect((await f("POST", "/api/pergunta", { pergunta: "quando começar a papinha?" })).corpo.resposta).toBe("ok");
+    expect((await f("POST", "/api/pergunta", { pergunta: "mais uma" })).status).toBe(429);
+    expect((await m("GET", `/api/perguntas?paciente=${corpo.id}`)).corpo.perguntas).toHaveLength(2);
+    s.close();
+    base = antigo;
+    await b2.fechar();
   });
 });

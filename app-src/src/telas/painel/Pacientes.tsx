@@ -285,6 +285,8 @@ function VerPaciente({ p, medico, financeiro, ir, recarregar }: { p: PacienteRes
         ))}
       </div>
 
+      <PerguntasDaFamilia pacienteId={p.id} />
+
       <div className="grade2">
         <button className="btn sec" onClick={() => ir({ t: "editar", id: p.id })}>Editar</button>
         <button className="btn contorno" onClick={() => setRemovendo(true)}>Remover</button>
@@ -300,5 +302,25 @@ function VerPaciente({ p, medico, financeiro, ir, recarregar }: { p: PacienteRes
         </div>
       )}
     </>
+  );
+}
+
+function PerguntasDaFamilia({ pacienteId }: { pacienteId: string }) {
+  const [lista, setLista] = useState<{ pergunta: string; tipo: string; resposta: string; criadoEm: string }[] | null>(null);
+  useEffect(() => {
+    api.get<{ perguntas: NonNullable<typeof lista> }>(`/api/perguntas?paciente=${pacienteId}`).then((r) => setLista(r.perguntas)).catch(() => setLista([]));
+  }, [pacienteId]);
+  if (!lista || lista.length === 0) return null;
+  const ROT: Record<string, string> = { orientacao: "respondida", fluxo: "mandada ao Vai ao PS", medico: "encaminhada a você", emergencia: "192", fora: "fora do conteúdo" };
+  return (
+    <div className="card">
+      <h3>Perguntas da família</h3>
+      {lista.slice(0, 10).map((q, i) => (
+        <div key={i} style={{ borderTop: "1px solid var(--line)", paddingTop: 6 }}>
+          <div className="linha"><b style={{ fontWeight: 600 }}>{q.pergunta}</b><span className={`chip ${q.tipo === "medico" || q.tipo === "emergencia" ? "pendente" : ""}`}>{ROT[q.tipo] ?? q.tipo}</span></div>
+          <p className="muted pequeno">{dataBr(q.criadoEm.slice(0, 10))} · {q.resposta}</p>
+        </div>
+      ))}
+    </div>
   );
 }

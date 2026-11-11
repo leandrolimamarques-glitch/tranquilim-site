@@ -8,11 +8,12 @@ import { Caderneta, type SecaoCaderneta } from "./telas/Caderneta";
 import { Ajustes } from "./telas/Ajustes";
 import { Painel } from "./telas/painel/Painel";
 import { Convite } from "./telas/Convite";
+import { Pergunta } from "./telas/Pergunta";
 import { extrairCodigo, ROTA_PAINEL } from "./lib/convite";
 
-export type Aba = "inicio" | "ps" | "trilhas" | "caderneta" | "ajustes";
+export type Aba = "inicio" | "ps" | "trilhas" | "caderneta" | "ajustes" | "pergunta";
 
-export type Navegar = (aba: Aba, opcoes?: { secao?: SecaoCaderneta }) => void;
+export type Navegar = (aba: Aba, opcoes?: { secao?: SecaoCaderneta; fluxo?: string }) => void;
 
 const ABAS: { id: Aba; rotulo: string; icone: string }[] = [
   { id: "inicio", rotulo: "Início", icone: "⌂" },
@@ -22,7 +23,18 @@ const ABAS: { id: Aba; rotulo: string; icone: string }[] = [
 ];
 
 function useHash(): [string, () => void] {
-  const [hash, setHash] = useState(() => location.hash);
+  // App instalado no iPhone abre sempre em "/": quem usa o painel volta direto para ele.
+  const [hash, setHash] = useState(() => {
+    if (location.hash) return location.hash;
+    let painel = false;
+    try {
+      painel = localStorage.getItem("tq:abrir") === "painel";
+    } catch {
+      // sem armazenamento
+    }
+    if (painel) history.replaceState(null, "", "#/pediatra");
+    return painel ? "#/pediatra" : "";
+  });
   useEffect(() => {
     const ouvir = () => setHash(location.hash);
     window.addEventListener("hashchange", ouvir);
@@ -41,17 +53,24 @@ export function App() {
   const [hash, limparHash] = useHash();
   const [aba, setAba] = useState<Aba>("inicio");
   const [secao, setSecao] = useState<SecaoCaderneta>("vacinas");
+  const [fluxoInicial, setFluxoInicial] = useState<string | null>(null);
 
   const navegar: Navegar = (destino, opcoes) => {
     if (opcoes?.secao) setSecao(opcoes.secao);
+    setFluxoInicial(opcoes?.fluxo ?? null);
     setAba(destino);
     window.scrollTo(0, 0);
   };
 
   if (hash.startsWith(ROTA_PAINEL)) {
+    try {
+      localStorage.setItem("tq:abrir", "painel");
+    } catch {
+      // sem armazenamento
+    }
     return (
       <div className="app">
-        <Painel sair={limparHash} />
+        <Painel sair={() => { try { localStorage.removeItem("tq:abrir"); } catch { /* nada */ } limparHash(); }} />
       </div>
     );
   }
@@ -83,7 +102,8 @@ export function App() {
     <div className="app">
       <main className="conteudo">
         {aba === "inicio" && <Inicio dados={dados} atualizar={atualizar} navegar={navegar} />}
-        {aba === "ps" && <VaiAoPS dados={dados} />}
+        {aba === "ps" && <VaiAoPS key={fluxoInicial ?? "lista"} dados={dados} fluxoInicial={fluxoInicial} />}
+        {aba === "pergunta" && <Pergunta dados={dados} navegar={navegar} />}
         {aba === "trilhas" && <Trilhas dados={dados} atualizar={atualizar} />}
         {aba === "caderneta" && <Caderneta dados={dados} atualizar={atualizar} secao={secao} setSecao={setSecao} modo={{ quem: "familia", carteira: !!dados.vinculo }} />}
         {aba === "ajustes" && <Ajustes dados={dados} atualizar={atualizar} navegar={navegar} controle={controle} />}

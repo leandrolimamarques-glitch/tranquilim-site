@@ -50,7 +50,7 @@ export function Pergunta({ dados, navegar }: { dados: Dados; navegar: Navegar })
     <>
       <button className="voltar" onClick={() => navegar("inicio")}>‹ Início</button>
       <h1 style={{ fontSize: 28 }}>Pergunte ao Tranquilim</h1>
-      <p className="muted">Respostas tiradas só do conteúdo revisado do app. Remédio, dose e diagnóstico ficam com o seu pediatra. Em emergência, ligue 192.</p>
+      <p className="muted">Respostas com base nas orientações do app e das sociedades de pediatria. Remédio, dose e diagnóstico ficam com o seu pediatra. Em emergência, ligue 192.</p>
       <div className="card">
         <textarea className="area-texto" rows={3} maxLength={500} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder={`Sua dúvida sobre ${dados.crianca?.nome ?? "a criança"}`} />
         {erro && <p className="pequeno" style={{ color: "var(--ps)" }}>{erro}</p>}

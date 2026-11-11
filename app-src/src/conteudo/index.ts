@@ -24,3 +24,5 @@ export const TRILHAS: readonly Trilha[] = [PRIMEIROS_DIAS, AMAMENTACAO, SONO_SEG
 export function trilhasDaIdade(meses: number): Trilha[] {
   return TRILHAS.filter((t) => meses >= t.deMeses && meses <= t.ateMeses).sort((a, b) => a.ateMeses - a.deMeses - (b.ateMeses - b.deMeses));
 }
+
+export { DICAS } from "./dicas";

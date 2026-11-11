@@ -9,6 +9,7 @@ import { ehEmergencia, RESPOSTA_EMERGENCIA, type Assistente } from "./pergunta";
 import { docValido, juntarDocs, type Doc } from "../src/lib/sinc";
 import { docInicial, docParaVista, type Crianca } from "../src/lib/familia";
 import { situacaoDasVacinas } from "../src/lib/vacinas";
+import { alertasDaCrianca } from "../src/lib/alertas";
 import { hojeIso, idadeTexto } from "../src/lib/idade";
 import { dataValida, telefoneBr } from "../src/lib/convite";
 
@@ -276,6 +277,7 @@ export function criarApp(o: Opcoes) {
           ativadoEm: iso(p.ativado_em),
           criadoEm: iso(p.criado_em),
           atualizadoEm: iso(p.atualizado_em),
+          alertas: p.ativado_em ? alertasDaCrianca({ ...vista, crianca: { nome: String(p.nome), nascimento: String(p.nascimento), sexo: p.sexo as "menina" | "menino" } }, hoje) : [],
           resumo: {
             vacinasPendentes: vacinas.filter((v) => v.situacao === "pendente").length,
             vacinasConfirmadas: vista.vacinasAplicadas.length,

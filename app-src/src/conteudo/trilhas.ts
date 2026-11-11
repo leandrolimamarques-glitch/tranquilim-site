@@ -1,4 +1,4 @@
-// Trilha 1: texto das aulas, a partir do roteiro de gravação revisado pelo pediatra.
+// Trilha de amamentação: texto das aulas (os vídeos entram depois).
 // Os vídeos entram quando a gravação for editada.
 // Fontes: Ministério da Saúde, Caderno de Atenção Básica nº 23 (2015) e Guia Alimentar
 // para Crianças Brasileiras Menores de 2 Anos (2019); Rede Brasileira de Bancos de
@@ -10,6 +10,10 @@ export type Aula = {
   gancho: string;
   pontos: string[];
   alerta: string;
+  /** Versão ultra simples (o que aparece primeiro): frases curtas, palavras do dia a dia. */
+  simples?: string[];
+  /** "Entender melhor": um pouco mais técnico, ainda em linguagem simples. Parágrafos. */
+  aprofundado?: string[];
 };
 
 export type Trilha = {

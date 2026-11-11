@@ -8,6 +8,7 @@ import { situacaoDasVacinas } from "../lib/vacinas";
 import { trilhasDaIdade } from "../conteudo";
 import { contarHoje, ROTULOS_REGISTRO } from "./Caderneta";
 import { linhaRegistro, linkLigar, linkWhatsApp } from "../lib/convite";
+import { alertasDaCrianca } from "../lib/alertas";
 
 export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar: Atualizar; navegar: Navegar }) {
   const c = dados.crianca!;
@@ -23,6 +24,7 @@ export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar:
   const pPeso = ultimaComPeso && mesesMedida >= 0 && mesesMedida <= IDADE_MAXIMA_CURVA_MESES ? percentil(c.sexo, "peso", mesesMedida, ultimaComPeso.pesoKg!) : null;
   const contagem = contarHoje(dados.diario, hoje);
 
+  const avisos = alertasDaCrianca(dados, hoje).filter((a) => a.nivel === "atencao" && a.id !== "vacinas");
   const registrar = (tipo: TipoRegistro) =>
     atualizar((d) => ({ ...d, diario: [{ id: novoId(), tipo, quando: new Date().toISOString() }, ...d.diario] }));
 
@@ -112,6 +114,13 @@ export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar:
         <p className="muted pequeno">Toque para registrar agora.</p>
       </div>
 
+      {avisos.length > 0 && (
+        <button className="card" style={{ textAlign: "left", cursor: "pointer", borderColor: "var(--hoje)", borderWidth: 2 }} onClick={() => navegar("caderneta", { secao: "crescimento" })}>
+          <h3>Vale conversar com {dados.medico ? dados.medico.nome : "o pediatra"}</h3>
+          {avisos.map((a) => <p key={a.id} className="muted">{a.texto}.</p>)}
+          <p className="muted pequeno">{dados.vinculo ? "O consultório também vê este aviso." : "Mostre a curva na próxima consulta."} Fora da curva não quer dizer doença, mas merece um olhar.</p>
+        </button>
+      )}
       <button className="card" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => navegar("caderneta", { secao: "crescimento" })}>
         <span className="muted pequeno" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Crescimento</span>
         {ultimaComPeso ? (

@@ -120,3 +120,6 @@ button { font: inherit; color: inherit; }
 .voltar { align-self: flex-start; border: 0; background: transparent; color: var(--muted); font-weight: 700; min-height: 44px; padding: 0; cursor: pointer; }
 .fontes { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; }
 .area-texto { width: 100%; font: inherit; border-radius: 12px; padding: 10px 12px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); resize: vertical; }
+.chips-rolagem { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin: 0 -16px; padding-left: 16px; padding-right: 16px; scrollbar-width: none; }
+.chip-filtro { flex: 0 0 auto; min-height: 40px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); padding: 6px 14px; font-weight: 700; font-size: 14px; cursor: pointer; }
+.chip-filtro.ativa { background: var(--noite); color: #F6EFE4; border-color: var(--noite); }

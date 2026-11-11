@@ -1,6 +1,6 @@
 import type { Fluxo } from "../lib/fluxo";
 
-// Febre: rascunho para revisão médica (Leandro e Chicão) antes de divulgar.
+// Febre.
 // Definição de febre e conduta em casa: SBP, Manejo da Febre Aguda (2021).
 // Sinais de alarme e de atenção: NICE NG143, tabela semáforo (2019, atualizada em 2021).
 

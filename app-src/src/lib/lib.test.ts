@@ -180,3 +180,20 @@ describe("sincronização", () => {
     expect(docValido([])).toBe(false);
   });
 });
+
+import { alertasDaCrianca } from "./alertas";
+describe("alertas para o pediatra", () => {
+  const base = { ...VISTA_VAZIA, crianca: { nome: "Bia", nascimento: "2026-01-01", sexo: "menina" as const } };
+  it("peso muito baixo e queda de percentil", () => {
+    const a = alertasDaCrianca({ ...base, vacinasAplicadas: [], medidas: [
+      { id: "1", data: "2026-03-01", pesoKg: 5.0 },
+      { id: "2", data: "2026-06-01", pesoKg: 5.2 },
+    ] }, "2026-06-10").map((x) => x.id);
+    expect(a).toContain("peso-baixo");
+    expect(a).toContain("peso-queda");
+    expect(a).toContain("vacinas");
+  });
+  it("sem medida vira aviso informativo", () => {
+    expect(alertasDaCrianca(base, "2026-06-10").find((x) => x.id === "sem-medida")?.nivel).toBe("info");
+  });
+});

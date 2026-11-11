@@ -18,7 +18,7 @@ export type Navegar = (aba: Aba, opcoes?: { secao?: SecaoCaderneta; fluxo?: stri
 const ABAS: { id: Aba; rotulo: string; icone: string }[] = [
   { id: "inicio", rotulo: "Início", icone: "⌂" },
   { id: "ps", rotulo: "Vai ao PS?", icone: "✚" },
-  { id: "trilhas", rotulo: "Trilhas", icone: "▶" },
+  { id: "trilhas", rotulo: "Aprender", icone: "▶" },
   { id: "caderneta", rotulo: "Caderneta", icone: "✓" },
 ];
 

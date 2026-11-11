@@ -22,6 +22,7 @@ export type PacienteResumo = {
   conviteEm: string | null;
   ativadoEm: string | null;
   atualizadoEm: string | null;
+  alertas: { id: string; nivel: "atencao" | "info"; texto: string }[];
   resumo: { vacinasPendentes: number; vacinasConfirmadas: number; ultimaMedida: Medida | null; ultimoDiario: string | null };
 };
 
@@ -72,10 +73,10 @@ function Lista({ lista, erro, ir }: { lista: PacienteResumo[] | null; erro: stri
   const visiveis = (lista ?? []).filter(
     (p) =>
       (!termo || `${p.crianca.nome} ${p.responsavel}`.toLocaleLowerCase("pt-BR").includes(termo)) &&
-      (filtro === "todos" || (filtro === "atrasadas" ? p.resumo.vacinasPendentes > 0 && !!p.ativadoEm : !p.ativadoEm)),
+      (filtro === "todos" || (filtro === "atrasadas" ? p.alertas.some((a) => a.nivel === "atencao") : !p.ativadoEm)),
   );
   const ativos = lista?.filter((p) => p.ativadoEm).length ?? 0;
-  const comAtraso = lista?.filter((p) => p.ativadoEm && p.resumo.vacinasPendentes > 0).length ?? 0;
+  const comAtraso = lista?.filter((p) => p.ativadoEm && p.alertas.some((a) => a.nivel === "atencao")).length ?? 0;
 
   return (
     <>
@@ -84,7 +85,7 @@ function Lista({ lista, erro, ir }: { lista: PacienteResumo[] | null; erro: stri
         <div className="grade4" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
           <div className="contador"><b>{lista.length}</b><span>cadastrados</span></div>
           <div className="contador"><b>{ativos}</b><span>usando o app</span></div>
-          <div className="contador"><b style={{ color: comAtraso ? "var(--ps)" : undefined }}>{comAtraso}</b><span>vacina a conferir</span></div>
+          <div className="contador"><b style={{ color: comAtraso ? "var(--ps)" : undefined }}>{comAtraso}</b><span>com aviso</span></div>
         </div>
       )}
       <button className="btn bloco" onClick={() => ir({ t: "novo" })}>+ Cadastrar paciente</button>
@@ -94,7 +95,7 @@ function Lista({ lista, erro, ir }: { lista: PacienteResumo[] | null; erro: stri
           <label className="campo">Buscar<input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Nome da criança ou do responsável" /></label>
           <div className="segmento">
             <button className={filtro === "todos" ? "ativa" : ""} onClick={() => setFiltro("todos")}>Todos</button>
-            <button className={filtro === "atrasadas" ? "ativa" : ""} onClick={() => setFiltro("atrasadas")}>Vacina</button>
+            <button className={filtro === "atrasadas" ? "ativa" : ""} onClick={() => setFiltro("atrasadas")}>Com aviso</button>
             <button className={filtro === "sem-convite" ? "ativa" : ""} onClick={() => setFiltro("sem-convite")}>Sem app</button>
           </div>
         </>
@@ -115,8 +116,8 @@ function Lista({ lista, erro, ir }: { lista: PacienteResumo[] | null; erro: stri
               </span>
               {!p.ativadoEm ? (
                 <span className="chip pendente">{p.conviteEm ? "convidado" : "sem convite"}</span>
-              ) : p.resumo.vacinasPendentes > 0 ? (
-                <span className="chip" style={{ background: "var(--ps-soft)", color: "var(--ps)" }}>{p.resumo.vacinasPendentes} vacina{p.resumo.vacinasPendentes > 1 ? "s" : ""}</span>
+              ) : p.alertas.some((a) => a.nivel === "atencao") ? (
+                <span className="chip" style={{ background: "var(--ps-soft)", color: "var(--ps)" }}>{p.alertas.filter((a) => a.nivel === "atencao").length} aviso{p.alertas.filter((a) => a.nivel === "atencao").length > 1 ? "s" : ""}</span>
               ) : (
                 <span className="chip aplicada">em dia</span>
               )}
@@ -285,6 +286,12 @@ function VerPaciente({ p, medico, financeiro, ir, recarregar }: { p: PacienteRes
         ))}
       </div>
 
+      {p.alertas.length > 0 && (
+        <div className="card" style={{ borderColor: p.alertas.some((a) => a.nivel === "atencao") ? "var(--ps)" : "var(--line)" }}>
+          <h3>Avisos</h3>
+          {p.alertas.map((a) => <p key={a.id} className={a.nivel === "info" ? "muted" : ""}>{a.nivel === "atencao" ? "● " : "○ "}{a.texto}</p>)}
+        </div>
+      )}
       <PerguntasDaFamilia pacienteId={p.id} />
 
       <div className="grade2">

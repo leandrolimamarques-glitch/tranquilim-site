@@ -3,6 +3,8 @@ import { Coruja } from "../Coruja";
 import { api } from "../lib/api";
 import { Sobre } from "./Sobre";
 import { VaiAoPS } from "./VaiAoPS";
+import { CaixaAceite, Legal } from "./Legal";
+import { VERSAO_TERMOS } from "../conteudo/versao-termos";
 import { VISTA_VAZIA } from "../lib/familia";
 
 export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
@@ -12,15 +14,17 @@ export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
   const [enviando, setEnviando] = useState(false);
   const [sobre, setSobre] = useState(false);
   const [ps, setPs] = useState(false);
+  const [aceite, setAceite] = useState(false);
+  const [lendo, setLendo] = useState<"politica" | "termos" | null>(null);
   const campo = (k: keyof typeof f) => ({ value: f[k], onChange: (e: ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value }) });
-  const valido = f.email.includes("@") && f.senha.length >= 8 && (modo === "entrar" || f.nome.trim().length >= 2);
+  const valido = f.email.includes("@") && f.senha.length >= 8 && (modo === "entrar" || (f.nome.trim().length >= 2 && aceite));
 
   const enviar = async (e: FormEvent) => {
     e.preventDefault();
     setErro("");
     setEnviando(true);
     try {
-      await api.post(modo === "entrar" ? "/api/conta/entrar" : "/api/conta/cadastro", f);
+      await api.post(modo === "entrar" ? "/api/conta/entrar" : "/api/conta/cadastro", modo === "entrar" ? f : { ...f, aceite: VERSAO_TERMOS });
       aoEntrar();
     } catch (er) {
       setErro((er as Error).message);
@@ -29,6 +33,7 @@ export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
   };
 
   if (sobre) return <Sobre voltar={() => setSobre(false)} rotuloVoltar="Entrar" />;
+  if (lendo) return <Legal doc={lendo} voltar={() => setLendo(null)} rotuloVoltar={modo === "criar" ? "Criar conta" : "Entrar"} />;
   if (ps) {
     return (
       <>
@@ -56,11 +61,13 @@ export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
         {modo === "criar" && <label className="campo">Seu nome<input id="nome-conta" {...campo("nome")} autoComplete="name" /></label>}
         <label className="campo">E-mail<input id="email" {...campo("email")} type="email" autoComplete="email" inputMode="email" /></label>
         <label className="campo">Senha<input id="senha" {...campo("senha")} type="password" autoComplete={modo === "entrar" ? "current-password" : "new-password"} placeholder={modo === "criar" ? "pelo menos 8 caracteres" : ""} /></label>
+        {modo === "criar" && <CaixaAceite marcado={aceite} mudar={setAceite} abrir={setLendo} />}
         {erro && <p className="pequeno" style={{ color: "var(--ps)" }}>{erro}</p>}
         <button className="btn bloco" type="submit" disabled={!valido || enviando}>{enviando ? "Aguarde…" : modo === "entrar" ? "Entrar" : "Criar conta"}</button>
         {modo === "entrar" && <Esqueci emailInicial={f.email} />}
       </form>
       <button className="voltar" style={{ alignSelf: "center" }} onClick={() => setSobre(true)}>Quem somos ›</button>
+      <button className="voltar pequeno" style={{ alignSelf: "center" }} onClick={() => setLendo("politica")}>Política de privacidade</button>
       <a className="link-192" href="tel:192">Emergência: ligar 192</a>
     </>
   );

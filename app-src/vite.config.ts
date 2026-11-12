@@ -17,6 +17,8 @@ export default defineConfig({
       workbox: {
         // Rotas do servidor nunca caem no index.html do app (ex.: abrir a foto da carteira).
         navigateFallbackDenylist: [/^\/api\//],
+        // Fontes e ícones também ficam guardados para abrir sem internet.
+        globPatterns: ["**/*.{js,css,html,woff2,png,svg,webp}"],
       },
       manifest: {
         name: "Tranquilim",

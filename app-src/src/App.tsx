@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from "react";
-import { useCrianca, useSessao, type Atualizar, type CriancaDaConta, type Dados, type Sessao } from "./lib/store";
+import { esquecerSessaoLocal, useCrianca, useSessao, type Atualizar, type CriancaDaConta, type Dados, type Sessao } from "./lib/store";
 import { VISTA_VAZIA } from "./lib/familia";
 import { api } from "./lib/api";
 import { Entrar } from "./telas/Entrar";
@@ -14,6 +14,7 @@ import { Consultorio } from "./telas/painel/Consultorio";
 import { Coruja } from "./Coruja";
 import { Sobre } from "./telas/Sobre";
 import { Confirmar, Redefinir } from "./telas/Senha";
+import { PedirAceite } from "./telas/Legal";
 
 export type Aba = "inicio" | "ps" | "trilhas" | "caderneta" | "ajustes" | "pergunta" | "consultorio" | "sobre";
 export type Navegar = (aba: Aba, opcoes?: { secao?: SecaoCaderneta; fluxo?: string }) => void;
@@ -44,6 +45,18 @@ function ComSessao() {
     return (
       <div className="app">
         <main className="conteudo sem-abas"><Entrar aoEntrar={() => void recarregar()} /></main>
+      </div>
+    );
+  }
+  if (sessao.termos && !sessao.termos.aceito && !erro) {
+    return (
+      <div className="app">
+        <main className="conteudo sem-abas">
+          <PedirAceite
+            aceito={() => void recarregar()}
+            sair={() => void api.post("/api/conta/sair").catch(() => undefined).then(() => { esquecerSessaoLocal(); location.reload(); })}
+          />
+        </main>
       </div>
     );
   }

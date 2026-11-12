@@ -204,6 +204,18 @@ const MIGRACOES: string[] = [
      texto text not null,
      em timestamptz not null default now()
    )`,
+  // LGPD: aceite registrado; exclusão de conta apaga de vez. O que era só escondido
+  // (criança tirada por todos os responsáveis) é apagado agora.
+  `alter table contas add column consentimento_em timestamptz;
+   alter table contas add column consentimento_versao text;
+   alter table criancas alter column criado_por drop not null;
+   alter table carteiras alter column enviado_por drop not null;
+   delete from carteiras where crianca_id in (select id from criancas where removido_em is not null);
+   delete from perguntas where crianca_id in (select id from criancas where removido_em is not null);
+   delete from acompanhamentos where crianca_id in (select id from criancas where removido_em is not null);
+   delete from responsaveis where crianca_id in (select id from criancas where removido_em is not null);
+   delete from documentos where chave in (select 'crianca:' || id::text from criancas where removido_em is not null);
+   delete from criancas where removido_em is not null`,
 ];
 
 export async function migrar(banco: Banco): Promise<number> {

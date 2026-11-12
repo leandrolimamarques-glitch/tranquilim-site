@@ -24,7 +24,7 @@ export type ContaInfo = {
 };
 export type CriancaDaConta = { id: string; crianca: Crianca; pediatras: Pediatra[] };
 export type Pedido = { id: string; pediatra: Pediatra; criadoEm: string };
-export type Sessao = { conta: ContaInfo; criancas: CriancaDaConta[]; pedidos: Pedido[]; emailLigado?: boolean };
+export type Sessao = { conta: ContaInfo; criancas: CriancaDaConta[]; pedidos: Pedido[]; emailLigado?: boolean; termos?: { versao: string; aceito: boolean } };
 
 const CHAVE_SESSAO = "tq:sessao";
 

@@ -6,14 +6,16 @@ import { esquecerSessaoLocal, type CriancaDaConta, type Pediatra, type Sessao } 
 import { Onboarding } from "./Onboarding";
 import { Admin } from "./Admin";
 import { Sobre } from "./Sobre";
+import { Legal } from "./Legal";
 
 type Props = { sessao: Sessao; atual: CriancaDaConta | null; escolher: (id: string) => void; recarregar: () => Promise<void>; navegar: Navegar; novaCrianca: () => void };
 
 export function Ajustes({ sessao, atual, escolher, recarregar, navegar, novaCrianca }: Props) {
-  const [tela, setTela] = useState<"menu" | "admin" | "senha" | "sobre">("menu");
+  const [tela, setTela] = useState<"menu" | "admin" | "senha" | "sobre" | "politica" | "termos">("menu");
   if (tela === "admin") return <Admin voltar={() => setTela("menu")} euId={sessao.conta.id} />;
   if (tela === "senha") return <TrocarSenha voltar={() => setTela("menu")} />;
   if (tela === "sobre") return <Sobre voltar={() => setTela("menu")} rotuloVoltar="Ajustes" />;
+  if (tela === "politica" || tela === "termos") return <Legal doc={tela} voltar={() => setTela("menu")} rotuloVoltar="Ajustes" />;
   const sair = async () => {
     await api.post("/api/conta/sair").catch(() => undefined);
     esquecerSessaoLocal();
@@ -57,6 +59,8 @@ export function Ajustes({ sessao, atual, escolher, recarregar, navegar, novaCria
       )}
 
       <Sugestao />
+
+      <SeusDados abrir={setTela} ehDono={sessao.conta.dono} />
 
       <button className="card" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => setTela("sobre")}>
         <h3>Quem somos</h3>
@@ -129,7 +133,7 @@ function CriancaAtual({ k, recarregar }: { k: CriancaDaConta; recarregar: () => 
           <button className="btn contorno bloco" onClick={() => setRemovendo(true)}>Tirar {nome} desta conta</button>
         ) : (
           <>
-            <p className="muted">{nome} sai da sua conta. Se ninguém mais for responsável, os registros deixam de aparecer para todos.</p>
+            <p className="muted">{nome} sai da sua conta. Se ninguém mais for responsável, os registros de {nome} são apagados de vez.</p>
             <div className="grade2">
               <button className="btn sec" onClick={() => setRemovendo(false)}>Cancelar</button>
               <button className="btn ps" onClick={() => void api.del(`/api/criancas/${k.id}`).then(() => location.reload())}>Tirar</button>
@@ -221,6 +225,63 @@ function Sugestao() {
         </>
       )}
       {msg && <p className="pequeno" role="status">{msg}</p>}
+    </div>
+  );
+}
+
+function SeusDados({ abrir, ehDono }: { abrir: (t: "politica" | "termos") => void; ehDono: boolean }) {
+  const [baixando, setBaixando] = useState(false);
+  const [excluindo, setExcluindo] = useState(false);
+  const [senha, setSenha] = useState("");
+  const [msg, setMsg] = useState("");
+  const baixar = async () => {
+    setBaixando(true);
+    setMsg("");
+    try {
+      const dados = await api.get<unknown>("/api/conta/exportar");
+      const url = URL.createObjectURL(new Blob([JSON.stringify(dados, null, 2)], { type: "application/json" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `tranquilim-meus-dados-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (e) {
+      setMsg((e as Error).message);
+    }
+    setBaixando(false);
+  };
+  return (
+    <div className="card">
+      <h3>Privacidade e seus dados</h3>
+      <div className="grade2">
+        <button className="btn contorno" onClick={() => abrir("politica")}>Política de privacidade</button>
+        <button className="btn contorno" onClick={() => abrir("termos")}>Termos de uso</button>
+      </div>
+      <button className="btn sec bloco" disabled={baixando} onClick={() => void baixar()}>{baixando ? "Preparando…" : "Baixar meus dados"}</button>
+      {!excluindo ? (
+        <button className="btn contorno bloco" onClick={() => { setExcluindo(true); setMsg(""); }}>Excluir minha conta</button>
+      ) : (
+        <>
+          <p className="muted">
+            Apaga a sua conta na hora. As crianças que não têm outro responsável são apagadas junto, com vacinas, medidas, diário, carteira e perguntas. Não dá para desfazer. Se quiser guardar uma cópia, toque antes em Baixar meus dados.
+            {ehDono ? " Como administrador, torne outra conta administradora antes." : ""}
+          </p>
+          <label className="campo">Sua senha, para confirmar<input type="password" value={senha} onChange={(e) => setSenha(e.target.value)} autoComplete="current-password" /></label>
+          <div className="grade2">
+            <button className="btn sec" onClick={() => { setExcluindo(false); setSenha(""); }}>Cancelar</button>
+            <button className="btn ps" disabled={!senha} onClick={async () => {
+              try {
+                await api.post("/api/conta/excluir", { senha });
+                esquecerSessaoLocal();
+                location.reload();
+              } catch (e) {
+                setMsg((e as Error).message);
+              }
+            }}>Excluir de vez</button>
+          </div>
+        </>
+      )}
+      {msg && <p className="pequeno" style={{ color: "var(--ps)" }}>{msg}</p>}
     </div>
   );
 }

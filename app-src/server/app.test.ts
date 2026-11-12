@@ -7,6 +7,7 @@ import type { LeituraCarteira } from "./leitura";
 import { ehEmergencia, validarResposta, corpoDeReferencia } from "./pergunta";
 import { gravar } from "../src/lib/sinc";
 import { docParaVista } from "../src/lib/familia";
+import { VERSAO_TERMOS } from "../src/conteudo/versao-termos";
 
 let banco: Banco;
 let servidor: Server;
@@ -70,17 +71,18 @@ describe("contas, crianças e pediatras", () => {
   let chicaoId = "";
 
   it("a primeira conta é o dono; as outras são família", async () => {
-    expect((await dono("POST", "/api/conta/cadastro", { nome: "Leandro", email: "dono@x.com", senha: "123" })).status).toBe(400);
-    expect((await dono("POST", "/api/conta/cadastro", { nome: "Leandro", email: "Dono@X.com", senha: "segredo123" })).status).toBe(200);
+    expect((await dono("POST", "/api/conta/cadastro", { nome: "Leandro", email: "dono@x.com", senha: "123", aceite: VERSAO_TERMOS })).status).toBe(400);
+    expect((await dono("POST", "/api/conta/cadastro", { nome: "Leandro", email: "dono@x.com", senha: "segredo123" })).status).toBe(400);
+    expect((await dono("POST", "/api/conta/cadastro", { nome: "Leandro", email: "Dono@X.com", senha: "segredo123", aceite: VERSAO_TERMOS })).status).toBe(200);
     const eu = (await dono("GET", "/api/conta")).corpo.conta;
     expect(eu.dono).toBe(true);
     expect(eu.pediatra).toBe(true);
-    await chicao("POST", "/api/conta/cadastro", { nome: "Chicão", email: "chicao@x.com", senha: "segredo123" });
+    await chicao("POST", "/api/conta/cadastro", { nome: "Chicão", email: "chicao@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
     const c = (await chicao("GET", "/api/conta")).corpo.conta;
     chicaoId = c.id;
     expect(c.dono).toBe(false);
     expect(c.pediatra).toBe(false);
-    expect((await chicao("POST", "/api/conta/cadastro", { nome: "Xavier", email: "chicao@x.com", senha: "segredo123" })).status).toBe(409);
+    expect((await chicao("POST", "/api/conta/cadastro", { nome: "Xavier", email: "chicao@x.com", senha: "segredo123", aceite: VERSAO_TERMOS })).status).toBe(409);
     expect((await estranho("POST", "/api/conta/entrar", { email: "chicao@x.com", senha: "errada123" })).status).toBe(401);
   });
 
@@ -95,7 +97,7 @@ describe("contas, crianças e pediatras", () => {
   });
 
   it("família cadastra criança e escolhe o pediatra da rede; ele passa a ver", async () => {
-    await mae("POST", "/api/conta/cadastro", { nome: "Mariana", email: "mae@x.com", senha: "segredo123" });
+    await mae("POST", "/api/conta/cadastro", { nome: "Mariana", email: "mae@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
     joao = (await mae("POST", "/api/criancas", { crianca: { nome: "João", nascimento: "2026-01-01", sexo: "menino" } })).corpo.id;
     expect((await mae("GET", "/api/conta")).corpo.criancas[0].crianca.nome).toBe("João");
     expect((await chicao("GET", `/api/criancas/${joao}/doc`)).status).toBe(404);
@@ -120,7 +122,7 @@ describe("contas, crianças e pediatras", () => {
   });
 
   it("pai entra como outro responsável; mãe, pai e pediatra escrevem juntos sem perder nada", async () => {
-    await pai("POST", "/api/conta/cadastro", { nome: "Paulo", email: "pai@x.com", senha: "segredo123" });
+    await pai("POST", "/api/conta/cadastro", { nome: "Paulo", email: "pai@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
     expect((await mae("POST", `/api/criancas/${joao}/responsaveis`, { email: "ninguem@x.com" })).status).toBe(404);
     await mae("POST", `/api/criancas/${joao}/responsaveis`, { email: "pai@x.com" });
     const t = Date.now();
@@ -225,7 +227,7 @@ describe("e-mail: confirmação e esqueci a senha", () => {
     base = `http://127.0.0.1:${(s.address() as AddressInfo).port}`;
     try {
       const a = navegador();
-      await a("POST", "/api/conta/cadastro", { nome: "Ana", email: "ana@x.com", senha: "segredo123" });
+      await a("POST", "/api/conta/cadastro", { nome: "Ana", email: "ana@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
       await new Promise((r) => setTimeout(r, 50));
       expect((await a("GET", "/api/conta")).corpo.conta.emailVerificado).toBe(false);
       const conf = caixa[0].texto.match(/#\/confirmar\/(\S+)/)![1];
@@ -247,5 +249,47 @@ describe("e-mail: confirmação e esqueci a senha", () => {
       base = antigo;
       await b2.fechar();
     }
+  });
+});
+
+describe("LGPD: aceite, cópia dos dados e exclusão", () => {
+  it("aceite fica registrado; exportar traz tudo; excluir apaga a criança sem outro responsável e preserva a compartilhada", async () => {
+    const dona = navegador();
+    const avo = navegador();
+    await dona("POST", "/api/conta/cadastro", { nome: "Beatriz", email: "bia@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
+    await avo("POST", "/api/conta/cadastro", { nome: "Vó Lurdes", email: "vo@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
+    const s = (await dona("GET", "/api/conta")).corpo;
+    expect(s.termos).toEqual({ versao: VERSAO_TERMOS, aceito: true });
+    const so = (await dona("POST", "/api/criancas", { crianca: { nome: "Lia", nascimento: "2025-01-10", sexo: "menina" } })).corpo.id;
+    const junta = (await dona("POST", "/api/criancas", { crianca: { nome: "Davi", nascimento: "2024-05-02", sexo: "menino" } })).corpo.id;
+    await dona("POST", `/api/criancas/${junta}/responsaveis`, { email: "vo@x.com" });
+    await dona("POST", "/api/pergunta?crianca=" + so, { pergunta: "Quando começa a papinha?" });
+
+    const exp = (await dona("GET", "/api/conta/exportar")).corpo;
+    expect(exp.conta.email).toBe("bia@x.com");
+    expect(exp.conta.consentimento_versao).toBe(VERSAO_TERMOS);
+    expect(exp.conta.senha_hash).toBeUndefined();
+    expect(exp.criancas.map((k: { nome: string }) => k.nome).sort()).toEqual(["Davi", "Lia"]);
+    expect(exp.criancas.find((k: { nome: string }) => k.nome === "Lia").perguntas.length).toBe(1);
+
+    expect((await dona("POST", "/api/conta/excluir", { senha: "errada" })).status).toBe(400);
+    expect((await dona("POST", "/api/conta/excluir", { senha: "segredo123" })).status).toBe(200);
+    expect((await dona("GET", "/api/conta")).status).toBe(401);
+    expect((await dona("POST", "/api/conta/entrar", { email: "bia@x.com", senha: "segredo123" })).status).toBe(401);
+    expect(await banco.q(`select 1 from criancas where id = $1`, [so])).toHaveLength(0);
+    expect(await banco.q(`select 1 from perguntas where crianca_id = $1`, [so])).toHaveLength(0);
+    const vo = (await avo("GET", "/api/conta")).corpo;
+    expect(vo.criancas.map((k: { crianca: { nome: string } }) => k.crianca.nome)).toEqual(["Davi"]);
+  });
+
+  it("o único administrador não exclui a própria conta; termos novos pedem novo aceite", async () => {
+    const d = navegador();
+    await d("POST", "/api/conta/entrar", { email: "dono@x.com", senha: "segredo123" });
+    expect((await d("POST", "/api/conta/excluir", { senha: "segredo123" })).status).toBe(400);
+    await banco.q(`update contas set consentimento_versao = 'antiga' where email = 'dono@x.com'`);
+    expect((await d("GET", "/api/conta")).corpo.termos.aceito).toBe(false);
+    expect((await d("POST", "/api/conta/consentimento", { versao: "antiga" })).status).toBe(400);
+    await d("POST", "/api/conta/consentimento", { versao: VERSAO_TERMOS });
+    expect((await d("GET", "/api/conta")).corpo.termos.aceito).toBe(true);
   });
 });

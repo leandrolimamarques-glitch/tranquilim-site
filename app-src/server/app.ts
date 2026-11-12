@@ -1,3 +1,4 @@
+import { VERSAO_TERMOS } from "../src/conteudo/versao-termos";
 import express, { type NextFunction, type Request, type Response } from "express";
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
@@ -29,7 +30,7 @@ export type Opcoes = {
   urlBase?: string;
 };
 
-type Conta = { id: string; email: string; nome: string; dono: boolean; pediatra: boolean; registro: string | null; titulo: string | null; whatsapp: string | null; telefone: string | null; local: string | null };
+type Conta = { id: string; email: string; nome: string; dono: boolean; pediatra: boolean; registro: string | null; titulo: string | null; whatsapp: string | null; telefone: string | null; local: string | null; consentimento_versao?: string | null };
 type Req = Request & { conta?: Conta };
 
 const COOKIE = "tq";
@@ -135,7 +136,7 @@ export function criarApp(o: Opcoes) {
     const t = lerCookie(req);
     if (!t) return null;
     const [c] = await banco.q<Conta>(
-      `select c.id, c.email, c.nome, c.dono, c.pediatra, c.registro, c.titulo, c.whatsapp, c.telefone, c.local, c.email_verificado_em
+      `select c.id, c.email, c.nome, c.dono, c.pediatra, c.registro, c.titulo, c.whatsapp, c.telefone, c.local, c.email_verificado_em, c.consentimento_versao
          from sessoes s join contas c on c.id = s.conta_id where s.hash = $1 and s.expira_em > now()`,
       [sha(t)],
     );
@@ -180,6 +181,36 @@ export function criarApp(o: Opcoes) {
     if (JSON.stringify(d).length > 3_000_000) throw new Erro(413, "Documento grande demais.");
     return d;
   };
+
+  // ---------- exclusão (LGPD) ----------
+  /** Apaga de vez uma criança e tudo dela. */
+  async function apagarCrianca(id: string) {
+    await banco.q(`delete from carteiras where crianca_id = $1`, [id]);
+    await banco.q(`delete from perguntas where crianca_id = $1`, [id]);
+    await banco.q(`delete from acompanhamentos where crianca_id = $1`, [id]);
+    await banco.q(`delete from responsaveis where crianca_id = $1`, [id]);
+    await banco.q(`delete from documentos where chave = $1`, [`crianca:${id}`]);
+    await banco.q(`delete from criancas where id = $1`, [id]);
+  }
+
+  async function apagarConta(c: Conta) {
+    const minhas = await banco.q<{ id: string }>(`select crianca_id as id from responsaveis where conta_id = $1`, [c.id]);
+    await banco.q(`delete from responsaveis where conta_id = $1`, [c.id]);
+    for (const k of minhas) {
+      const resta = await banco.q(`select 1 from responsaveis where crianca_id = $1`, [k.id]);
+      if (!resta.length) await apagarCrianca(k.id);
+    }
+    // Crianças que continuam com outro responsável ficam com os registros; só some o vínculo com esta conta.
+    await banco.q(`delete from perguntas where conta_id = $1`, [c.id]);
+    await banco.q(`update carteiras set enviado_por = null where enviado_por = $1`, [c.id]);
+    await banco.q(`update criancas set criado_por = null where criado_por = $1`, [c.id]);
+    await banco.q(`delete from acompanhamentos where pediatra_id = $1`, [c.id]);
+    await banco.q(`delete from pedidos where pediatra_id = $1 or email = $2`, [c.id, c.email]);
+    await banco.q(`delete from documentos where chave = $1`, [`financeiro:${c.id}`]);
+    await banco.q(`delete from sessoes where conta_id = $1`, [c.id]);
+    await banco.q(`delete from tokens where conta_id = $1`, [c.id]);
+    await banco.q(`delete from contas where id = $1`, [c.id]);
+  }
 
   // ---------- acesso a uma criança ----------
   type Acesso = { id: string; nome: string; nascimento: string; sexo: "menina" | "menino"; como: "familia" | "pediatra" };
@@ -245,11 +276,12 @@ export function criarApp(o: Opcoes) {
     if (nome.length < 2) throw new Erro(400, "Informe seu nome.");
     if (!emailOk(email)) throw new Erro(400, "E-mail inválido.");
     if (senha.length < 8) throw new Erro(400, "A senha precisa de pelo menos 8 caracteres.");
+    if (b.aceite !== VERSAO_TERMOS) throw new Erro(400, "Para criar a conta, leia e aceite a Política de privacidade e os Termos de uso.");
     if ((await banco.q(`select 1 from contas where email = $1`, [email])).length) throw new Erro(409, "Já existe uma conta com este e-mail. Use Entrar.");
     const [{ n }] = await banco.q<{ n: number }>(`select count(*)::int as n from contas`);
     const primeira = Number(n) === 0;
     const id = randomUUID();
-    await banco.q(`insert into contas (id, email, senha_hash, nome, dono, pediatra) values ($1,$2,$3,$4,$5,$5)`, [id, email, await bcrypt.hash(senha, 10), nome, primeira]);
+    await banco.q(`insert into contas (id, email, senha_hash, nome, dono, pediatra, consentimento_em, consentimento_versao) values ($1,$2,$3,$4,$5,$5,now(),$6)`, [id, email, await bcrypt.hash(senha, 10), nome, primeira, VERSAO_TERMOS]);
     await abrirSessao(res, id);
     void enviarConfirmacao(id, email, nome);
     return { ok: true };
@@ -332,6 +364,7 @@ export function criarApp(o: Opcoes) {
     );
     return {
       emailLigado: !!o.carteiro,
+      termos: { versao: VERSAO_TERMOS, aceito: c.consentimento_versao === VERSAO_TERMOS },
       conta: { id: c.id, email: c.email, nome: c.nome, dono: c.dono, pediatra: c.pediatra, emailVerificado: !!(c as Conta & { email_verificado_em?: unknown }).email_verificado_em, registro: c.registro, titulo: c.titulo, whatsapp: c.whatsapp, telefone: c.telefone, local: c.local },
       criancas: criancas.map((k) => ({
         id: k.id,
@@ -340,6 +373,64 @@ export function criarApp(o: Opcoes) {
       })),
       pedidos: pedidos.map((d) => ({ id: d.id, pediatra: pediatraPublico({ ...(d as unknown as Conta), id: String(d.pid) }), criadoEm: iso(d.criado_em) })),
     };
+  }));
+
+  conta.post("/consentimento", rota(async (req) => {
+    if ((req.body as { versao?: unknown }).versao !== VERSAO_TERMOS) throw new Erro(400, "Versão dos termos desatualizada. Recarregue o app.");
+    await banco.q(`update contas set consentimento_em = now(), consentimento_versao = $1 where id = $2`, [VERSAO_TERMOS, req.conta!.id]);
+    return { ok: true };
+  }));
+
+  /** LGPD (art. 18): cópia de tudo o que a conta guarda, num arquivo. */
+  conta.get("/exportar", rota(async (req) => {
+    const c = req.conta!;
+    const [dados] = await banco.q<Record<string, unknown>>(
+      `select nome, email, criado_em, email_verificado_em, consentimento_em, consentimento_versao, pediatra, registro, titulo, whatsapp, telefone, local from contas where id = $1`,
+      [c.id],
+    );
+    const ks = await banco.q<{ id: string; nome: string; nascimento: string; sexo: string; criado_em: unknown }>(
+      `select k.id, k.nome, k.nascimento::text as nascimento, k.sexo, k.criado_em from criancas k join responsaveis r on r.crianca_id = k.id where r.conta_id = $1`,
+      [c.id],
+    );
+    const criancasExp = [];
+    for (const k of ks) {
+      const resp = await banco.q<{ nome: string; email: string }>(`select c.nome, c.email from responsaveis r join contas c on c.id = r.conta_id where r.crianca_id = $1`, [k.id]);
+      const peds = await banco.q<{ nome: string; registro: string | null }>(`select c.nome, c.registro from acompanhamentos a join contas c on c.id = a.pediatra_id where a.crianca_id = $1`, [k.id]);
+      const carts = await banco.q<{ mime: string; bytes: Buffer | Uint8Array; leitura: unknown; criado_em: unknown }>(`select mime, bytes, leitura, criado_em from carteiras where crianca_id = $1 order by criado_em`, [k.id]);
+      const pergs = await banco.q<Record<string, unknown>>(`select pergunta, tipo, resposta, criado_em from perguntas where crianca_id = $1 order by criado_em`, [k.id]);
+      criancasExp.push({
+        nome: k.nome, nascimento: k.nascimento, sexo: k.sexo, cadastradaEm: iso(k.criado_em),
+        responsaveis: resp, pediatras: peds,
+        registros: await lerDoc(`crianca:${k.id}`),
+        carteiras: carts.map((x) => ({ tipo: x.mime, enviadaEm: iso(x.criado_em), leitura: x.leitura ? comoJson(x.leitura) : null, arquivoBase64: Buffer.from(x.bytes).toString("base64") })),
+        perguntas: pergs.map((x) => ({ ...x, criado_em: iso(x.criado_em) })),
+      });
+    }
+    const pacientes = c.pediatra
+      ? await banco.q<Record<string, unknown>>(`select k.nome, k.nascimento::text as nascimento from acompanhamentos a join criancas k on k.id = a.crianca_id where a.pediatra_id = $1`, [c.id])
+      : [];
+    const sugestoes = await banco.q<Record<string, unknown>>(`select texto, em from sugestoes where conta_id = $1 order by em`, [c.id]);
+    return {
+      geradoEm: new Date().toISOString(),
+      conta: { ...dados, criado_em: iso(dados.criado_em), email_verificado_em: dados.email_verificado_em ? iso(dados.email_verificado_em) : null, consentimento_em: dados.consentimento_em ? iso(dados.consentimento_em) : null },
+      criancas: criancasExp,
+      ...(c.pediatra ? { pacientesQueAcompanho: pacientes, financeiro: await lerDoc(`financeiro:${c.id}`) } : {}),
+      sugestoes: sugestoes.map((x) => ({ texto: x.texto, em: iso(x.em) })),
+    };
+  }));
+
+  /** LGPD (art. 18): excluir a conta. Crianças sem outro responsável são apagadas junto. */
+  conta.post("/excluir", rota(async (req, res) => {
+    const c = req.conta!;
+    const [h] = await banco.q<{ senha_hash: string }>(`select senha_hash from contas where id = $1`, [c.id]);
+    if (!(await bcrypt.compare(typeof (req.body as { senha?: unknown }).senha === "string" ? (req.body as { senha: string }).senha : "", h.senha_hash))) throw new Erro(400, "A senha não confere.");
+    if (c.dono) {
+      const [{ n }] = await banco.q<{ n: number }>(`select count(*)::int as n from contas where dono and id <> $1`, [c.id]);
+      if (!Number(n)) throw new Erro(400, "Você é o único administrador. Torne outra conta administradora antes de excluir a sua.");
+    }
+    await apagarConta(c);
+    res.clearCookie(COOKIE, { path: "/" });
+    return { ok: true };
   }));
 
   conta.post("/reenviar-confirmacao", rota(async (req) => {
@@ -420,7 +511,7 @@ export function criarApp(o: Opcoes) {
     if (a.como !== "familia") throw new Erro(403, "Só a família.");
     await banco.q(`delete from responsaveis where crianca_id = $1 and conta_id = $2`, [a.id, req.conta!.id]);
     const resta = await banco.q(`select 1 from responsaveis where crianca_id = $1`, [a.id]);
-    if (!resta.length) await banco.q(`update criancas set removido_em = now() where id = $1`, [a.id]);
+    if (!resta.length) await apagarCrianca(a.id);
     return { ok: true };
   }));
 
@@ -683,7 +774,7 @@ export function criarApp(o: Opcoes) {
       if (!o.assistente) throw new Erro(503, "O assistente não está ligado agora.");
       const [cfg] = await banco.q<{ valor: string }>(`select valor from config where chave = 'regras_ia'`);
       const [ped] = await banco.q<{ nome: string }>(`select p.nome from acompanhamentos x join contas p on p.id = x.pediatra_id where x.crianca_id = $1 and p.pediatra order by x.desde limit 1`, [a.id]);
-      r = await o.assistente(pergunta, { nome: a.nome, idadeTexto: idadeTexto(a.nascimento, hojeIso()), regrasDosMedicos: cfg?.valor, pediatra: ped?.nome });
+      r = await o.assistente(pergunta, { nome: a.nome.split(" ")[0], idadeTexto: idadeTexto(a.nascimento, hojeIso()), regrasDosMedicos: cfg?.valor, pediatra: ped?.nome });
     }
     await banco.q(`insert into perguntas (id, crianca_id, conta_id, pergunta, tipo, resposta, fluxo) values ($1,$2,$3,$4,$5,$6,$7)`, [randomUUID(), a.id, req.conta!.id, pergunta, r.tipo, r.resposta, r.fluxo]);
     return r;

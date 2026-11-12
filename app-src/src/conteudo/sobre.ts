@@ -7,27 +7,27 @@ export type Medico = { nome: string; apelido?: string; linha: string; registro: 
 export const SOBRE = {
   titulo: "Por que criamos o Tranquilim",
   abertura: [
-    "Somos dois médicos e amigos. Um trabalha onde a medicina é mais grave; o outro cuida de crianças e famílias no dia a dia. Os dois vivem a mesma cena: a dúvida que aparece de madrugada e não encontra resposta confiável.",
+    "Somos dois médicos e amigos, formados pela mesma faculdade. Um cuida de crianças e famílias no dia a dia; o outro trabalha onde a medicina é mais grave. Os dois vivem a mesma cena: a dúvida que aparece de madrugada e não encontra resposta confiável.",
     "Sem saber o que fazer, a família pesquisa na internet, pergunta no grupo, ouve opiniões. Às vezes corre ao pronto-socorro por algo que poderia ser cuidado em casa. Às vezes espera demais por algo que não podia esperar.",
   ],
   medicos: [
     {
-      nome: "Dr. Leandro Marques",
-      linha: "Médico com atuação em UTI e emergência · pós-graduação em medicina de emergência",
+      nome: "Dr. Francisco Martiniano",
+      apelido: "Chicão",
+      linha: "Médico formado em 2018 pela Universidade de Marília · pós-graduação em pediatria, em geriatria e em autismo infantil",
+      registro: "CRM-SP 199456",
+      texto: [
+        "O Chicão passa os dias respondendo às perguntas que toda mãe e todo pai fazem: febre, cólica, vacina, peso, sono, comida, desenvolvimento. Pai do João Francisco, sabe na pele que a dúvida não escolhe horário.",
+        "É ele quem acompanha as famílias no app, com a caderneta de vacinas e a curva de crescimento à vista.",
+      ],
+    },
+    {
+      nome: "Dr. Leandro L. Marques",
+      linha: "Médico formado em 2020 pela Universidade de Marília · atuação em UTI e emergência · pós-graduação em medicina de emergência",
       registro: "CRM-SP 216.200",
       texto: [
         "Na UTI e na sala vermelha, o Leandro vê o que acontece quando a dúvida não tem resposta a tempo. Foi dessa rotina que veio o jeito do Tranquilim de separar o que é para ir agora, o que é para hoje e o que dá para cuidar em casa.",
         "Também criou o Ductus, aplicativo de apoio à decisão para médicos de plantão.",
-      ],
-    },
-    {
-      nome: "Dr. Francisco Martiniano",
-      apelido: "Chicão",
-      linha: "Médico · cuida de crianças e famílias no consultório",
-      registro: "CRM-SP 199456",
-      texto: [
-        "O Chicão passa os dias respondendo às perguntas que toda mãe e todo pai fazem: febre, cólica, vacina, peso, sono, comida. Pai do João Francisco, sabe na pele que a dúvida não escolhe horário.",
-        "É ele quem acompanha as famílias no app, com a caderneta de vacinas e a curva de crescimento à vista.",
       ],
     },
   ] as Medico[],

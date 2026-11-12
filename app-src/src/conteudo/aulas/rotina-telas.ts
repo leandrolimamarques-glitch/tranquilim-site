@@ -158,7 +158,7 @@ export const ROTINA_TELAS: Trilha = {
       titulo: "Telas em casa: regras que funcionam",
       gancho: "Tirar a tela vira choro? As regras ficam mais fáceis quando valem para a família toda.",
       pontos: [
-        "Até 2 anos, sem telas (só chamada de vídeo com a família, com um adulto junto). De 2 a 5 anos, no máximo 1 hora por dia, com um adulto por perto.",
+        "Até 2 anos, sem telas, e isso inclui desenho e vídeo no celular ou na TV (a única exceção é a chamada de vídeo com a família, com um adulto junto). De 2 a 5 anos, no máximo 1 hora por dia, com um adulto por perto.",
         "Nada de tela nas refeições nem de 1 a 2 horas antes de dormir. TV, tablet e celular fora do quarto da criança.",
         "Tela não é babá nem calmante: ofereça alternativas antes que ela peça, como brincar ao ar livre, desenhar ou ajudar numa tarefa.",
         "Quando usar, assista junto, escolha conteúdo para a idade e combine antes quando acaba (“depois deste episódio, desligamos”).",
@@ -167,7 +167,7 @@ export const ROTINA_TELAS: Trilha = {
       ],
       alerta: "Fica muito agressiva ou desesperada quando a tela acaba, só come ou dorme com tela, ou está atrasada na fala ou no convívio com outras crianças: converse com o pediatra.",
       simples: [
-        "Até 2 anos, sem telas. Só chamada de vídeo com a família.",
+        "Até 2 anos, sem telas: nem desenho no celular, nem TV. Só chamada de vídeo com a família.",
         "De 2 a 5 anos, no máximo 1 hora por dia, com um adulto perto.",
         "Nada de tela na hora de comer e antes de dormir.",
         "Celular, tablet e TV fora do quarto da criança.",

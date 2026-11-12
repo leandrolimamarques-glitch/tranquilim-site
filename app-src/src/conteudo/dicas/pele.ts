@@ -273,7 +273,7 @@ export const PELE: Dica[] = [
       "Vermelho vivo com bolinhas em volta e nas dobras pode ser fungo: fale com o pediatra.",
     ],
     aprofundado: [
-      "A assadura comum é uma irritação: urina e cocô em contato com a pele abafada, mais o atrito da fralda, inflamam a pele. Quase toda criança tem pelo menos uma vez até os 2 anos. A prevenção é a melhor arma: troca frequente, limpeza suave, pele exposta ao ar e creme de barreira (como os de óxido de zinco, dexpantenol ou vaselina), que forma uma película protetora.",
+      "A assadura comum é uma irritação: urina e cocô em contato com a pele abafada, mais o atrito da fralda, inflamam a pele. Quase toda criança tem pelo menos uma vez até os 2 anos. A prevenção é a melhor arma: troca frequente, limpeza suave, pele exposta ao ar e o creme de barreira que o pediatra indicar, que forma uma película protetora.",
       "Não é preciso tirar todo o creme a cada troca se não houver cocô por cima. Lenços umedecidos podem ser usados se forem sem álcool, sem perfume e sem óleos essenciais. A pele da região da fralda absorve mais os produtos, por isso quanto mais simples, melhor.",
       "Quando a área fica vermelho vivo, brilhante, de borda bem definida, pegando as dobras da virilha, com bolinhas vermelhas soltas em volta (lesões satélites), pode ser candidíase, que é um fungo. É mais comum depois de uso de antibiótico e pode vir com sapinho na boca. Esse caso precisa de avaliação e tratamento indicado pelo pediatra.",
       "Não use pomada com corticoide ou antibiótico por conta própria.",

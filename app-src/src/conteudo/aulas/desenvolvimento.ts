@@ -151,7 +151,7 @@ export const DESENVOLVIMENTO: Trilha = {
       titulo: "Telas e desenvolvimento: quanto e quando",
       gancho: "O vídeo acalma na hora, mas tira dela o que mais desenvolve: gente de verdade.",
       pontos: [
-        "Menos de 2 anos: nenhuma tela, nem a TV ligada “de fundo”. A exceção é a chamada de vídeo com a família, com um adulto junto.",
+        "Menos de 2 anos: nenhuma tela, nem desenho no celular, nem a TV ligada “de fundo”. A exceção é a chamada de vídeo com a família, com um adulto junto.",
         "De 2 a 5 anos: no máximo 1 hora por dia, sempre com um adulto por perto e com conteúdo próprio para a idade.",
         "Menos é melhor. Cada hora na tela é uma hora a menos de conversa, brincadeira e movimento, que é o que desenvolve a fala e a atenção.",
         "Nada de tela durante as refeições, e desligue tudo de 1 a 2 horas antes de dormir.",

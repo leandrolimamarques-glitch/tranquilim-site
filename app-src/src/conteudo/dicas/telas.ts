@@ -22,7 +22,7 @@ export const TELAS: Dica[] = [
     deMeses: 0,
     ateMeses: 72,
     simples: [
-      "Até 2 anos: nenhuma tela, nem TV ligada de fundo.",
+      "Até 2 anos: nenhuma tela. Nem desenho no celular, nem TV ligada de fundo.",
       "De 2 a 5 anos: no máximo 1 hora por dia, com um adulto junto.",
       "A partir de 6 anos: no máximo 1 a 2 horas por dia, com supervisão.",
       "Nunca nas refeições e nunca antes de dormir.",

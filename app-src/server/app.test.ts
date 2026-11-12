@@ -8,6 +8,7 @@ import { ehEmergencia, validarResposta, corpoDeReferencia } from "./pergunta";
 import { gravar } from "../src/lib/sinc";
 import { docParaVista } from "../src/lib/familia";
 import { VERSAO_TERMOS } from "../src/conteudo/versao-termos";
+import { enviarLembretes, resumoVacinas } from "./lembretes";
 
 let banco: Banco;
 let servidor: Server;
@@ -40,6 +41,8 @@ afterAll(async () => {
   servidor?.close();
   await banco?.fechar();
 });
+
+const base0 = () => base;
 
 /** Cliente com pote de cookies, como um navegador. */
 function navegador() {
@@ -291,5 +294,57 @@ describe("LGPD: aceite, cópia dos dados e exclusão", () => {
     expect((await d("POST", "/api/conta/consentimento", { versao: "antiga" })).status).toBe(400);
     await d("POST", "/api/conta/consentimento", { versao: VERSAO_TERMOS });
     expect((await d("GET", "/api/conta")).corpo.termos.aceito).toBe(true);
+  });
+});
+
+describe("lembrete de vacina por e-mail", () => {
+  it("caderneta vazia pede para preencher em vez de listar tudo como atrasado", async () => {
+    const f = navegador();
+    await f("POST", "/api/conta/cadastro", { nome: "Rita", email: "rita@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
+    await f("POST", "/api/criancas", { crianca: { nome: "Bia", nascimento: "2026-01-01", sexo: "menina" } });
+    await banco.q(`update contas set email_verificado_em = now(), criado_em = now() - interval '10 days' where email = 'rita@x.com'`);
+    const caixa: string[] = [];
+    await enviarLembretes({ banco, urlBase: "https://app.x", hoje: "2026-11-12", carteiro: async (m) => void (m.para === "rita@x.com" && caixa.push(m.texto)) });
+    expect(caixa[0]).toContain("Bia: nenhuma vacina marcada");
+  });
+
+  it("resumo separa atrasadas e próximas 30 dias", () => {
+    const r = resumoVacinas("2026-01-01", "2026-03-15", new Set(["bcg", "hepb-0"]));
+    expect(r.atrasadas.some((v) => v.startsWith("Pentavalente"))).toBe(true);
+    expect(r.atrasadas.some((v) => v.startsWith("BCG"))).toBe(false);
+    expect(r.proximas.every((p) => p.data > "2026-03-15" && p.data <= "2026-04-15")).toBe(true);
+  });
+
+  it("manda no máximo um por período, só para e-mail confirmado, e o link para de mandar", async () => {
+    const f = navegador();
+    await f("POST", "/api/conta/cadastro", { nome: "Carla Souza", email: "carla@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
+    const tom = (await f("POST", "/api/criancas", { crianca: { nome: "Tom", nascimento: "2026-01-01", sexo: "menino" } })).corpo.id;
+    await f("PUT", `/api/criancas/${tom}/doc`, { doc: gravar(gravar({}, "vacinas", { id: "bcg" }), "vacinas", { id: "hepb-0" }) });
+    const caixa: { para: string; assunto: string; texto: string }[] = [];
+    const carteiro = async (m: { para: string; assunto: string; texto: string; html: string }) => void caixa.push(m);
+    const base = { banco, carteiro, urlBase: "https://app.x", hoje: "2026-03-15" };
+    // Conta nova e sem e-mail confirmado: nada.
+    await enviarLembretes(base);
+    expect(caixa.filter((m) => m.para === "carla@x.com")).toHaveLength(0);
+    await banco.q(`update contas set email_verificado_em = now(), criado_em = now() - interval '10 days' where email = 'carla@x.com'`);
+    await enviarLembretes(base);
+    const meus = caixa.filter((m) => m.para === "carla@x.com");
+    expect(meus).toHaveLength(1);
+    expect(meus[0].texto).toContain("Tom: com a idade passada");
+    expect(meus[0].texto).toContain("Pentavalente");
+    expect(meus[0].texto).not.toContain("BCG");
+    // De novo no mesmo dia: não repete.
+    await banco.q(`update contas set lembrete_verificado_em = null where email = 'carla@x.com'`);
+    await enviarLembretes(base);
+    expect(caixa.filter((m) => m.para === "carla@x.com")).toHaveLength(1);
+    // Link de parar: assinatura errada não vale; certa desliga.
+    const link = meus[0].texto.match(/https:\/\/app\.x(\/api\/lembretes\/parar\?[^\s]+)/)![1];
+    const r1 = await fetch(base0() + link.replace(/t=[0-9a-f]+/, "t=errado"));
+    expect(await r1.text()).toContain("Link inválido");
+    const r2 = await fetch(base0() + link);
+    expect(await r2.text()).toContain("não vai mais receber");
+    expect((await f("GET", "/api/conta")).corpo.conta.lembretes).toBe(false);
+    await f("PUT", "/api/conta/lembretes", { ligado: true });
+    expect((await f("GET", "/api/conta")).corpo.conta.lembretes).toBe(true);
   });
 });

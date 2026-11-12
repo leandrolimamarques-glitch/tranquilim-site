@@ -5,6 +5,7 @@ import { criarApp } from "./app";
 import { criarLeitorClaude } from "./leitura";
 import { criarAssistenteClaude } from "./pergunta";
 import { criarCarteiroResend } from "./email";
+import { enviarLembretes } from "./lembretes";
 
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 
@@ -36,6 +37,18 @@ async function iniciar() {
     cookieSeguro: process.env.NODE_ENV === "production",
     pastaPublica: path.join(aqui, "public"),
   });
+  // Lembretes de vacina: confere de hora em hora, e só manda das 9h às 20h de Brasília.
+  const urlBase = process.env.URL_BASE ?? "https://app.tranquilim.com.br";
+  const rodarLembretes = () => {
+    const hora = Number(new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", hourCycle: "h23", timeZone: "America/Sao_Paulo" }).format(new Date()));
+    if (hora < 9 || hora >= 20) return;
+    enviarLembretes({ banco, carteiro, urlBase })
+      .then((n) => n && console.log(`lembretes de vacina enviados: ${n}`))
+      .catch((e) => console.error("lembretes de vacina", e));
+  };
+  setTimeout(rodarLembretes, 2 * 60_000);
+  setInterval(rodarLembretes, 60 * 60_000);
+
   const porta = Number(process.env.PORT ?? 8080);
   app.listen(porta, "0.0.0.0", () => console.log(`Tranquilim ouvindo na porta ${porta}`));
 }

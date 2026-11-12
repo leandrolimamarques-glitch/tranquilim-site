@@ -21,6 +21,7 @@ export type ContaInfo = {
   telefone: string | null;
   local: string | null;
   emailVerificado?: boolean;
+  lembretes?: boolean;
 };
 export type CriancaDaConta = { id: string; crianca: Crianca; pediatras: Pediatra[] };
 export type Pedido = { id: string; pediatra: Pediatra; criadoEm: string };

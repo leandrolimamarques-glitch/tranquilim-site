@@ -216,6 +216,10 @@ const MIGRACOES: string[] = [
    delete from responsaveis where crianca_id in (select id from criancas where removido_em is not null);
    delete from documentos where chave in (select 'crianca:' || id::text from criancas where removido_em is not null);
    delete from criancas where removido_em is not null`,
+  // Lembrete de vacina por e-mail (ligado por padrão; a pessoa desliga em Ajustes ou pelo link do e-mail).
+  `alter table contas add column lembretes boolean not null default true;
+   alter table contas add column lembrete_em timestamptz;
+   alter table contas add column lembrete_verificado_em timestamptz`,
 ];
 
 export async function migrar(banco: Banco): Promise<number> {

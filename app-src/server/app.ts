@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs";
 import type { Banco } from "./banco";
 import type { LeitorCarteira } from "./leitura";
 import { mensagem, type Carteiro } from "./email";
+import { assinaturaConfere, segredoLembretes } from "./lembretes";
 import { emergenciaDe, type Assistente } from "./pergunta";
 import { docValido, juntarDocs, type Doc } from "../src/lib/sinc";
 import { docInicial, docParaVista, type Crianca } from "../src/lib/familia";
@@ -30,7 +31,7 @@ export type Opcoes = {
   urlBase?: string;
 };
 
-type Conta = { id: string; email: string; nome: string; dono: boolean; pediatra: boolean; registro: string | null; titulo: string | null; whatsapp: string | null; telefone: string | null; local: string | null; consentimento_versao?: string | null };
+type Conta = { id: string; email: string; nome: string; dono: boolean; pediatra: boolean; registro: string | null; titulo: string | null; whatsapp: string | null; telefone: string | null; local: string | null; consentimento_versao?: string | null; lembretes?: boolean };
 type Req = Request & { conta?: Conta };
 
 const COOKIE = "tq";
@@ -136,7 +137,7 @@ export function criarApp(o: Opcoes) {
     const t = lerCookie(req);
     if (!t) return null;
     const [c] = await banco.q<Conta>(
-      `select c.id, c.email, c.nome, c.dono, c.pediatra, c.registro, c.titulo, c.whatsapp, c.telefone, c.local, c.email_verificado_em, c.consentimento_versao
+      `select c.id, c.email, c.nome, c.dono, c.pediatra, c.registro, c.titulo, c.whatsapp, c.telefone, c.local, c.email_verificado_em, c.consentimento_versao, c.lembretes
          from sessoes s join contas c on c.id = s.conta_id where s.hash = $1 and s.expira_em > now()`,
       [sha(t)],
     );
@@ -254,6 +255,19 @@ export function criarApp(o: Opcoes) {
     return { ok: true };
   }));
 
+  /** Link "parar de receber" do e-mail de lembrete: funciona sem entrar na conta. */
+  app.get("/api/lembretes/parar", rota(async (req, res) => {
+    const id = String(req.query.c ?? "");
+    const t = String(req.query.t ?? "");
+    const ok = /^[0-9a-f-]{36}$/.test(id) && assinaturaConfere(await segredoLembretes(banco), id, t);
+    if (ok) await banco.q(`update contas set lembretes = false where id = $1`, [id]);
+    res.type("html").send(`<!doctype html><html lang="pt-BR"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tranquilim</title>
+<body style="font-family:Arial,sans-serif;background:#FBF7F0;color:#1E2A47;padding:24px;max-width:480px;margin:0 auto">
+<h2>${ok ? "Pronto. Você não vai mais receber lembretes de vacina." : "Link inválido."}</h2>
+<p>${ok ? "Se mudar de ideia, ligue de novo no app, em Ajustes." : "Desligue os lembretes no app, em Ajustes."}</p>
+<p><a href="${o.urlBase ?? "/"}">Abrir o Tranquilim</a></p></body></html>`);
+  }));
+
   // ---------- saúde ----------
   app.get("/api/saude", (_req, res) => {
     res.json({ ok: true });
@@ -365,7 +379,7 @@ export function criarApp(o: Opcoes) {
     return {
       emailLigado: !!o.carteiro,
       termos: { versao: VERSAO_TERMOS, aceito: c.consentimento_versao === VERSAO_TERMOS },
-      conta: { id: c.id, email: c.email, nome: c.nome, dono: c.dono, pediatra: c.pediatra, emailVerificado: !!(c as Conta & { email_verificado_em?: unknown }).email_verificado_em, registro: c.registro, titulo: c.titulo, whatsapp: c.whatsapp, telefone: c.telefone, local: c.local },
+      conta: { id: c.id, email: c.email, nome: c.nome, dono: c.dono, pediatra: c.pediatra, emailVerificado: !!(c as Conta & { email_verificado_em?: unknown }).email_verificado_em, registro: c.registro, titulo: c.titulo, whatsapp: c.whatsapp, telefone: c.telefone, local: c.local, lembretes: c.lembretes !== false },
       criancas: criancas.map((k) => ({
         id: k.id,
         crianca: { nome: k.nome, nascimento: k.nascimento, sexo: k.sexo },
@@ -431,6 +445,12 @@ export function criarApp(o: Opcoes) {
     await apagarConta(c);
     res.clearCookie(COOKIE, { path: "/" });
     return { ok: true };
+  }));
+
+  conta.put("/lembretes", rota(async (req) => {
+    const ligado = (req.body as { ligado?: unknown }).ligado === true;
+    await banco.q(`update contas set lembretes = $1 where id = $2`, [ligado, req.conta!.id]);
+    return { ok: true, ligado };
   }));
 
   conta.post("/reenviar-confirmacao", rota(async (req) => {

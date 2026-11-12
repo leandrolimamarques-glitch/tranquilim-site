@@ -31,6 +31,7 @@ export function Ajustes({ sessao, atual, escolher, recarregar, navegar, novaCria
         <h3>Sua conta</h3>
         <p><b>{sessao.conta.nome}</b></p>
         <p className="muted">{sessao.conta.email}{sessao.conta.pediatra ? " · pediatra" : ""}{sessao.conta.dono ? " · administrador" : ""}</p>
+        <Lembretes ligado={sessao.conta.lembretes !== false} verificado={sessao.conta.emailVerificado !== false} recarregar={recarregar} />
         <div className="grade2">
           <button className="btn sec" onClick={() => setTela("senha")}>Trocar senha</button>
           <button className="btn contorno" onClick={() => void sair()}>Sair</button>
@@ -283,5 +284,27 @@ function SeusDados({ abrir, ehDono }: { abrir: (t: "politica" | "termos") => voi
       )}
       {msg && <p className="pequeno" style={{ color: "var(--ps)" }}>{msg}</p>}
     </div>
+  );
+}
+
+function Lembretes({ ligado, verificado, recarregar }: { ligado: boolean; verificado: boolean; recarregar: () => Promise<void> }) {
+  const [valor, setValor] = useState(ligado);
+  return (
+    <label className="sinal" style={{ borderWidth: 1, padding: "8px 12px", alignItems: "flex-start" }}>
+      <input type="checkbox" checked={valor} style={{ marginTop: 4 }} onChange={async (e) => {
+        const v = e.target.checked;
+        setValor(v);
+        try {
+          await api.put("/api/conta/lembretes", { ligado: v });
+          await recarregar();
+        } catch {
+          setValor(!v);
+        }
+      }} />
+      <span>
+        Lembrete de vacina por e-mail
+        <span className="muted pequeno" style={{ display: "block" }}>No máximo um por mês, quando houver vacina atrasada ou chegando.{verificado ? "" : " Só chega depois de confirmar o e-mail."}</span>
+      </span>
+    </label>
   );
 }

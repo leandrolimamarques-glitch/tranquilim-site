@@ -4,6 +4,7 @@ import { dataBr } from "../lib/idade";
 import type { Atualizar, Dados } from "../lib/store";
 import { novoId } from "../lib/store";
 import { CALENDARIO } from "../lib/vacinas";
+import { CALENDARIO_PARTICULAR } from "../lib/vacinas-particular";
 
 type Registro = { calendarioId: string; nomeNaCarteira: string; data: string; confianca: "alta" | "media" | "baixa"; nota: string };
 type Leitura = { legivel: boolean; observacao: string; registros: Registro[] };
@@ -11,7 +12,7 @@ type ItemCarteira = { id: string; enviadoPor: string; mime: string; leitura: Lei
 
 const ROTULO_CONFIANCA = { alta: "leitura clara", media: "conferir", baixa: "duvidosa" } as const;
 const CHIP_CONFIANCA = { alta: "aplicada", media: "pendente", baixa: "" } as const;
-const NOME = new Map(CALENDARIO.map((v) => [v.id, `${v.nome} · ${v.dose}`]));
+const NOME = new Map([...CALENDARIO, ...CALENDARIO_PARTICULAR].map((v) => [v.id, `${v.nome} · ${v.dose}`]));
 
 /** Reduz a foto para no máximo 2000 px (JPEG), para subir rápido no 4G. */
 async function prepararArquivo(f: File): Promise<Blob> {

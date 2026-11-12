@@ -6,6 +6,7 @@
 
 import Anthropic from "@anthropic-ai/sdk";
 import { CALENDARIO } from "../src/lib/vacinas";
+import { CALENDARIO_PARTICULAR } from "../src/lib/vacinas-particular";
 
 export type RegistroLido = {
   calendarioId: string; // id do CALENDARIO, ou "outra"
@@ -19,7 +20,7 @@ export type LeituraCarteira = { legivel: boolean; observacao: string; registros:
 
 export type LeitorCarteira = (arquivo: { mime: string; bytes: Buffer }, contexto: { nascimento: string }) => Promise<LeituraCarteira>;
 
-const IDS = [...CALENDARIO.map((v) => v.id), "outra"];
+const IDS = [...CALENDARIO.map((v) => v.id), ...CALENDARIO_PARTICULAR.map((v) => v.id), "outra"];
 
 const ESQUEMA = {
   type: "object",
@@ -53,14 +54,15 @@ Regras:
 - Mapeie cada dose para um id do calendário abaixo. Se uma vacina cobre mais de um item (hexavalente = pentavalente + VIP da mesma dose; tetraviral SCRV = item "scrv"; meningocócica ACWY aos 3 e 5 meses cobre menc-1 e menc-2), escreva um registro para cada id coberto, com a mesma data e explique na nota.
 - Pneumocócica 10, 13, 15 ou 20-valente conta para pneumo-1/2/r pela ordem das doses. Rotavírus monovalente ou pentavalente conta para rota-1/rota-2 (a 3ª dose da pentavalente vai como "outra").
 - Influenza de qualquer ano: só a primeira vai como flu-1; as outras como "outra" com o ano na nota.
-- Vacina fora da lista (meningocócica B, dengue, VOP de campanha, doses extras) vai como "outra".
+- Vacinas da rede particular que estão na lista (meningocócica B, ACWY precoce, dengue etc.) usam o id "p-..." correspondente. Fora da lista (VOP de campanha, doses extras) vai como "outra".
 - Datas no formato AAAA-MM-DD. Se o ano estiver com dois dígitos, deduza pelo nascimento da criança. Se não der para ler a data com segurança, deixe "" e confiança "baixa".
 - confianca "alta" só quando o nome e a data estão claros. Use "media" quando precisou deduzir a equivalência ou um dígito da data, e "baixa" quando está em dúvida.
 - Não invente: na dúvida, menos registros com confiança honesta.
 - "observacao": uma frase curta para a família sobre a qualidade da imagem ou o que não deu para ler (ex.: "A página das vacinas de 4 meses ficou cortada").`;
 
 function textoCalendario(): string {
-  return CALENDARIO.map((v) => `${v.id}: ${v.nome}, ${v.dose} (prevista aos ${v.idadeMeses} meses)`).join("\n");
+  const linha = (v: { id: string; nome: string; dose: string; idadeMeses: number }) => `${v.id}: ${v.nome}, ${v.dose} (prevista aos ${v.idadeMeses} meses)`;
+  return `SUS:\n${CALENDARIO.map(linha).join("\n")}\n\nRede particular (use só quando a dose for claramente do produto particular e não houver item do SUS equivalente):\n${CALENDARIO_PARTICULAR.map(linha).join("\n")}`;
 }
 
 export function criarLeitorClaude(chave: string, modelo: string, esforco: "low" | "medium" | "high" | "xhigh" | "max"): LeitorCarteira {

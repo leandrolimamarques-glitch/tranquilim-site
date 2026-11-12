@@ -4,6 +4,8 @@ import { curva, descreverPercentil, IDADE_MAXIMA_CURVA_MESES, LINHAS_PERCENTIL, 
 import { novoId, type Atualizar, type Dados, type Medida, type Registro, type TipoRegistro } from "../lib/store";
 import { FONTE_CALENDARIO, situacaoDasVacinas, type VacinaComSituacao } from "../lib/vacinas";
 import { Carteira } from "./Carteira";
+import { CALENDARIO_PARTICULAR, FONTE_PARTICULAR, NOTA_PARTICULAR } from "../lib/vacinas-particular";
+import { somarMeses } from "../lib/idade";
 
 export type SecaoCaderneta = "vacinas" | "crescimento" | "diario";
 
@@ -95,6 +97,29 @@ function Vacinas({ dados, atualizar, modo }: { dados: Dados; atualizar: Atualiza
           </div>
         </div>
       ))}
+      <h2 style={{ marginTop: 10 }}>Rede particular</h2>
+      <p className="muted">{NOTA_PARTICULAR}</p>
+      <div className="card">
+        <div className="tabela-vacina">
+          {CALENDARIO_PARTICULAR.map((v) => {
+            const aplicada = dados.vacinasAplicadas.includes(v.id);
+            const prevista = somarMeses(c.nascimento, v.idadeMeses);
+            const chegou = prevista <= hojeIso();
+            return (
+              <label key={v.id}>
+                <input type="checkbox" checked={aplicada} onChange={() => alternar(v.id)} />
+                <span>
+                  <b style={{ fontWeight: 600 }}>{v.nome}</b> <span className="muted">· {v.dose}</span>
+                  <span className="muted pequeno" style={{ display: "block" }}>{rotuloIdade(v.idadeMeses)} · {dataBr(prevista)}</span>
+                  {!aplicada && v.nota && <span className="muted pequeno" style={{ display: "block" }}>{v.nota}</span>}
+                </span>
+                {aplicada ? <span className="chip aplicada">aplicada</span> : chegou ? <span className="chip">converse</span> : null}
+              </label>
+            );
+          })}
+        </div>
+      </div>
+      <p className="fontes">{FONTE_PARTICULAR}</p>
       {dados.outrasVacinas.length > 0 && (
         <div className="card">
           <h3>Outras vacinas</h3>

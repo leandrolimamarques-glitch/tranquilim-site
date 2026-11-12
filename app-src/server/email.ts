@@ -2,11 +2,13 @@
 
 export type Carteiro = (m: { para: string; assunto: string; texto: string; html: string }) => Promise<void>;
 
-export function criarCarteiroResend(chave: string, remetente: string): Carteiro {
+export function criarCarteiroResend(chave: string | (() => Promise<string | undefined>), remetente: string): Carteiro {
   return async (m) => {
+    const k = typeof chave === "string" ? chave : await chave();
+    if (!k) throw new Error("Chave do Resend não configurada.");
     const r = await fetch("https://api.resend.com/emails", {
       method: "POST",
-      headers: { Authorization: `Bearer ${chave}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${k.trim()}`, "Content-Type": "application/json" },
       body: JSON.stringify({ from: remetente, to: [m.para], subject: m.assunto, text: m.texto, html: m.html }),
     });
     if (!r.ok) throw new Error(`Resend ${r.status}: ${(await r.text()).slice(0, 200)}`);

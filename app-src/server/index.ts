@@ -21,8 +21,12 @@ async function iniciar() {
   if (!leitor) console.warn("LLM_API_KEY ausente: leitura de carteira desligada.");
 
   const assistente = chave ? criarAssistenteClaude(chave, process.env.LLM_MODELO_ASSISTENTE ?? "claude-haiku-5-5") : undefined;
-  const carteiro = process.env.RESEND_API_KEY ? criarCarteiroResend(process.env.RESEND_API_KEY, process.env.EMAIL_REMETENTE ?? "Tranquilim <nao-responda@tranquilim.com.br>") : undefined;
-  if (!carteiro) console.warn("RESEND_API_KEY ausente: e-mails desligados.");
+  // Chave do Resend: a guardada no banco (config.resend_api_key) vale mais que a do ambiente.
+  const chaveResend = async () => {
+    const [r] = await banco.q<{ valor: string }>(`select valor from config where chave = 'resend_api_key'`).catch(() => []);
+    return r?.valor || process.env.RESEND_API_KEY;
+  };
+  const carteiro = criarCarteiroResend(chaveResend, process.env.EMAIL_REMETENTE ?? "Tranquilim <nao-responda@tranquilim.com.br>");
   const app = criarApp({
     banco,
     carteiro,

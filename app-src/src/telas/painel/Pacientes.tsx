@@ -244,6 +244,7 @@ function VerPaciente({ p, medico, financeiro, ir, recarregar }: { p: PacienteRes
           <p className="muted">{p.conviteEm ? `Enviado em ${dataBr(p.conviteEm.slice(0, 10))}, ainda não aberto.` : "A família ainda não recebeu o convite."}</p>
           <a className="btn bloco" href={linkWhatsApp(p.whatsapp, mensagem)} target="_blank" rel="noopener noreferrer" onClick={marcarEnviado}>Enviar pelo WhatsApp</a>
           <button className="btn sec bloco" onClick={copiar}>{copiado === "ok" ? "Mensagem copiada" : "Copiar mensagem com o link"}</button>
+          <a className="btn contorno bloco" href={link} target="_blank" rel="noopener noreferrer">Abrir como a família (teste)</a>
           {copiado === "falhou" && <textarea readOnly value={mensagem} rows={6} className="area-texto" onFocus={(e) => e.currentTarget.select()} />}
         </div>
       ) : (

@@ -30,9 +30,13 @@ export function App() {
 function ComSessao() {
   const [sessao, recarregar, erro] = useSessao();
   if (sessao === undefined) {
+    if (erro) return <SemConexao erro={erro} tentar={() => void recarregar()} />;
     return (
       <div className="app">
-        <main className="conteudo sem-abas"><p className="muted" role="status">{erro || "Abrindo…"}</p></main>
+        <main className="conteudo sem-abas">
+          <p className="muted" role="status">Abrindo…</p>
+          <a className="link-192" href="tel:192">Emergência: ligar 192</a>
+        </main>
       </div>
     );
   }
@@ -43,8 +47,26 @@ function ComSessao() {
       </div>
     );
   }
-  return <Logado sessao={sessao} recarregar={recarregar} />;
+  return <Logado sessao={sessao} recarregar={recarregar} semConexao={!!erro} />;
 }
+
+/** Sem internet e sem cópia da conta no aparelho: o que salva vida continua disponível. */
+function SemConexao({ erro, tentar }: { erro: string; tentar: () => void }) {
+  return (
+    <div className="app">
+      <main className="conteudo sem-abas">
+        <div className="card" style={{ borderColor: "var(--luz)" }}>
+          <p><b>{erro}</b></p>
+          <p className="muted">O "Vai ao PS?" funciona sem internet. A ligação para o 192 também.</p>
+          <button className="btn sec bloco" onClick={tentar}>Tentar de novo</button>
+        </div>
+        <VaiAoPS dados={DADOS_VAZIOS} />
+      </main>
+    </div>
+  );
+}
+
+const DADOS_VAZIOS: Dados = { ...VISTA_VAZIA, criancaId: "", medico: null, vinculo: null, sincronia: "ok" };
 
 function lerPreferida(): string | null {
   try {
@@ -54,7 +76,7 @@ function lerPreferida(): string | null {
   }
 }
 
-function Logado({ sessao, recarregar }: { sessao: Sessao; recarregar: () => Promise<void> }) {
+function Logado({ sessao, recarregar, semConexao }: { sessao: Sessao; recarregar: () => Promise<void>; semConexao: boolean }) {
   const [criancaId, setCriancaIdEstado] = useState<string | null>(lerPreferida);
   const c = sessao.criancas.find((k) => k.id === criancaId) ?? sessao.criancas[0] ?? null;
   const ehPediatra = sessao.conta.pediatra;
@@ -149,7 +171,10 @@ function Logado({ sessao, recarregar }: { sessao: Sessao; recarregar: () => Prom
 
   const casca = (dados: Dados, atualizar: Atualizar, temCrianca: boolean) => (
     <div className="app">
-      <main className="conteudo">{conteudo(dados, atualizar, temCrianca)}</main>
+      <main className="conteudo">
+        {semConexao && <p className="pequeno muted" role="status" style={{ margin: 0 }}>Sem internet: mostrando o que estava salvo neste aparelho.</p>}
+        {conteudo(dados, atualizar, temCrianca)}
+      </main>
       <nav className="abas" aria-label="Seções do app">
         <div style={{ gridTemplateColumns: `repeat(${abas.length}, 1fr) 0.8fr` }}>
           {abas.map((a) => (
@@ -167,7 +192,7 @@ function Logado({ sessao, recarregar }: { sessao: Sessao; recarregar: () => Prom
     </div>
   );
 
-  if (!c) return casca({ ...VISTA_VAZIA, criancaId: "", medico: null, vinculo: null, sincronia: "ok" }, () => undefined, false);
+  if (!c) return casca(DADOS_VAZIOS, () => undefined, false);
   return <ComCrianca key={c.id} c={c}>{(dados, atualizar) => casca(dados, atualizar, true)}</ComCrianca>;
 }
 

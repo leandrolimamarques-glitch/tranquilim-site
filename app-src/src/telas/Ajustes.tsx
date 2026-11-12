@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Navegar } from "../App";
 import { api } from "../lib/api";
 import { linhaRegistro } from "../lib/convite";
-import type { CriancaDaConta, Pediatra, Sessao } from "../lib/store";
+import { esquecerSessaoLocal, type CriancaDaConta, type Pediatra, type Sessao } from "../lib/store";
 import { Onboarding } from "./Onboarding";
 import { Admin } from "./Admin";
 import { Sobre } from "./Sobre";
@@ -16,6 +16,7 @@ export function Ajustes({ sessao, atual, escolher, recarregar, navegar, novaCria
   if (tela === "sobre") return <Sobre voltar={() => setTela("menu")} rotuloVoltar="Ajustes" />;
   const sair = async () => {
     await api.post("/api/conta/sair").catch(() => undefined);
+    esquecerSessaoLocal();
     location.reload();
   };
 

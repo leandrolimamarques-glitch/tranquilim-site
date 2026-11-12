@@ -2,6 +2,8 @@ import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Coruja } from "../Coruja";
 import { api } from "../lib/api";
 import { Sobre } from "./Sobre";
+import { VaiAoPS } from "./VaiAoPS";
+import { VISTA_VAZIA } from "../lib/familia";
 
 export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
   const [modo, setModo] = useState<"entrar" | "criar">("entrar");
@@ -9,6 +11,7 @@ export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [sobre, setSobre] = useState(false);
+  const [ps, setPs] = useState(false);
   const campo = (k: keyof typeof f) => ({ value: f[k], onChange: (e: ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value }) });
   const valido = f.email.includes("@") && f.senha.length >= 8 && (modo === "entrar" || f.nome.trim().length >= 2);
 
@@ -26,6 +29,14 @@ export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
   };
 
   if (sobre) return <Sobre voltar={() => setSobre(false)} rotuloVoltar="Entrar" />;
+  if (ps) {
+    return (
+      <>
+        <button className="voltar" onClick={() => setPs(false)}>‹ Entrar</button>
+        <VaiAoPS dados={{ ...VISTA_VAZIA, criancaId: "", medico: null, vinculo: null, sincronia: "ok" }} />
+      </>
+    );
+  }
   return (
     <>
       <div className="card noite" style={{ alignItems: "center", textAlign: "center", padding: 24 }}>
@@ -33,6 +44,10 @@ export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
         <h1 style={{ fontSize: 30 }}>Tranquilim</h1>
         <p className="muted">Orientação em saúde infantil feita por médicos, na hora da dúvida.</p>
       </div>
+      <button className="opcao" style={{ borderColor: "var(--ps)" }} onClick={() => setPs(true)}>
+        Criança passando mal agora?
+        <span className="muted" style={{ display: "block", fontWeight: 500, fontSize: 14 }}>Vai ao PS, liga ou espera? Funciona sem conta e sem internet.</span>
+      </button>
       <div className="segmento">
         <button className={modo === "entrar" ? "ativa" : ""} onClick={() => { setModo("entrar"); setErro(""); }}>Entrar</button>
         <button className={modo === "criar" ? "ativa" : ""} onClick={() => { setModo("criar"); setErro(""); }}>Criar conta</button>

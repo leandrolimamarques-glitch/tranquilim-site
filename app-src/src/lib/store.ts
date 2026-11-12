@@ -26,17 +26,55 @@ export type CriancaDaConta = { id: string; crianca: Crianca; pediatras: Pediatra
 export type Pedido = { id: string; pediatra: Pediatra; criadoEm: string };
 export type Sessao = { conta: ContaInfo; criancas: CriancaDaConta[]; pedidos: Pedido[]; emailLigado?: boolean };
 
-/** null = fora da conta; undefined = carregando. */
+const CHAVE_SESSAO = "tq:sessao";
+
+function lerSessaoGuardada(): Sessao | undefined {
+  try {
+    const t = localStorage.getItem(CHAVE_SESSAO);
+    return t ? (JSON.parse(t) as Sessao) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function guardarSessao(s: Sessao | null) {
+  try {
+    if (s) localStorage.setItem(CHAVE_SESSAO, JSON.stringify(s));
+    else localStorage.removeItem(CHAVE_SESSAO);
+  } catch {
+    // sem armazenamento: segue só em memória
+  }
+}
+
+/** Apaga a cópia local da conta (ao sair ou excluir a conta). */
+export function esquecerSessaoLocal() {
+  guardarSessao(null);
+  try {
+    for (const k of Object.keys(localStorage)) if (k.startsWith("tq:")) localStorage.removeItem(k);
+  } catch {
+    // nada
+  }
+}
+
+/**
+ * null = fora da conta; undefined = carregando (e sem cópia no aparelho).
+ * Abre na hora com a última cópia guardada e atualiza pelo servidor em seguida; sem internet,
+ * segue com a cópia (o terceiro valor diz que está sem conexão).
+ */
 export function useSessao(): [Sessao | null | undefined, () => Promise<void>, string] {
-  const [s, setS] = useState<Sessao | null | undefined>(undefined);
+  const [s, setS] = useState<Sessao | null | undefined>(lerSessaoGuardada);
   const [erro, setErro] = useState("");
   const carregar = useCallback(async () => {
     try {
-      setS(await api.get<Sessao>("/api/conta"));
+      const nova = await api.get<Sessao>("/api/conta");
+      guardarSessao(nova);
+      setS(nova);
       setErro("");
     } catch (e) {
-      if (e instanceof ErroApi && e.status === 401) setS(null);
-      else setErro((e as Error).message);
+      if (e instanceof ErroApi && e.status === 401) {
+        guardarSessao(null);
+        setS(null);
+      } else setErro((e as Error).message);
     }
   }, []);
   useEffect(() => {

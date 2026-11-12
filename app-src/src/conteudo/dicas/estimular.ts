@@ -1,0 +1,540 @@
+import type { Dica } from "./tipos";
+
+// Brincar e estimular: brincadeiras baratas por faixa de idade.
+// Marcos de desenvolvimento conforme a Caderneta da Criança (MS); sem promessa de "acelerar" o desenvolvimento.
+
+const CADERNETA = "Ministério da Saúde. Caderneta da Criança: Passaporte da Cidadania. 6ª edição, 2023; 7ª edição, 2024.";
+const OMS_MOVIMENTO =
+  "Organização Mundial da Saúde. Guidelines on physical activity, sedentary behaviour and sleep for children under 5 years of age. 2019.";
+const AAP_BRINCAR =
+  "American Academy of Pediatrics. The Power of Play: A Pediatric Role in Enhancing Development in Young Children. Pediatrics, 2018.";
+const OMS_CUIDADO =
+  "Organização Mundial da Saúde, UNICEF e Banco Mundial. Nurturing Care for Early Childhood Development (Cuidados de criação). 2018.";
+const SBP_LEITURA =
+  "Sociedade Brasileira de Pediatria. Receite um Livro: fortalecendo o desenvolvimento e o vínculo. Campanha, 2015.";
+const AAP_LEITURA =
+  "American Academy of Pediatrics. Literacy Promotion: An Essential Component of Primary Care Pediatric Practice. Pediatrics, 2014.";
+const SBP_ENGASGO =
+  "Sociedade Brasileira de Pediatria. Guia Prático de Atualização nº 222: Obstrução de vias aéreas por corpo estranho e engasgo por líquidos. 2025.";
+const SBP_CORPO_ESTRANHO =
+  "Sociedade Brasileira de Pediatria, Departamento de Gastroenterologia. Ingestão de corpos estranhos. 2022.";
+const SBP_TELAS = "Sociedade Brasileira de Pediatria. Manual de Orientação #Menos Telas #Mais Saúde. Atualização 2024.";
+
+export const ESTIMULAR: Dica[] = [
+  {
+    id: "es-barriga-para-baixo",
+    categoria: "estimular",
+    titulo: "Barriga para baixo, só acordado",
+    resumo: "Deixar o bebê um pouco de bruços, acordado e com você perto, fortalece pescoço, ombros e costas.",
+    deMeses: 0,
+    ateMeses: 6,
+    simples: [
+      "Com o bebê acordado, deite ele de barriga para baixo no chão, sobre um pano limpo.",
+      "Fique ao lado, olho no olho, e converse com ele.",
+      "Comece com poucos minutos, várias vezes ao dia.",
+      "Se ele chorar, pegue no colo e tente mais tarde.",
+      "Para dormir, sempre de barriga para cima.",
+    ],
+    aprofundado: [
+      "Ficar de bruços acordado obriga o bebê a levantar a cabeça, o que fortalece pescoço, ombros e costas. Esse é o caminho para depois rolar, sentar e engatinhar. Também ajuda a evitar que a cabeça fique achatada atrás, porque o bebê passa muito tempo deitado de barriga para cima.",
+      "A Organização Mundial da Saúde orienta que bebês que ainda não se arrastam fiquem pelo menos meia hora por dia de bruços, somada ao longo do dia, sempre acordados e com um adulto olhando. No começo, muitos bebês não gostam: vale deitar o bebê sobre o seu peito, com você reclinado, ou colocar um rolinho de pano sob o peito dele.",
+      "Faça num lugar firme e no chão, nunca em cama alta, sofá ou perto de travesseiros. Se o bebê adormecer de bruços, vire de barriga para cima e coloque no berço.",
+    ],
+    atencao:
+      "Converse com o pediatra se, por volta dos 4 meses, ele ainda não sustenta bem a cabeça, ou se a cabeça está ficando achatada ou torta.",
+    fontes: [CADERNETA, OMS_MOVIMENTO, "American Academy of Pediatrics. Sleep-Related Infant Deaths: Updated 2022 Recommendations. Pediatrics, 2022."],
+  },
+  {
+    id: "es-conversa-olho-no-olho",
+    categoria: "estimular",
+    titulo: "Conversa olho no olho",
+    resumo: "Falar com o bebê de pertinho, desde o nascimento, é a base da linguagem e do vínculo.",
+    deMeses: 0,
+    ateMeses: 3,
+    simples: [
+      "Fale com o bebê de pertinho, olhando nos olhos dele.",
+      "Conte o que você está fazendo: trocar fralda, dar banho, vestir.",
+      "Use voz calma e cantada. Bebê adora.",
+      "Sorria para ele. Logo ele vai sorrir de volta.",
+      "Quando ele virar o rosto ou chorar, é hora de descansar.",
+    ],
+    aprofundado: [
+      "Nos primeiros meses, o bebê enxerga melhor o que está a um palmo ou dois do rosto, mais ou menos a distância do colo até o seu rosto. Rostos são o que ele mais gosta de olhar. A Caderneta da Criança espera que, por volta dos 2 meses, ele já sorria quando alguém conversa com ele.",
+      "Narrar a rotina parece bobo, mas é assim que o cérebro do bebê vai ligando sons a situações. A voz mais aguda e cantada que os adultos usam naturalmente com bebês ajuda a prender a atenção dele.",
+      "O bebê também avisa quando cansou: vira o rosto, boceja, fica agitado ou chora. Respeitar esses sinais faz parte do cuidado que responde a ele, recomendado pela Organização Mundial da Saúde.",
+    ],
+    atencao:
+      "Fale com o pediatra se, por volta dos 2 meses, ele não sorri para as pessoas, não acompanha o seu rosto com os olhos ou não se assusta com barulhos fortes.",
+    fontes: [CADERNETA, OMS_CUIDADO],
+  },
+  {
+    id: "es-acompanhar-com-olhar",
+    categoria: "estimular",
+    titulo: "Siga o objeto com os olhos",
+    resumo: "Um objeto colorido movido devagar ajuda o bebê a treinar o olhar e a atenção.",
+    deMeses: 0,
+    ateMeses: 3,
+    simples: [
+      "Pegue um objeto colorido ou um chocalho, bem limpo.",
+      "Mostre a um palmo do rosto do bebê, deitado de barriga para cima.",
+      "Mexa devagar para um lado e para o outro.",
+      "Veja se ele acompanha com os olhos e vira a cabeça.",
+      "Poucos minutos bastam. Pare se ele cansar.",
+    ],
+    aprofundado: [
+      "Acompanhar um objeto com o olhar é um dos primeiros marcos da Caderneta da Criança. Cores fortes e contraste, como preto e branco ou vermelho, chamam mais a atenção do bebê pequeno.",
+      "Você pode fazer um chocalho caseiro com uma garrafinha plástica pequena com tampa bem colada com fita forte. O som também ajuda o bebê a virar a cabeça na direção do barulho.",
+      "Brinquedo para bebê não pode ter peças que soltam, cordões compridos ou pontas. Confira sempre se a tampa continua bem presa.",
+    ],
+    atencao:
+      "Fale com o pediatra se o bebê não fixa o olhar no seu rosto, se um olho parece desviar o tempo todo ou se aparece um brilho branco na pupila em fotos.",
+    fontes: [CADERNETA, SBP_ENGASGO],
+  },
+  {
+    id: "es-musica-e-colo",
+    categoria: "estimular",
+    titulo: "Música, ritmo e colo",
+    resumo: "Cantar e balançar no ritmo acalma e ajuda o bebê a perceber sons e palavras.",
+    deMeses: 0,
+    ateMeses: 12,
+    simples: [
+      "Cante para o bebê, mesmo que você ache que canta mal.",
+      "Músicas de roda e cantigas de ninar servem muito bem.",
+      "Balance devagar no ritmo da música, com ele no colo.",
+      "Bata palminhas e mexa as mãos dele com carinho.",
+      "Prefira sua voz a músicas de celular ou TV.",
+    ],
+    aprofundado: [
+      "O bebê reconhece a voz de quem cuida dele desde o nascimento. Canções repetidas, com rimas e ritmo, ajudam o cérebro dele a separar sons e sílabas, um passo para a fala.",
+      "Repetir a mesma música na hora do banho ou de dormir vira um sinal de rotina: o bebê aprende o que vem depois e se acalma com mais facilidade.",
+      "A Sociedade Brasileira de Pediatria orienta não usar telas antes dos 2 anos, nem como som de fundo. A sua voz, ao vivo, é o melhor estímulo.",
+    ],
+    fontes: [CADERNETA, OMS_CUIDADO, SBP_TELAS],
+  },
+  {
+    id: "es-imitar-sons",
+    categoria: "estimular",
+    titulo: "Conversa de balbucio",
+    resumo: "Responder aos sons do bebê como numa conversa ensina a ele a vez de falar e de ouvir.",
+    deMeses: 3,
+    ateMeses: 6,
+    simples: [
+      "Quando o bebê fizer um som, responda com o mesmo som.",
+      "Espere ele \"responder\" de volta. É uma conversa.",
+      "Faça caretas, sorria, mostre a língua. Ele vai tentar imitar.",
+      "Chame ele pelo nome, de lados diferentes.",
+      "Faça isso em momentos do dia a dia, sem pressa.",
+    ],
+    aprofundado: [
+      "Entre 3 e 6 meses, a maioria dos bebês emite sons, ri alto e vira a cabeça para quem fala. Quando você imita o som dele e espera, ele aprende o vai e vem da conversa, que é a base da linguagem.",
+      "Essa troca, chamada de interação \"saque e devolução\" por pesquisadores do desenvolvimento, é uma das formas de cuidado responsivo que a Organização Mundial da Saúde recomenda para todas as famílias.",
+      "Bebê que mama no peito já tem muitos desses momentos. Aproveite também a troca de fralda, o banho e o colo.",
+    ],
+    atencao:
+      "Fale com o pediatra se, perto dos 6 meses, o bebê não emite sons, não ri ou não vira a cabeça quando chamado. Pergunte também se o teste da orelhinha foi feito.",
+    fontes: [CADERNETA, OMS_CUIDADO],
+  },
+  {
+    id: "es-pegar-objetos",
+    categoria: "estimular",
+    titulo: "Pegar, apertar e levar à boca",
+    resumo: "Objetos seguros ao alcance da mão ajudam o bebê a aprender a pegar e explorar.",
+    deMeses: 3,
+    ateMeses: 6,
+    simples: [
+      "Ofereça objetos leves e fáceis de segurar: argola, colher de pau, paninho.",
+      "Coloque perto da mão do bebê para ele tentar pegar.",
+      "Ele vai levar tudo à boca. Isso é normal.",
+      "Por isso, só dê coisas grandes, limpas e sem peças soltas.",
+      "Nunca deixe sacolas plásticas, moedas ou pilhas por perto.",
+    ],
+    aprofundado: [
+      "Por volta dos 4 meses, a maioria dos bebês já segura objetos e leva à boca. A boca é uma forma de explorar: ali o bebê sente textura, forma e temperatura.",
+      "Um teste simples: se o objeto passa por dentro de um rolinho de papel higiênico, é pequeno demais para criança abaixo de 3 anos, porque pode causar engasgo.",
+      "Pilhas do tipo botão e ímãs pequenos são muito perigosos se engolidos. Guarde controles, brinquedos com bateria e enfeites de geladeira longe do bebê.",
+    ],
+    atencao:
+      "Se ele engolir uma pilha, um ímã ou ficar engasgado sem conseguir respirar, ligue 192 na hora.",
+    fontes: [CADERNETA, SBP_ENGASGO, SBP_CORPO_ESTRANHO],
+  },
+  {
+    id: "es-rolar-e-alcancar",
+    categoria: "estimular",
+    titulo: "Rolar para alcançar o brinquedo",
+    resumo: "Brinquedos um pouco fora do alcance, no chão, incentivam o bebê a rolar e se mexer.",
+    deMeses: 3,
+    ateMeses: 9,
+    simples: [
+      "Deixe o bebê no chão, sobre um tapete ou pano, nunca em lugar alto.",
+      "Coloque um brinquedo ao lado, um pouco longe da mão.",
+      "Incentive com a voz: \"Vem pegar!\"",
+      "Deixe ele tentar sozinho antes de ajudar.",
+      "Comemore cada tentativa com sorrisos.",
+    ],
+    aprofundado: [
+      "Rolar costuma aparecer entre 4 e 6 meses. O chão é o lugar mais seguro e mais rico para o bebê se mexer: cadeirinhas, bebê-conforto fora do carro e andadores prendem o movimento.",
+      "A Sociedade Brasileira de Pediatria desaconselha o andador: ele não ajuda a andar e causa quedas graves, principalmente em escadas.",
+      "Bebê que começa a rolar pode cair de cama, sofá ou trocador num segundo. A partir daí, nunca deixe ele sozinho em lugar alto, nem por um instante.",
+    ],
+    atencao:
+      "Se ele cair de um lugar alto e vomitar, ficar muito sonolento, mole ou diferente: procure o pronto-socorro.",
+    fontes: [CADERNETA, OMS_MOVIMENTO, "Sociedade Brasileira de Pediatria, Departamento Científico de Segurança. Andador: perigoso e desnecessário. 2015."],
+  },
+  {
+    id: "es-esconde-achou",
+    categoria: "estimular",
+    titulo: "Cadê? Achou!",
+    resumo: "Esconder o rosto ou um brinquedo ensina que as coisas continuam existindo quando somem.",
+    deMeses: 6,
+    ateMeses: 12,
+    simples: [
+      "Cubra seu rosto com as mãos ou um pano e diga: \"Cadê?\"",
+      "Descubra e diga: \"Achou!\" com um sorriso.",
+      "Depois, esconda um brinquedo embaixo de um paninho, com ele vendo.",
+      "Deixe ele puxar o pano e achar.",
+      "Repita quantas vezes ele quiser.",
+    ],
+    aprofundado: [
+      "Por volta dos 9 meses, a Caderneta da Criança espera que o bebê brinque de esconde-achou. Ele está aprendendo que pessoas e objetos continuam existindo mesmo quando ele não vê.",
+      "Essa descoberta também explica por que muitos bebês choram quando você sai do quarto nessa fase: ele já sabe que você existe em outro lugar. Brincar de sumir e voltar ajuda a lidar com essas separações.",
+      "Use um pano leve e nunca deixe o bebê dormir com ele: pano solto no berço aumenta o risco de sufocação.",
+    ],
+    fontes: [CADERNETA, AAP_BRINCAR],
+  },
+  {
+    id: "es-potes-e-tampas",
+    categoria: "estimular",
+    titulo: "Potes, tampas e colheres",
+    resumo: "Utensílios de cozinha seguros viram brinquedos de bater, encaixar e tirar.",
+    deMeses: 6,
+    ateMeses: 12,
+    simples: [
+      "Separe potes de plástico, tampas grandes e colher de pau.",
+      "Deixe o bebê sentado no chão, com você perto.",
+      "Mostre como bater no pote e fazer barulho.",
+      "Coloque um objeto dentro do pote para ele tirar.",
+      "Nada de vidro, faca ou peças pequenas.",
+    ],
+    aprofundado: [
+      "Por volta dos 9 meses, a maioria dos bebês senta sem apoio e passa objetos de uma mão para a outra. Bater, tirar e colocar dentro são as brincadeiras preferidas dessa fase.",
+      "Brinquedo bom não precisa ser caro. A Academia Americana de Pediatria lembra que objetos simples e abertos, que podem virar muitas coisas, estimulam mais a criatividade do que brinquedos eletrônicos que fazem tudo sozinhos.",
+      "Antes de dar, confira se não há rachaduras ou pedaços que soltam. Pote de remédio, de produto de limpeza ou de cosmético não serve como brinquedo.",
+    ],
+    fontes: [CADERNETA, AAP_BRINCAR, SBP_ENGASGO],
+  },
+  {
+    id: "es-cesto-de-tesouros",
+    categoria: "estimular",
+    titulo: "Cesto de tesouros",
+    resumo: "Uma caixa com objetos de texturas diferentes para o bebê explorar com as mãos.",
+    deMeses: 6,
+    ateMeses: 12,
+    simples: [
+      "Pegue uma caixa ou cesto baixo.",
+      "Coloque objetos grandes e seguros: esponja nova, escova de cabelo macia, pano áspero, bola.",
+      "Deixe o bebê pegar, sentir e explorar.",
+      "Fique sempre junto, olhando.",
+      "Troque os objetos de vez em quando para ter novidade.",
+    ],
+    aprofundado: [
+      "Texturas diferentes, como liso, áspero, macio e duro, ajudam o bebê a conhecer o mundo pelo tato. Nessa idade ele começa a fazer o movimento de pinça, pegando coisas com a ponta dos dedos.",
+      "Como tudo vai à boca, use o teste do rolinho de papel higiênico: o que passa por dentro dele não entra no cesto. Evite também objetos com cordão comprido, que pode enrolar no pescoço.",
+      "Não coloque bexigas (balões de festa), nem cheias nem murchas: pedaços de bexiga estão entre as causas mais graves de engasgo em crianças pequenas.",
+    ],
+    atencao: "Se a criança engasgar e não conseguir chorar, tossir ou respirar, ligue 192 e comece a manobra de desengasgo.",
+    fontes: [CADERNETA, SBP_ENGASGO],
+  },
+  {
+    id: "es-leitura-compartilhada",
+    categoria: "estimular",
+    titulo: "Ler junto, desde bebê",
+    resumo: "Ler e mostrar figuras todo dia ajuda a fala, a atenção e o vínculo.",
+    deMeses: 6,
+    ateMeses: 72,
+    simples: [
+      "Escolha um livro com figuras grandes. Pode ser de pano ou plástico.",
+      "Sente com a criança no colo e mostre as figuras.",
+      "Aponte e diga o nome: \"Olha o cachorro! Au-au!\"",
+      "Não precisa ler o texto todo. Converse sobre a figura.",
+      "Faça um pouco todo dia, como na hora de dormir.",
+    ],
+    aprofundado: [
+      "A Sociedade Brasileira de Pediatria, com a campanha Receite um Livro, e a Academia Americana de Pediatria orientam ler em voz alta para as crianças desde o nascimento. Ler junto aumenta o vocabulário e a atenção e fortalece o vínculo entre a criança e quem lê.",
+      "Para bebês, livros de pano, plástico ou papelão grosso aguentam ser mordidos. Com 1 a 2 anos, a criança já aponta figuras quando você pergunta \"cadê o gato?\". A partir dos 2 anos, faça perguntas: \"o que você acha que vai acontecer?\".",
+      "Não tem livro em casa? Bibliotecas públicas emprestam de graça, e revistas, embalagens e fotos da família também servem para conversar. O importante é o momento juntos, não o livro.",
+    ],
+    fontes: [SBP_LEITURA, AAP_LEITURA, CADERNETA],
+  },
+  {
+    id: "es-tchau-e-palminhas",
+    categoria: "estimular",
+    titulo: "Tchau, palminhas e imitação",
+    resumo: "Gestos simples repetidos no dia a dia ajudam o bebê a se comunicar antes de falar.",
+    deMeses: 9,
+    ateMeses: 12,
+    simples: [
+      "Dê tchau com a mão sempre que alguém sair.",
+      "Bata palminhas quando algo bom acontecer.",
+      "Mande beijo, faça \"não\" com a cabeça, aponte para as coisas.",
+      "Espere ele imitar. Comemore quando ele fizer.",
+      "Dê nome a tudo que ele aponta.",
+    ],
+    aprofundado: [
+      "Perto de 1 ano, a Caderneta da Criança espera que o bebê imite gestos, como dar tchau e bater palmas, e que fale as primeiras sílabas com sentido, como \"mamã\" ou \"papá\". Gestos são uma forma de comunicação que vem antes das palavras.",
+      "Apontar é especialmente importante: quando a criança aponta para mostrar algo e olha para você, ela está dividindo a atenção com outra pessoa. Responda sempre, dando nome ao que ela mostrou.",
+      "A falta desses gestos de comunicação é um dos sinais que o pediatra avalia nas consultas, inclusive no questionário M-CHAT, que está na Caderneta e deve ser aplicado aos 18 e 24 meses.",
+    ],
+    atencao:
+      "Converse com o pediatra se, perto de 1 ano, ele não aponta, não dá tchau, não atende pelo nome ou não olha nos seus olhos.",
+    fontes: [CADERNETA],
+  },
+  {
+    id: "es-andar-com-apoio",
+    categoria: "estimular",
+    titulo: "Primeiros passos com segurança",
+    resumo: "Espaço livre no chão e móveis firmes para apoiar ajudam a criança a ficar de pé e andar.",
+    deMeses: 9,
+    ateMeses: 18,
+    simples: [
+      "Deixe a criança engatinhar e se apoiar em móveis firmes.",
+      "Tire do caminho tapetes que escorregam e quinas perigosas.",
+      "Fique na frente dela e chame: \"Vem!\"",
+      "Descalça em casa é melhor para sentir o chão.",
+      "Não use andador.",
+    ],
+    aprofundado: [
+      "A maioria das crianças anda sozinha entre 12 e 15 meses, mas há variação grande: algumas andam antes de 1 ano, outras perto de 1 ano e meio. Engatinhar não é obrigatório. Algumas crianças se arrastam sentadas ou vão direto para o andar.",
+      "Ficar descalço em superfície segura ajuda o equilíbrio e o fortalecimento dos pés. Fora de casa, use calçado leve e flexível.",
+      "Proteja escadas com portãozinho, prenda móveis que podem tombar, como estantes e TVs, e coloque protetor nas tomadas. A criança que anda chega a lugares novos todos os dias.",
+    ],
+    atencao: "Fale com o pediatra se, com 18 meses, ela ainda não anda sozinha, ou se ela perdeu algo que já fazia.",
+    fontes: [CADERNETA, OMS_MOVIMENTO],
+  },
+  {
+    id: "es-empilhar",
+    categoria: "estimular",
+    titulo: "Empilhar e derrubar",
+    resumo: "Montar torres com potes ou caixas treina mãos, olhos e paciência.",
+    deMeses: 12,
+    ateMeses: 24,
+    simples: [
+      "Use potes de plástico, caixinhas de papelão ou blocos grandes.",
+      "Mostre como colocar um em cima do outro.",
+      "Deixe a criança derrubar. Ela vai adorar.",
+      "Conte junto: \"Um, dois, três... caiu!\"",
+      "Monte de novo, juntos.",
+    ],
+    aprofundado: [
+      "Empilhar exige olhar, mão e força trabalhando juntos, o que se chama coordenação motora. A criança costuma empilhar 2 ou 3 objetos perto de 1 ano e meio e torres maiores depois dos 2 anos.",
+      "Derrubar também é aprendizado: ela descobre causa e efeito e repete para ver se acontece de novo. Contar em voz alta apresenta os números de um jeito natural.",
+      "Caixas de leite ou de suco, bem lavadas e com a boca fechada com fita, viram blocos leves e gratuitos.",
+    ],
+    fontes: [CADERNETA, AAP_BRINCAR],
+  },
+  {
+    id: "es-nomear-coisas",
+    categoria: "estimular",
+    titulo: "Falar o nome de tudo",
+    resumo: "Dar nome às coisas e às ações no dia a dia ajuda a criança a aprender palavras.",
+    deMeses: 12,
+    ateMeses: 24,
+    simples: [
+      "Diga o nome do que ela está olhando ou pegando.",
+      "Fale frases curtas e claras: \"É a bola. A bola rolou.\"",
+      "Se ela falar errado, repita certo, sem brigar: \"Isso, é água.\"",
+      "Faça perguntas simples: \"Cadê o sapato?\"",
+      "Desligue a TV de fundo. Ela atrapalha a conversa.",
+    ],
+    aprofundado: [
+      "Entre 1 e 2 anos, o número de palavras cresce rápido. Perto dos 2 anos, a Caderneta da Criança espera que a criança junte duas palavras, como \"quer água\" ou \"papai foi\".",
+      "Repetir a palavra do jeito certo, em vez de corrigir, é a forma mais eficaz de ensinar. Expandir também ajuda: se ela diz \"carro\", você responde \"o carro azul passou\".",
+      "TV ligada de fundo diminui a quantidade de palavras que os adultos dirigem à criança. A Sociedade Brasileira de Pediatria orienta nenhuma tela antes dos 2 anos.",
+    ],
+    atencao:
+      "Fale com o pediatra se, com 18 meses, ela não fala nenhuma palavra com sentido, ou se, com 2 anos, não junta duas palavras ou perdeu palavras que já falava.",
+    fontes: [CADERNETA, SBP_TELAS],
+  },
+  {
+    id: "es-ajudar-em-casa",
+    categoria: "estimular",
+    titulo: "Pequeno ajudante",
+    resumo: "Participar de tarefas simples da casa estimula autonomia, linguagem e coordenação.",
+    deMeses: 18,
+    ateMeses: 48,
+    simples: [
+      "Peça ajuda em tarefas fáceis: guardar brinquedos, levar a roupa ao cesto.",
+      "Deixe ela separar meias por cor ou guardar talheres de plástico.",
+      "Agradeça e elogie o esforço, não só o resultado.",
+      "Aceite que vai demorar mais e não vai ficar perfeito.",
+      "Longe do fogão, de facas e de produtos de limpeza.",
+    ],
+    aprofundado: [
+      "Crianças pequenas adoram imitar os adultos. Transformar tarefas em brincadeira ensina sequência, categorias (cores, tamanhos) e palavras novas, além de dar à criança a sensação de que ela é capaz.",
+      "A Caderneta da Criança acompanha marcos de autonomia, como tirar peças de roupa, comer sozinha com a colher e ajudar a se vestir. Tarefas da casa treinam esses mesmos movimentos.",
+      "Produtos de limpeza, remédios e cosméticos devem ficar no alto e trancados, nunca em garrafas de refrigerante. São das principais causas de intoxicação em crianças pequenas.",
+    ],
+    fontes: [CADERNETA, "Sociedade Brasileira de Pediatria. Intoxicações exógenas (Pediatria para Famílias). 2024."],
+  },
+  {
+    id: "es-rabiscar",
+    categoria: "estimular",
+    titulo: "Rabiscar e desenhar",
+    resumo: "Giz de cera grosso e papel no chão dão liberdade para rabiscar e criar.",
+    deMeses: 18,
+    ateMeses: 48,
+    simples: [
+      "Use giz de cera grosso ou lápis de cor grande.",
+      "Prenda uma folha grande no chão ou na mesa com fita.",
+      "Deixe rabiscar livre. Não precisa ser desenho de nada.",
+      "Pergunte: \"Me conta o que você fez?\"",
+      "Material atóxico, e de olho para não levar à boca.",
+    ],
+    aprofundado: [
+      "Rabiscar é um treino para a mão que um dia vai escrever. Primeiro vêm riscos soltos, depois círculos e, perto dos 3 anos, muitas crianças já tentam copiar um círculo. Bonecos com cabeça e pernas costumam aparecer entre 3 e 4 anos.",
+      "Pedir para a criança contar o que desenhou valoriza a imaginação e treina a fala. Evite corrigir o desenho ou desenhar por ela.",
+      "Papelão de caixas, verso de folhas usadas e papel de pão servem muito bem. Escolha materiais com selo do Inmetro e indicação para a idade.",
+    ],
+    fontes: [CADERNETA, AAP_BRINCAR],
+  },
+  {
+    id: "es-massinha-caseira",
+    categoria: "estimular",
+    titulo: "Massinha caseira com segurança",
+    resumo: "Amassar, enrolar e cortar massinha fortalece as mãos e solta a imaginação.",
+    deMeses: 24,
+    ateMeses: 72,
+    simples: [
+      "Massinha é ótima para as mãos: amassar, enrolar, fazer bolinha.",
+      "A massinha caseira leva muito sal. Não deixe a criança comer.",
+      "Brinque sempre junto, numa mesa.",
+      "Guarde num pote fechado, no alto, depois de brincar.",
+      "Use forminhas e palitos sem ponta para cortar e modelar.",
+    ],
+    aprofundado: [
+      "Modelar fortalece os músculos pequenos da mão, que depois vão segurar o lápis e a tesoura. Também é uma brincadeira calma, boa para o fim do dia.",
+      "Receitas de massinha caseira levam bastante sal. Centros de controle de intoxicação já alertaram que uma criança pequena que come uma porção grande pode ter excesso de sódio no sangue, o que é grave. Por isso: só com adulto junto, e fora do alcance depois.",
+      "Para quem ainda leva tudo à boca, prefira esperar ou trocar por brincadeiras sem massa. Massinhas compradas devem ter selo do Inmetro e indicação de idade.",
+    ],
+    atencao:
+      "Se a criança comeu um pedaço grande de massinha caseira e ficar com muita sede, vômitos, sonolência, irritação ou moleza, procure o pronto-socorro. Se tiver convulsão ou não acordar, ligue 192.",
+    fontes: [
+      CADERNETA,
+      AAP_BRINCAR,
+      "Vanderbilt University Medical Center, Tennessee Poison Center. What are the dangers of borax slime and homemade salt dough? 2016.",
+    ],
+  },
+  {
+    id: "es-faz-de-conta",
+    categoria: "estimular",
+    titulo: "Faz de conta",
+    resumo: "Brincar de casinha, médico ou mercado desenvolve linguagem, imaginação e emoções.",
+    deMeses: 24,
+    ateMeses: 72,
+    simples: [
+      "Separe roupas velhas, panelas, caixas e bonecos.",
+      "Entre na brincadeira: seja o cliente, o paciente, o filhinho.",
+      "Deixe a criança mandar na história.",
+      "Use a brincadeira para falar de medos: \"O ursinho vai ao médico?\"",
+      "Não precisa de brinquedo comprado. Caixa vira carro, casa ou foguete.",
+    ],
+    aprofundado: [
+      "O faz de conta costuma começar perto dos 2 anos, com ações simples, como dar comida para a boneca, e vai ficando mais elaborado até virar histórias inteiras entre 4 e 5 anos. A Caderneta acompanha esse marco.",
+      "Ao fingir ser outra pessoa, a criança treina se colocar no lugar do outro, organizar uma sequência de acontecimentos e controlar impulsos para seguir as regras da brincadeira. A Academia Americana de Pediatria considera esse tipo de brincar essencial para o desenvolvimento.",
+      "Brincar de médico ou de escola antes de uma consulta ou da entrada na creche ajuda a criança a entender e a falar do que vai acontecer.",
+    ],
+    atencao:
+      "Fale com o pediatra se, perto dos 2 a 3 anos, a criança não faz nenhuma brincadeira de faz de conta, brinca sempre do mesmo jeito repetitivo ou não se interessa por outras crianças.",
+    fontes: [CADERNETA, AAP_BRINCAR],
+  },
+  {
+    id: "es-ar-livre",
+    categoria: "estimular",
+    titulo: "Brincar ao ar livre",
+    resumo: "Correr, pular e explorar fora de casa todo dia faz bem ao corpo, ao sono e ao humor.",
+    deMeses: 12,
+    ateMeses: 72,
+    simples: [
+      "Leve a criança para brincar fora todos os dias, se possível.",
+      "Praça, quintal, calçada tranquila: tudo serve.",
+      "Deixe correr, pular, subir em lugar baixo e mexer na terra.",
+      "Proteja do sol forte: chapéu, roupa leve, água e sombra.",
+      "Lave as mãos depois.",
+    ],
+    aprofundado: [
+      "A Organização Mundial da Saúde recomenda que crianças de 1 a 4 anos fiquem ativas, em movimento de qualquer intensidade, pelo menos 3 horas por dia, espalhadas ao longo do dia. A partir dos 3 anos, parte disso deve ser brincadeira mais agitada, de suar e ficar ofegante.",
+      "Brincar fora melhora o equilíbrio, a força, o sono e o humor, e ajuda a prevenir obesidade. Também é ótimo para a visão: tempo ao ar livre está ligado a menor risco de miopia.",
+      "Evite o sol forte do meio do dia. Em bebês com menos de 6 meses, a proteção é sombra e roupa, não protetor solar. Em parquinhos, prefira brinquedos baixos, sobre areia ou grama, e fique perto.",
+    ],
+    fontes: [
+      OMS_MOVIMENTO,
+      "Sociedade Brasileira de Pediatria. Manual de Orientação nº 1: Promoção da Atividade Física na Infância e Adolescência. 2017.",
+    ],
+  },
+  {
+    id: "es-coordenacao-fina",
+    categoria: "estimular",
+    titulo: "Mãos habilidosas",
+    resumo: "Enfiar, recortar, abotoar e encaixar preparam a mão para escrever e se vestir sozinha.",
+    deMeses: 36,
+    ateMeses: 72,
+    simples: [
+      "Enfie macarrão grande (tipo tubinho) num cadarço.",
+      "Recorte papel com tesoura sem ponta, com você do lado.",
+      "Treine abotoar, fechar zíper e calçar o sapato.",
+      "Transfira objetos de um pote a outro com pregador de roupa.",
+      "Faça bolinhas de papel e tente acertar num balde.",
+    ],
+    aprofundado: [
+      "Entre 3 e 6 anos, a criança refina os movimentos das mãos. Ela passa a copiar formas, segurar o lápis com mais firmeza, usar tesoura e, perto dos 5 anos, se vestir quase sozinha.",
+      "Atividades do dia a dia, como abotoar, descascar uma banana ou ajudar a passar manteiga no pão, treinam exatamente esses movimentos e ainda dão autonomia.",
+      "Cadarço e cordões só com adulto junto: nunca deixe a criança dormir ou brincar sozinha com eles, pelo risco de enforcamento. Para menores de 3 anos, macarrão cru e pregadores são pequenos demais.",
+    ],
+    atencao:
+      "Converse com o pediatra se a criança tem muita dificuldade com tarefas das mãos em comparação com outras da mesma idade, ou se usa sempre um lado do corpo e evita o outro.",
+    fontes: [CADERNETA, AAP_BRINCAR, SBP_ENGASGO],
+  },
+  {
+    id: "es-jogos-com-regras",
+    categoria: "estimular",
+    titulo: "Jogos com regras e vez de jogar",
+    resumo: "Jogos simples ensinam a esperar a vez, ganhar, perder e seguir combinados.",
+    deMeses: 36,
+    ateMeses: 72,
+    simples: [
+      "Brinque de \"estátua\", \"morto-vivo\" ou \"seu mestre mandou\".",
+      "Jogos de memória feitos com tampinhas ou cartões de papel funcionam bem.",
+      "Explique a regra com poucas palavras e jogue junto.",
+      "Às vezes deixe ela ganhar, às vezes não.",
+      "Ajude a lidar com a frustração de perder: \"Fica chateado, né? Vamos de novo?\"",
+    ],
+    aprofundado: [
+      "Brincadeiras como estátua e seu mestre mandou treinam o controle dos impulsos: a criança precisa parar, esperar e prestar atenção. Essas habilidades, chamadas funções executivas, são importantes para a escola e para a vida.",
+      "Perder faz parte. Dar nome ao sentimento e mostrar que dá para tentar de novo ensina a lidar com frustração. Jogos muito longos ou difíceis cansam; prefira partidas curtas.",
+      "Jogos de roda e cantigas brasileiras também têm regras, ritmo e convivência, e não custam nada.",
+    ],
+    fontes: [AAP_BRINCAR, CADERNETA],
+  },
+  {
+    id: "es-contar-historias",
+    categoria: "estimular",
+    titulo: "Contar e inventar histórias",
+    resumo: "Inventar histórias juntos treina memória, vocabulário e organização das ideias.",
+    deMeses: 36,
+    ateMeses: 72,
+    simples: [
+      "Conte histórias da sua infância ou da família.",
+      "Comece uma história e deixe a criança continuar.",
+      "Pergunte: \"E depois? O que ele sentiu?\"",
+      "Peça para ela contar como foi o dia dela.",
+      "Antes de dormir é um ótimo momento.",
+    ],
+    aprofundado: [
+      "Entre 3 e 5 anos, a criança passa a contar coisas que aconteceram, em sequência. Perguntas abertas, que não se respondem com sim ou não, ajudam a organizar o pensamento e a fala.",
+      "Falar de sentimentos dos personagens (\"ele ficou com medo?\") ajuda a criança a reconhecer e nomear as próprias emoções.",
+      "Histórias contadas ao vivo, sem tela, também são um bom ritual de sono, que substitui o celular na hora de deitar.",
+    ],
+    atencao:
+      "Converse com o pediatra se, aos 4 anos, pessoas de fora da família ainda não entendem a maior parte do que a criança fala, ou se ela gagueja muito e sofre com isso.",
+    fontes: [SBP_LEITURA, AAP_LEITURA, CADERNETA],
+  },
+];

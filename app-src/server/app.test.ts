@@ -193,6 +193,8 @@ describe("assistente", () => {
     expect(ehEmergencia("meu filho está roxo e não respira")).toBe(true);
     expect(ehEmergencia("Ele engoliu uma pilha de relógio")).toBe(true);
     expect(ehEmergencia("como fazer introdução alimentar")).toBe(false);
+    expect(ehEmergencia("tenho vontade de machucar o bebê")).toBe(true);
+    expect(ehEmergencia("quero morrer, não aguento mais")).toBe(true);
     expect(validarResposta({ tipo: "orientacao", resposta: "Dê 10 gotas de dipirona", fluxo: "" }).tipo).toBe("medico");
     expect(validarResposta({ tipo: "fluxo", resposta: "Veja o fluxo.", fluxo: "inventado" }).fluxo).toBe("");
     expect(corpoDeReferencia()).toContain("Engasgo");

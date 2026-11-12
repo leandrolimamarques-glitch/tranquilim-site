@@ -18,6 +18,7 @@ export function Sobre({ voltar, rotuloVoltar = "Voltar" }: { voltar: () => void;
           {m.texto.map((t) => <p key={t}>{t}</p>)}
         </div>
       ))}
+      <p style={{ fontSize: 17 }}>{SOBRE.juntos}</p>
       <div className="card">
         <h3>Nosso compromisso</h3>
         <ul className="lista">{SOBRE.compromissos.map((c) => <li key={c}>{c}</li>)}</ul>

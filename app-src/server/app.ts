@@ -5,7 +5,7 @@ import path from "node:path";
 import bcrypt from "bcryptjs";
 import type { Banco } from "./banco";
 import type { LeitorCarteira } from "./leitura";
-import { ehEmergencia, RESPOSTA_EMERGENCIA, type Assistente } from "./pergunta";
+import { emergenciaDe, type Assistente } from "./pergunta";
 import { docValido, juntarDocs, type Doc } from "../src/lib/sinc";
 import { docInicial, docParaVista, type Crianca } from "../src/lib/familia";
 import { alertasDaCrianca } from "../src/lib/alertas";
@@ -540,11 +540,12 @@ export function criarApp(o: Opcoes) {
     if (pergunta.length < 3) throw new Erro(400, "Escreva a sua dúvida.");
     const [{ n }] = await banco.q<{ n: number }>(`select count(*)::int as n from perguntas where conta_id = $1 and criado_em > now() - interval '1 day'`, [req.conta!.id]);
     if (Number(n) >= (o.limitePerguntas ?? 20)) throw new Erro(429, "Chegou ao limite de perguntas de hoje. Para dúvidas sobre a criança, fale com o pediatra.");
-    let r = RESPOSTA_EMERGENCIA;
-    if (!ehEmergencia(pergunta)) {
+    let r = emergenciaDe(pergunta);
+    if (!r) {
       if (!o.assistente) throw new Erro(503, "O assistente não está ligado agora.");
       const [cfg] = await banco.q<{ valor: string }>(`select valor from config where chave = 'regras_ia'`);
-      r = await o.assistente(pergunta, { nome: a.nome, idadeTexto: idadeTexto(a.nascimento, hojeIso()), regrasDosMedicos: cfg?.valor });
+      const [ped] = await banco.q<{ nome: string }>(`select p.nome from acompanhamentos x join contas p on p.id = x.pediatra_id where x.crianca_id = $1 and p.pediatra order by x.desde limit 1`, [a.id]);
+      r = await o.assistente(pergunta, { nome: a.nome, idadeTexto: idadeTexto(a.nascimento, hojeIso()), regrasDosMedicos: cfg?.valor, pediatra: ped?.nome });
     }
     await banco.q(`insert into perguntas (id, crianca_id, conta_id, pergunta, tipo, resposta, fluxo) values ($1,$2,$3,$4,$5,$6,$7)`, [randomUUID(), a.id, req.conta!.id, pergunta, r.tipo, r.resposta, r.fluxo]);
     return r;

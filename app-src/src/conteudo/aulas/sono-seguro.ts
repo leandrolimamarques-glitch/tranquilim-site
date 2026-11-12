@@ -23,6 +23,19 @@ export const SONO_SEGURO: Trilha = {
         "De bruços, só acordado e com um adulto olhando: esse tempo ajuda a fortalecer pescoço e costas.",
       ],
       alerta: "Bebê encontrado roxo, mole ou sem respirar: ligue 192. Se você souber, comece a reanimação até a ajuda chegar.",
+      simples: [
+        "Coloque o bebê para dormir sempre de barriga para cima.",
+        "Vale para a noite e para os cochilos do dia.",
+        "De lado não é seguro. De bruços também não.",
+        "Bebê com refluxo também dorme de barriga para cima.",
+        "De bruços, só acordado e com um adulto olhando.",
+      ],
+      aprofundado: [
+        "A síndrome da morte súbita do lactente é a morte inesperada de um bebê aparentemente saudável, quase sempre durante o sono e com mais frequência nos primeiros meses. Desde que as campanhas passaram a orientar o sono de barriga para cima, essas mortes caíram muito no mundo todo.",
+        "De bruços, o bebê pode respirar de novo o ar que ele mesmo soltou e tem mais dificuldade para despertar. De lado a posição é instável: ele rola para de bruços com facilidade.",
+        "Muitos pais temem que o bebê se engasgue com leite ou vômito de barriga para cima. O bebê saudável tem reflexos que protegem a respiração, e essa posição não aumenta o engasgo. Por isso, também no refluxo, a orientação é barriga para cima, sem travesseiro, rolinho ou elevação do berço.",
+        "Quando o bebê já rola sozinho para os dois lados (de barriga para cima para de bruços e de volta), pode ficar na posição que escolher. O tempo de bruços acordado, com um adulto olhando, fortalece pescoço, ombros e costas e ajuda a evitar que a parte de trás da cabeça fique achatada.",
+      ],
     },
     {
       id: "ss2",
@@ -37,6 +50,19 @@ export const SONO_SEGURO: Trilha = {
         "Sem cordões, fitas, colares ou enfeites de cabelo no bebê ou perto dele na hora de dormir.",
       ],
       alerta: "Bebê encontrado com o rosto coberto e sem reagir, roxo ou sem respirar: ligue 192 e, se souber, comece a reanimação.",
+      simples: [
+        "No berço, só o bebê. Nada solto.",
+        "Sem travesseiro, cobertor, bichinho ou protetor de grade.",
+        "Colchão firme, que não afunda, com lençol de elástico.",
+        "Nunca deixe o bebê dormir no sofá ou na poltrona.",
+        "Dormiu na cadeirinha do carro? Passe para o berço ao chegar.",
+      ],
+      aprofundado: [
+        "Objetos macios e soltos no berço podem cobrir o nariz e a boca do bebê, e ele ainda não tem força nem coordenação para se livrar deles. Colchão mole forma uma cova onde o rosto pode afundar. Por isso o berço seguro é \"sem graça\": colchão firme, bem encaixado, lençol de elástico e mais nada.",
+        "O protetor de grade parece proteger, mas pode sufocar ou prender o bebê. As grades com no máximo 6 cm entre elas impedem que o corpo passe e a cabeça fique presa.",
+        "Sofá e poltrona estão entre os lugares mais perigosos para o bebê dormir, sozinho ou no colo de um adulto que cochila: ele pode ficar preso entre o adulto e as almofadas. Na cadeirinha do carro, no bebê-conforto ou no sling, o bebê fica meio sentado, e a cabeça pode cair para a frente e dificultar a respiração.",
+        "Cordões, fitas e colares podem enrolar no pescoço. Isso inclui o cordão da chupeta e os enfeites de cabelo.",
+      ],
     },
     {
       id: "ss3",
@@ -50,6 +76,19 @@ export const SONO_SEGURO: Trilha = {
         "Ninho, redutor ou outro acessório para dormir junto na cama não tornam a cama segura. Gêmeos: cada um no seu berço.",
       ],
       alerta: "Se você anda adormecendo com o bebê no colo sem perceber, peça ajuda à família e fale com a equipe da UBS. Cansaço extremo, tristeza que não passa ou falta de vontade de cuidar do bebê podem ser depressão pós-parto, que tem tratamento.",
+      simples: [
+        "Deixe o berço do bebê no seu quarto, perto da sua cama.",
+        "Cada um dorme no seu lugar: o bebê no berço dele.",
+        "Pode trazer o bebê para a cama para mamar. Depois, volte com ele ao berço.",
+        "Nunca durma com o bebê se bebeu, fumou, tomou remédio que dá sono ou usou droga.",
+        "Muito cansaço ou tristeza que não passa: peça ajuda na UBS.",
+      ],
+      aprofundado: [
+        "Dormir no mesmo quarto, com o bebê no próprio berço, facilita as mamadas e reduz o risco de morte súbita. O recomendado é pelo menos nos primeiros 6 meses e, de preferência, até 1 ano.",
+        "Na cama dos pais, o colchão é mais macio, há travesseiros e cobertas, e o adulto pode rolar sobre o bebê no sono profundo. O risco é maior nos primeiros 3 meses, em bebês prematuros e quando o adulto fumou, bebeu álcool, tomou remédio que dá sono, usou droga ou está exausto.",
+        "Muitas mães adormecem amamentando. Se você perceber que pode dormir, é menos perigoso estar na cama do que no sofá ou na poltrona: tire travesseiros e cobertas de perto do bebê e, ao acordar, devolva-o ao berço, de barriga para cima.",
+        "Ninhos, redutores e outros acessórios para dormir junto na cama não tornam a cama segura. Cansaço extremo, tristeza que não passa ou falta de vontade de cuidar do bebê podem ser depressão pós-parto, que é comum e tem tratamento: a equipe da UBS pode ajudar.",
+      ],
     },
     {
       id: "ss4",
@@ -64,6 +103,18 @@ export const SONO_SEGURO: Trilha = {
         "Enrolar o bebê no cueiro não previne morte súbita. Se usar, sempre de barriga para cima, e pare assim que ele tentar rolar, o que costuma acontecer por volta dos 3 a 4 meses. Cueiro ou cobertor com peso não são seguros.",
       ],
       alerta: "Bebê quente, suado e molinho, ou com temperatura acima de 37,3 °C na axila depois de tirar o excesso de roupa: use o guia de febre do app. Com menos de 3 meses, vá ao pronto-socorro.",
+      simples: [
+        "Vista o bebê como você se vestiria, com no máximo uma peça a mais.",
+        "Aqueça com a roupa, não com cobertor.",
+        "Não cubra a cabeça nem o rosto do bebê para dormir.",
+        "Bebê suado ou com o peito quente está com calor demais.",
+        "Se enrolar no cueiro, pare quando ele começar a tentar virar.",
+      ],
+      aprofundado: [
+        "O calor em excesso está ligado a mais risco de morte súbita. Mais roupa não é mais proteção. Um jeito prático de conferir é tocar o peito ou a nuca do bebê: devem estar mornos, sem suor.",
+        "Cobertor solto pode subir e cobrir o rosto. Se o quarto estiver frio, prefira uma roupa mais quente ou um saco de dormir do tamanho certo. Deixar a cabeça descoberta ajuda o bebê a perder o calor que sobra.",
+        "O cueiro (pano para enrolar o bebê) pode acalmar, mas não previne morte súbita, e enrolado de bruços o risco aumenta muito. Por isso, se usar, sempre de barriga para cima e só até ele dar sinais de que vai rolar, o que costuma acontecer por volta dos 3 a 4 meses. Cueiro ou cobertor com peso não são seguros.",
+      ],
     },
     {
       id: "ss5",
@@ -78,6 +129,18 @@ export const SONO_SEGURO: Trilha = {
         "Decida junto com o pediatra o que faz mais sentido para o seu bebê.",
       ],
       alerta: "Depois que começou a chupeta, o bebê passou a mamar menos, largar o peito ou não ganhar peso: fale com o pediatra ou a UBS.",
+      simples: [
+        "Chupeta não é obrigatória. A família decide junto com o pediatra.",
+        "Se o bebê mama no peito, espere a amamentação estar firme antes.",
+        "Ofereça para dormir, mas não force.",
+        "Nunca pendure a chupeta no pescoço nem prenda com cordão.",
+        "Nunca passe mel ou açúcar na chupeta.",
+      ],
+      aprofundado: [
+        "O Ministério da Saúde orienta evitar a chupeta porque ela pode atrapalhar a amamentação: o jeito de sugar é diferente, o bebê pode mamar menos vezes e a produção de leite cair. O uso prolongado também está ligado a problemas na posição dos dentes e na fala.",
+        "Já o documento da Sociedade Brasileira de Pediatria sobre morte súbita e a Academia Americana de Pediatria sugerem oferecer a chupeta na hora de dormir, porque ela está ligada a menor risco de morte súbita. Ainda não se sabe exatamente o motivo dessa proteção.",
+        "Um caminho que concilia as duas orientações: se a família escolher a chupeta e o bebê mama no peito, esperar a amamentação estar bem estabelecida (boa pega, bastante leite e bom ganho de peso). Se a chupeta cair depois que o bebê dormiu, não precisa recolocar. Mel na chupeta traz risco de botulismo antes de 1 ano, e açúcar favorece a cárie.",
+      ],
     },
     {
       id: "ss6",
@@ -91,6 +154,19 @@ export const SONO_SEGURO: Trilha = {
         "Para ajudar a diferenciar dia e noite: de dia, cochilos com a claridade e os barulhos normais da casa; à noite, quarto escuro e silencioso.",
       ],
       alerta: "Recém-nascido que dorme tanto que não acorda para mamar: pediatra ou UBS no mesmo dia. Bebê muito sonolento, difícil de acordar ou molinho: pronto-socorro.",
+      simples: [
+        "O recém-nascido dorme muito, em sonos curtos, de dia e de noite.",
+        "Ele acorda para mamar, inclusive de madrugada. É normal.",
+        "Aos poucos, o sono vai se concentrando mais à noite.",
+        "De dia, deixe a casa clara e com os barulhos normais.",
+        "À noite, quarto escuro e silencioso.",
+        "Não acorda para mamar: UBS hoje. Molinho ou difícil de acordar: pronto-socorro.",
+      ],
+      aprofundado: [
+        "O recém-nascido ainda não tem o relógio biológico (ritmo circadiano) formado e não diferencia dia e noite. Ele dorme em blocos curtos espalhados pelas 24 horas, porque precisa mamar com frequência. Esse relógio amadurece nos primeiros meses, com a ajuda da luz do dia e da rotina da casa.",
+        "Por volta dos 2 a 3 meses o sono começa a se concentrar à noite. Dos 4 aos 12 meses, a Academia Americana de Medicina do Sono considera esperado de 12 a 16 horas em 24 horas, somando os cochilos. São médias: o que importa é o bebê estar disposto, mamando e crescendo bem.",
+        "\"Dormir a noite inteira\", para um bebê, costuma significar um bloco mais longo de sono, e não a noite toda sem nenhum despertar. Alguns bebês saudáveis continuam acordando à noite mesmo depois dos 9 meses. Comparar com o bebê dos outros costuma trazer preocupação à toa.",
+      ],
     },
     {
       id: "ss7",
@@ -105,6 +181,19 @@ export const SONO_SEGURO: Trilha = {
         "Todos que cuidam do bebê devem fazer do mesmo jeito.",
       ],
       alerta: "Se o sono do bebê está deixando a família exausta, ou a rotina não funciona depois de semanas tentando, converse com o pediatra: há caminhos seguros para ajudar.",
+      simples: [
+        "Faça a mesma sequência toda noite: banho, mamada, música baixa, luz apagada.",
+        "A rotina deve ser curta e tranquila.",
+        "Tente horários parecidos todos os dias, também no fim de semana.",
+        "Desligue TV e celular bem antes de dormir.",
+        "Aos poucos, ponha o bebê no berço sonolento, mas ainda acordado.",
+      ],
+      aprofundado: [
+        "Uma rotina previsível funciona como um aviso para o corpo do bebê de que o sono está chegando. A Sociedade Brasileira de Pediatria, no documento sobre higiene do sono (os hábitos que ajudam a dormir bem), recomenda uma sequência curta, sempre igual, num ambiente calmo e escuro, com horários regulares.",
+        "A luz das telas e o estímulo dos vídeos atrapalham a chegada do sono. Por isso a orientação é desligar as telas pelo menos 1 hora antes de dormir.",
+        "Colocar o bebê no berço sonolento, mas acordado, ajuda ele a aprender a adormecer ali. Assim, quando acordar entre um ciclo de sono e outro, reconhece o lugar e tem mais chance de voltar a dormir sozinho. Isso vem aos poucos: nos primeiros meses é normal ele precisar de colo e peito para dormir.",
+        "Quando cada adulto faz de um jeito, o bebê fica confuso. Combine a rotina com todos que cuidam dele. Se o sono está deixando a família exausta, o pediatra pode ajudar com estratégias seguras para a idade.",
+      ],
     },
     {
       id: "ss8",
@@ -119,6 +208,19 @@ export const SONO_SEGURO: Trilha = {
         "Depois de mamar ou acalmar, devolva o bebê ao berço, de barriga para cima.",
       ],
       alerta: "Bebê que acorda chorando muito e não se acalma de jeito nenhum, ou acorda com febre, vômitos ou respiração difícil: procure atendimento. Se o cansaço dos pais estiver grande demais, peça ajuda à família e à equipe da UBS.",
+      simples: [
+        "Todo bebê acorda de noite. É normal.",
+        "Nos primeiros meses, ele precisa acordar para mamar.",
+        "No bebê maior, espere um pouquinho antes de pegar: às vezes ele volta a dormir.",
+        "À noite, luz fraca, voz baixa e pouca conversa.",
+        "Depois, devolva o bebê ao berço, de barriga para cima.",
+      ],
+      aprofundado: [
+        "O sono é feito de ciclos, e os do bebê são mais curtos que os do adulto. No fim de cada ciclo há um despertar breve: ele se mexe, resmunga, abre os olhos. Muitas vezes volta a dormir sozinho se não for estimulado.",
+        "Nos primeiros meses, acordar para mamar é necessário para crescer, e as mamadas da madrugada ajudam a manter a produção de leite. Não é manha e não deve ser evitado.",
+        "No bebê maior, uma pausa curta antes de intervir dá a chance de ele aprender a voltar a dormir. Se precisar atender, faça com luz fraca e voz baixa, para não sinalizar que já é dia. Doenças, viagens e outras mudanças na rotina podem trazer algumas noites piores, que costumam passar.",
+        "Choro forte que não acalma de jeito nenhum, ou despertar com febre, vômitos ou respiração difícil, não é o acordar normal e precisa de avaliação.",
+      ],
     },
   ],
   fontes: [

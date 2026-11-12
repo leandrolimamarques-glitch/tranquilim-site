@@ -548,6 +548,18 @@ export function criarApp(o: Opcoes) {
     return { ok: true };
   }));
 
+  /** Manda um e-mail de teste para o próprio administrador e devolve o erro do provedor, se houver. */
+  adm.post("/teste-email", rota(async (req) => {
+    if (!o.carteiro) return { ok: false, erro: "RESEND_API_KEY não está configurada no servidor." };
+    try {
+      const m = mensagem("Teste de e-mail do Tranquilim", ["Se você recebeu isto, o envio de e-mails está funcionando."], { texto: "Abrir o Tranquilim", url: o.urlBase ?? "https://app.tranquilim.com.br" });
+      await o.carteiro({ para: req.conta!.email, assunto: "Teste de e-mail do Tranquilim", ...m });
+      return { ok: true };
+    } catch (e) {
+      return { ok: false, erro: e instanceof Error ? e.message : String(e) };
+    }
+  }));
+
   app.use("/api/admin", adm);
 
   // ---------- carteira de vacinação ----------

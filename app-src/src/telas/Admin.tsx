@@ -22,6 +22,7 @@ export function Admin({ voltar, euId }: { voltar: () => void; euId: string }) {
       <button className="voltar" onClick={voltar}>‹ Ajustes</button>
       <h1 style={{ fontSize: 26 }}>Administração</h1>
       <p className="muted">Quem criou conta. Para liberar a função de pediatra, abra a pessoa e ative.</p>
+      <TesteEmail />
       <RegrasIA />
       <h2 style={{ marginTop: 8 }}>Contas</h2>
       <label className="campo">Buscar<input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="nome ou e-mail" /></label>
@@ -113,6 +114,26 @@ function RegrasIA() {
         </div>
       ))}
       {perguntas.length > 8 && !verTodas && <button className="voltar" onClick={() => setVerTodas(true)}>Ver todas ({perguntas.length})</button>}
+    </div>
+  );
+}
+
+function TesteEmail() {
+  const [msg, setMsg] = useState("");
+  return (
+    <div className="card">
+      <h3>E-mail</h3>
+      <p className="muted pequeno">Manda um e-mail de teste para você. Se der erro, aparece aqui o motivo.</p>
+      <button className="btn sec bloco" onClick={async () => {
+        setMsg("Enviando…");
+        try {
+          const r = await api.post<{ ok: boolean; erro?: string }>("/api/admin/teste-email");
+          setMsg(r.ok ? "Enviado. Veja a caixa de entrada e o spam." : `Não enviou: ${r.erro}`);
+        } catch (e) {
+          setMsg((e as Error).message);
+        }
+      }}>Mandar e-mail de teste</button>
+      {msg && <p className="pequeno">{msg}</p>}
     </div>
   );
 }

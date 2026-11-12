@@ -12,8 +12,9 @@ import { Ajustes } from "./telas/Ajustes";
 import { Pergunta } from "./telas/Pergunta";
 import { Consultorio } from "./telas/painel/Consultorio";
 import { Coruja } from "./Coruja";
+import { Sobre } from "./telas/Sobre";
 
-export type Aba = "inicio" | "ps" | "trilhas" | "caderneta" | "ajustes" | "pergunta" | "consultorio";
+export type Aba = "inicio" | "ps" | "trilhas" | "caderneta" | "ajustes" | "pergunta" | "consultorio" | "sobre";
 export type Navegar = (aba: Aba, opcoes?: { secao?: SecaoCaderneta; fluxo?: string }) => void;
 
 const CHAVE_CRIANCA = "tq:crianca";
@@ -121,6 +122,8 @@ function Logado({ sessao, recarregar }: { sessao: Sessao; recarregar: () => Prom
         return <Trilhas dados={dados} atualizar={atualizar} />;
       case "caderneta":
         return precisaCrianca(<Caderneta dados={dados} atualizar={atualizar} secao={secao} setSecao={setSecao} modo={{ quem: "familia", carteira: true, pacienteId: dados.criancaId }} />);
+      case "sobre":
+        return <Sobre voltar={() => navegar("inicio")} rotuloVoltar="Início" />;
       case "pergunta":
         return precisaCrianca(<Pergunta dados={dados} navegar={navegar} />);
       default:

@@ -464,6 +464,21 @@ export function criarApp(o: Opcoes) {
     return { ok: true };
   }));
 
+  /** Regras que os médicos impõem à IA, e o que as famílias têm perguntado. */
+  adm.get("/ia", rota(async () => {
+    const [r] = await banco.q<{ valor: string }>(`select valor from config where chave = 'regras_ia'`);
+    const perguntas = await banco.q<Record<string, unknown>>(
+      `select p.pergunta, p.tipo, p.resposta, p.criado_em, k.nome as crianca from perguntas p join criancas k on k.id = p.crianca_id order by p.criado_em desc limit 100`,
+    );
+    return { regras: r?.valor ?? "", perguntas: perguntas.map((x) => ({ pergunta: x.pergunta, tipo: x.tipo, resposta: x.resposta, crianca: x.crianca, criadoEm: iso(x.criado_em) })) };
+  }));
+
+  adm.put("/ia", rota(async (req) => {
+    const regras = typeof (req.body as { regras?: unknown }).regras === "string" ? ((req.body as { regras: string }).regras).slice(0, 8000) : "";
+    await banco.q(`insert into config (chave, valor) values ('regras_ia', $1) on conflict (chave) do update set valor = excluded.valor, atualizado_em = now()`, [regras]);
+    return { ok: true };
+  }));
+
   app.use("/api/admin", adm);
 
   // ---------- carteira de vacinação ----------
@@ -528,7 +543,8 @@ export function criarApp(o: Opcoes) {
     let r = RESPOSTA_EMERGENCIA;
     if (!ehEmergencia(pergunta)) {
       if (!o.assistente) throw new Erro(503, "O assistente não está ligado agora.");
-      r = await o.assistente(pergunta, { nome: a.nome, idadeTexto: idadeTexto(a.nascimento, hojeIso()) });
+      const [cfg] = await banco.q<{ valor: string }>(`select valor from config where chave = 'regras_ia'`);
+      r = await o.assistente(pergunta, { nome: a.nome, idadeTexto: idadeTexto(a.nascimento, hojeIso()), regrasDosMedicos: cfg?.valor });
     }
     await banco.q(`insert into perguntas (id, crianca_id, conta_id, pergunta, tipo, resposta, fluxo) values ($1,$2,$3,$4,$5,$6,$7)`, [randomUUID(), a.id, req.conta!.id, pergunta, r.tipo, r.resposta, r.fluxo]);
     return r;

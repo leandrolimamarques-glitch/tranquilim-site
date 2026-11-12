@@ -174,6 +174,14 @@ describe("contas, crianças e pediatras", () => {
     expect((await chicao("POST", "/api/conta/entrar", { email: "chicao@x.com", senha: "provisoria1" })).status).toBe(200);
   });
 
+  it("regras da IA: só o dono edita, e chegam à IA", async () => {
+    expect((await mae("PUT", "/api/admin/ia", { regras: "x" })).status).toBe(403);
+    await dono("PUT", "/api/admin/ia", { regras: "Sempre lembrar do soro de reidratação na diarreia." });
+    const r = (await dono("GET", "/api/admin/ia")).corpo;
+    expect(r.regras).toContain("soro");
+    expect(r.perguntas.length).toBeGreaterThan(0);
+  });
+
   it("sair encerra a sessão", async () => {
     await mae("POST", "/api/conta/sair");
     expect((await mae("GET", "/api/conta")).status).toBe(401);

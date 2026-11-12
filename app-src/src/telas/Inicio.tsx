@@ -128,6 +128,10 @@ export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar:
           <h3>Registrar o primeiro peso</h3>
         )}
       </button>
+      <button className="card" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => navegar("sobre")}>
+        <span className="muted pequeno" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Quem somos</span>
+        <p className="muted">Feito por dois médicos. Conheça a história do Tranquilim.</p>
+      </button>
     </>
   );
 }

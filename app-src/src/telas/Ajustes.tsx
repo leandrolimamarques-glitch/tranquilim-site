@@ -5,13 +5,15 @@ import { linhaRegistro } from "../lib/convite";
 import type { CriancaDaConta, Pediatra, Sessao } from "../lib/store";
 import { Onboarding } from "./Onboarding";
 import { Admin } from "./Admin";
+import { Sobre } from "./Sobre";
 
 type Props = { sessao: Sessao; atual: CriancaDaConta | null; escolher: (id: string) => void; recarregar: () => Promise<void>; navegar: Navegar; novaCrianca: () => void };
 
 export function Ajustes({ sessao, atual, escolher, recarregar, navegar, novaCrianca }: Props) {
-  const [tela, setTela] = useState<"menu" | "admin" | "senha">("menu");
+  const [tela, setTela] = useState<"menu" | "admin" | "senha" | "sobre">("menu");
   if (tela === "admin") return <Admin voltar={() => setTela("menu")} euId={sessao.conta.id} />;
   if (tela === "senha") return <TrocarSenha voltar={() => setTela("menu")} />;
+  if (tela === "sobre") return <Sobre voltar={() => setTela("menu")} rotuloVoltar="Ajustes" />;
   const sair = async () => {
     await api.post("/api/conta/sair").catch(() => undefined);
     location.reload();
@@ -53,6 +55,10 @@ export function Ajustes({ sessao, atual, escolher, recarregar, navegar, novaCria
         </div>
       )}
 
+      <button className="card" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => setTela("sobre")}>
+        <h3>Quem somos</h3>
+        <p className="muted">Por que criamos o Tranquilim e quem são os médicos por trás dele.</p>
+      </button>
       <div className="card">
         <h3>Sobre o Tranquilim</h3>
         <p className="muted">Orienta e não substitui a consulta. Em emergência, ligue 192. Os dados ficam na sua conta e só você, quem você incluir como responsável e o pediatra que você escolher veem.</p>

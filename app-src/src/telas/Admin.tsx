@@ -22,6 +22,8 @@ export function Admin({ voltar, euId }: { voltar: () => void; euId: string }) {
       <button className="voltar" onClick={voltar}>‹ Ajustes</button>
       <h1 style={{ fontSize: 26 }}>Administração</h1>
       <p className="muted">Quem criou conta. Para liberar a função de pediatra, abra a pessoa e ative.</p>
+      <RegrasIA />
+      <h2 style={{ marginTop: 8 }}>Contas</h2>
       <label className="campo">Buscar<input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="nome ou e-mail" /></label>
       {aviso && <div className="card" role="status"><p>{aviso}</p></div>}
       {lista?.map((c) => (
@@ -80,5 +82,37 @@ function EditarConta({ c, eu, pronto }: { c: ContaAdm; eu: boolean; pronto: (m: 
       </div>
       {erro && <p className="pequeno" style={{ color: "var(--ps)" }}>{erro}</p>}
     </>
+  );
+}
+
+type PerguntaAdm = { pergunta: string; tipo: string; resposta: string; crianca: string; criadoEm: string };
+
+function RegrasIA() {
+  const [regras, setRegras] = useState<string | null>(null);
+  const [perguntas, setPerguntas] = useState<PerguntaAdm[]>([]);
+  const [msg, setMsg] = useState("");
+  const [verTodas, setVerTodas] = useState(false);
+  useEffect(() => {
+    api.get<{ regras: string; perguntas: PerguntaAdm[] }>("/api/admin/ia").then((r) => { setRegras(r.regras); setPerguntas(r.perguntas); }).catch(() => setRegras(""));
+  }, []);
+  if (regras === null) return null;
+  const ROT: Record<string, string> = { orientacao: "respondeu", fluxo: "mandou ao fluxo", medico: "mandou ao pediatra", emergencia: "192", fora: "fora do conteúdo" };
+  return (
+    <div className="card">
+      <h3>IA: regras dos médicos</h3>
+      <p className="muted pequeno">O "Pergunte ao Tranquilim" já usa o conteúdo do app e os filtros fixos (emergência vai ao 192; remédio, dose e diagnóstico vão ao pediatra). Aqui vocês acrescentam orientações próprias, uma por linha. Valem na próxima pergunta.</p>
+      <textarea className="area-texto" rows={6} value={regras} onChange={(e) => setRegras(e.target.value)} placeholder={"Ex.: Em dúvidas sobre sono, sempre lembrar que o bebê dorme de barriga para cima.\nEx.: Não falar sobre homeopatia; dizer que é para conversar com o pediatra."} />
+      <button className="btn bloco" onClick={async () => { await api.put("/api/admin/ia", { regras }); setMsg("Regras salvas."); }}>Salvar regras</button>
+      {msg && <p className="pequeno">{msg}</p>}
+      <h3 style={{ marginTop: 8 }}>Últimas perguntas das famílias</h3>
+      {perguntas.length === 0 && <p className="muted">Ninguém perguntou ainda.</p>}
+      {(verTodas ? perguntas : perguntas.slice(0, 8)).map((q, i) => (
+        <div key={i} style={{ borderTop: "1px solid var(--line)", paddingTop: 6 }}>
+          <div className="linha"><b style={{ fontWeight: 600 }}>{q.pergunta}</b><span className="chip">{ROT[q.tipo] ?? q.tipo}</span></div>
+          <p className="muted pequeno">{q.crianca} · {dataBr(q.criadoEm.slice(0, 10))} · {q.resposta}</p>
+        </div>
+      ))}
+      {perguntas.length > 8 && !verTodas && <button className="voltar" onClick={() => setVerTodas(true)}>Ver todas ({perguntas.length})</button>}
+    </div>
   );
 }

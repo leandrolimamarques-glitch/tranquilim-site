@@ -12,7 +12,7 @@ import { DICAS, FLUXOS, TRILHAS } from "../src/conteudo";
 
 export type TipoResposta = "orientacao" | "fluxo" | "medico" | "emergencia" | "fora";
 export type RespostaAssistente = { tipo: TipoResposta; resposta: string; fluxo: string };
-export type Assistente = (pergunta: string, contexto: { idadeTexto: string; nome: string }) => Promise<RespostaAssistente>;
+export type Assistente = (pergunta: string, contexto: { idadeTexto: string; nome: string; regrasDosMedicos?: string }) => Promise<RespostaAssistente>;
 
 const NFD = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
@@ -91,7 +91,12 @@ export function criarAssistenteClaude(chave: string, modelo: string): Assistente
       model: modelo,
       max_tokens: 2000,
       output_config: { effort: "low", format: { type: "json_schema", schema: ESQUEMA } },
-      system: [{ type: "text", text: sistema, cache_control: { type: "ephemeral" } }],
+      system: [
+        { type: "text", text: sistema, cache_control: { type: "ephemeral" } },
+        ...(ctx.regrasDosMedicos?.trim()
+          ? [{ type: "text" as const, text: `ORIENTAÇÕES DOS MÉDICOS DO TRANQUILIM (siga sempre; se conflitarem com as regras acima, vale a regra mais segura para a criança):\n${ctx.regrasDosMedicos.trim()}` }]
+          : []),
+      ],
       messages: [{ role: "user", content: `Criança: ${ctx.nome}, ${ctx.idadeTexto}.\nPergunta da família: ${pergunta}` }],
     });
     if (r.stop_reason === "refusal") return { tipo: "medico", resposta: "Essa pergunta é para o seu pediatra, que conhece a criança.", fluxo: "" };

@@ -1,12 +1,14 @@
 import { useState, type ChangeEvent, type FormEvent } from "react";
 import { Coruja } from "../Coruja";
 import { api } from "../lib/api";
+import { Sobre } from "./Sobre";
 
 export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
   const [modo, setModo] = useState<"entrar" | "criar">("entrar");
   const [f, setF] = useState({ nome: "", email: "", senha: "" });
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [sobre, setSobre] = useState(false);
   const campo = (k: keyof typeof f) => ({ value: f[k], onChange: (e: ChangeEvent<HTMLInputElement>) => setF({ ...f, [k]: e.target.value }) });
   const valido = f.email.includes("@") && f.senha.length >= 8 && (modo === "entrar" || f.nome.trim().length >= 2);
 
@@ -23,6 +25,7 @@ export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
     }
   };
 
+  if (sobre) return <Sobre voltar={() => setSobre(false)} rotuloVoltar="Entrar" />;
   return (
     <>
       <div className="card noite" style={{ alignItems: "center", textAlign: "center", padding: 24 }}>
@@ -42,6 +45,7 @@ export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
         <button className="btn bloco" type="submit" disabled={!valido || enviando}>{enviando ? "Aguarde…" : modo === "entrar" ? "Entrar" : "Criar conta"}</button>
         {modo === "entrar" && <p className="muted pequeno">Esqueceu a senha? Fale com quem te convidou para o Tranquilim.</p>}
       </form>
+      <button className="voltar" style={{ alignSelf: "center" }} onClick={() => setSobre(true)}>Quem somos ›</button>
       <a className="link-192" href="tel:192">Emergência: ligar 192</a>
     </>
   );

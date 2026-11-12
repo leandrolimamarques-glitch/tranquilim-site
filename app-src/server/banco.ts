@@ -175,6 +175,11 @@ const MIGRACOES: string[] = [
      criado_em timestamptz not null default now()
    );
    create index perguntas_crianca on perguntas(crianca_id, criado_em)`,
+  `create table config (
+     chave text primary key,
+     valor text not null,
+     atualizado_em timestamptz not null default now()
+   )`,
 ];
 
 export async function migrar(banco: Banco): Promise<number> {

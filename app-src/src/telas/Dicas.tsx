@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { DICAS } from "../conteudo";
 import { ROTULO_CATEGORIA, type CategoriaDica, type Dica } from "../conteudo/dicas/tipos";
 import { hojeIso, idadeEmMesesDecimal } from "../lib/idade";
+import { imagemDe } from "../conteudo/imagens";
 import type { Dados } from "../lib/store";
 
 function faixa(d: Dica): string {
@@ -44,6 +45,7 @@ export function Dicas({ dados }: { dados: Dados }) {
       {lista.length === 0 && <p className="muted">Nada encontrado{daIdade ? " para esta idade. Desmarque o filtro de idade para ver tudo." : "."}</p>}
       {lista.map((d) => (
         <button key={d.id} className="opcao" onClick={() => { setAberta(d); window.scrollTo(0, 0); }}>
+          {imagemDe(d.id) && <img className="foto-mini" src={imagemDe(d.id)!} alt="" loading="lazy" />}
           {d.titulo}
           <span className="muted" style={{ display: "block", fontWeight: 500, fontSize: 14 }}>{d.resumo}</span>
           <span className="muted pequeno" style={{ display: "block", fontWeight: 600 }}>{ROTULO_CATEGORIA[d.categoria]} · {faixa(d)}</span>
@@ -60,6 +62,7 @@ function DicaAberta({ d, voltar }: { d: Dica; voltar: () => void }) {
       <button className="voltar" onClick={voltar}>‹ Dicas</button>
       <span className="muted pequeno" style={{ fontWeight: 700 }}>{ROTULO_CATEGORIA[d.categoria]} · {faixa(d)}</span>
       <h1 style={{ fontSize: 26 }}>{d.titulo}</h1>
+      {imagemDe(d.id) && <img className="foto" src={imagemDe(d.id)!} alt="" loading="lazy" />}
       {d.ingredientes && (
         <div className="card">
           <h3>Ingredientes</h3>

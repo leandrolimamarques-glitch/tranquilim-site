@@ -21,6 +21,8 @@ export type Dica = {
   /** Quando procurar o pediatra ou o pronto-socorro (opcional). */
   atencao?: string;
   fontes: string[];
+  /** Foto (arquivo em public/img/, pelo id). Preenchida pelo catálogo de imagens. */
+  imagem?: string;
 };
 
 export const ROTULO_CATEGORIA: Record<CategoriaDica, string> = {

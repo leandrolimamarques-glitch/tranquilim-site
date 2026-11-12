@@ -123,3 +123,5 @@ button { font: inherit; color: inherit; }
 .chips-rolagem { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin: 0 -16px; padding-left: 16px; padding-right: 16px; scrollbar-width: none; }
 .chip-filtro { flex: 0 0 auto; min-height: 40px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); padding: 6px 14px; font-weight: 700; font-size: 14px; cursor: pointer; }
 .chip-filtro.ativa { background: var(--noite); color: #F6EFE4; border-color: var(--noite); }
+.foto { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 16px; display: block; }
+.foto-mini { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; display: block; margin-bottom: 8px; }

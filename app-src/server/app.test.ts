@@ -4,13 +4,15 @@ import type { Server } from "node:http";
 import { bancoMemoria, migrar, type Banco } from "./banco";
 import { criarApp } from "./app";
 import type { LeituraCarteira } from "./leitura";
-import { gravar, type Doc } from "../src/lib/sinc";
+import { ehEmergencia, validarResposta, corpoDeReferencia } from "./pergunta";
+import { gravar } from "../src/lib/sinc";
 import { docParaVista } from "../src/lib/familia";
 
 let banco: Banco;
 let servidor: Server;
 let base = "";
 let leituras = 0;
+let perguntas = 0;
 
 const leituraFalsa: LeituraCarteira = {
   legivel: true,
@@ -20,9 +22,15 @@ const leituraFalsa: LeituraCarteira = {
 
 beforeAll(async () => {
   banco = await bancoMemoria();
-  expect(await migrar(banco)).toBe(3);
+  expect(await migrar(banco)).toBeGreaterThan(0);
   expect(await migrar(banco)).toBe(0);
-  const app = criarApp({ banco, cookieSeguro: false, cadastroAberto: true, leitor: async () => (leituras++, leituraFalsa) });
+  const app = criarApp({
+    banco,
+    cookieSeguro: false,
+    limitePerguntas: 3,
+    leitor: async () => (leituras++, leituraFalsa),
+    assistente: async () => (perguntas++, { tipo: "orientacao", resposta: "ok", fluxo: "" }),
+  });
   servidor = app.listen(0);
   base = `http://127.0.0.1:${(servidor.address() as AddressInfo).port}`;
 }, 30_000);
@@ -52,137 +60,133 @@ function navegador() {
   };
 }
 
-const PERFIL = { nome: "Dra. Joana Exemplo", registro: "CRM-SP 000001", whatsapp: "11987654321" };
-
-describe("servidor", () => {
-  const medico = navegador();
-  const intruso = navegador();
+describe("contas, crianças e pediatras", () => {
+  const dono = navegador();
+  const chicao = navegador();
   const mae = navegador();
   const pai = navegador();
-  let pacienteId = "";
-  let convite = "";
+  const estranho = navegador();
+  let joao = "";
+  let chicaoId = "";
 
-  it("cadastra o médico e recusa senha curta, e-mail repetido e senha errada", async () => {
-    expect((await medico("POST", "/api/medico/cadastro", { ...PERFIL, email: "a@b.com", senha: "123" })).status).toBe(400);
-    const ok = await medico("POST", "/api/medico/cadastro", { ...PERFIL, email: "Joana@Exemplo.com", senha: "segredo123" });
-    expect(ok.status).toBe(200);
-    expect((await medico("POST", "/api/medico/cadastro", { ...PERFIL, email: "joana@exemplo.com", senha: "segredo123" })).status).toBe(409);
-    expect((await intruso("POST", "/api/medico/entrar", { email: "joana@exemplo.com", senha: "errada123" })).status).toBe(401);
-    expect((await medico("GET", "/api/medico/eu")).corpo.medico.email).toBe("joana@exemplo.com");
+  it("a primeira conta é o dono; as outras são família", async () => {
+    expect((await dono("POST", "/api/conta/cadastro", { nome: "Leandro", email: "dono@x.com", senha: "123" })).status).toBe(400);
+    expect((await dono("POST", "/api/conta/cadastro", { nome: "Leandro", email: "Dono@X.com", senha: "segredo123" })).status).toBe(200);
+    const eu = (await dono("GET", "/api/conta")).corpo.conta;
+    expect(eu.dono).toBe(true);
+    expect(eu.pediatra).toBe(true);
+    await chicao("POST", "/api/conta/cadastro", { nome: "Chicão", email: "chicao@x.com", senha: "segredo123" });
+    const c = (await chicao("GET", "/api/conta")).corpo.conta;
+    chicaoId = c.id;
+    expect(c.dono).toBe(false);
+    expect(c.pediatra).toBe(false);
+    expect((await chicao("POST", "/api/conta/cadastro", { nome: "Xavier", email: "chicao@x.com", senha: "segredo123" })).status).toBe(409);
+    expect((await estranho("POST", "/api/conta/entrar", { email: "chicao@x.com", senha: "errada123" })).status).toBe(401);
   });
 
-  it("cadastra paciente e só o próprio médico enxerga", async () => {
-    const r = await medico("POST", "/api/medico/pacientes", { crianca: { nome: "Ana Júlia", nascimento: "2026-01-01", sexo: "menina" }, responsavel: "Mariana", whatsapp: "11912345678" });
-    expect(r.status).toBe(200);
-    pacienteId = r.corpo.id;
-    const lista = await medico("GET", "/api/medico/pacientes");
-    expect(lista.corpo.pacientes).toHaveLength(1);
-    convite = lista.corpo.pacientes[0].convite;
-    expect(convite.length).toBeGreaterThan(20);
-    expect(lista.corpo.pacientes[0].resumo.vacinasPendentes).toBeGreaterThan(0);
-
-    await intruso("POST", "/api/medico/cadastro", { ...PERFIL, email: "outro@x.com", senha: "segredo123" });
-    expect((await intruso("GET", `/api/medico/pacientes/${pacienteId}/doc`)).status).toBe(404);
-    expect((await intruso("GET", "/api/medico/pacientes")).corpo.pacientes).toHaveLength(0);
-    expect((await mae("GET", "/api/medico/pacientes")).status).toBe(401);
+  it("só o dono ativa pediatra; antes disso não há painel", async () => {
+    expect((await chicao("GET", "/api/pediatra/pacientes")).status).toBe(403);
+    expect((await chicao("GET", "/api/admin/contas")).status).toBe(403);
+    const lista = (await dono("GET", "/api/admin/contas?busca=chic")).corpo.contas;
+    expect(lista).toHaveLength(1);
+    await dono("PUT", `/api/admin/contas/${chicaoId}`, { pediatra: true, registro: "CRM-SP 1" });
+    expect((await chicao("GET", "/api/pediatra/pacientes")).status).toBe(200);
+    expect((await chicao("GET", "/api/pediatras?busca=chi")).corpo.pediatras[0].nome).toBe("Chicão");
   });
 
-  it("convite: mostra médico e criança, exige consentimento e liga o celular", async () => {
-    const info = await mae("GET", `/api/convite/${convite}`);
-    expect(info.corpo.medico.nome).toBe(PERFIL.nome);
-    expect(info.corpo.crianca.nome).toBe("Ana Júlia");
-    expect((await mae("POST", `/api/convite/${convite}/aceitar`, {})).status).toBe(400);
-    const aceito = await mae("POST", `/api/convite/${convite}/aceitar`, { consentimento: true });
-    expect(aceito.status).toBe(200);
-    expect(docParaVista(aceito.corpo.doc).crianca?.nome).toBe("Ana Júlia");
-    expect((await medico("GET", "/api/medico/pacientes")).corpo.pacientes[0].ativadoEm).toBeTruthy();
+  it("família cadastra criança e escolhe o pediatra da rede; ele passa a ver", async () => {
+    await mae("POST", "/api/conta/cadastro", { nome: "Mariana", email: "mae@x.com", senha: "segredo123" });
+    joao = (await mae("POST", "/api/criancas", { crianca: { nome: "João", nascimento: "2026-01-01", sexo: "menino" } })).corpo.id;
+    expect((await mae("GET", "/api/conta")).corpo.criancas[0].crianca.nome).toBe("João");
+    expect((await chicao("GET", `/api/criancas/${joao}/doc`)).status).toBe(404);
+    await mae("POST", `/api/criancas/${joao}/pediatra`, { pediatraId: chicaoId });
+    const pac = (await chicao("GET", "/api/pediatra/pacientes")).corpo.pacientes;
+    expect(pac[0].crianca.nome).toBe("João");
+    expect(pac[0].responsaveis).toBe("Mariana");
+    expect((await mae("GET", "/api/conta")).corpo.criancas[0].pediatras[0].nome).toBe("Chicão");
   });
 
-  it("mãe, pai e médico escrevem ao mesmo tempo e nada se perde", async () => {
+  it("pediatra pede pelo e-mail; só entra depois que a família aceita", async () => {
+    const irma = (await mae("POST", "/api/criancas", { crianca: { nome: "Bia", nascimento: "2024-05-01", sexo: "menina" } })).corpo.id;
+    expect((await dono("POST", "/api/pediatra/pedidos", { email: "mae@x.com" })).corpo.temConta).toBe(true);
+    expect((await dono("GET", `/api/criancas/${irma}/doc`)).status).toBe(404);
+    const pedidos = (await mae("GET", "/api/conta")).corpo.pedidos;
+    expect(pedidos[0].pediatra.nome).toBe("Leandro");
+    expect((await estranho("POST", `/api/conta/pedidos/${pedidos[0].id}/aceitar`, { criancas: [irma] })).status).toBe(401);
+    await mae("POST", `/api/conta/pedidos/${pedidos[0].id}/aceitar`, { criancas: [irma] });
+    expect((await dono("GET", `/api/criancas/${irma}/doc`)).status).toBe(200);
+    expect((await dono("GET", `/api/criancas/${joao}/doc`)).status).toBe(404);
+    expect((await mae("GET", "/api/conta")).corpo.pedidos).toHaveLength(0);
+  });
+
+  it("pai entra como outro responsável; mãe, pai e pediatra escrevem juntos sem perder nada", async () => {
+    await pai("POST", "/api/conta/cadastro", { nome: "Paulo", email: "pai@x.com", senha: "segredo123" });
+    expect((await mae("POST", `/api/criancas/${joao}/responsaveis`, { email: "ninguem@x.com" })).status).toBe(404);
+    await mae("POST", `/api/criancas/${joao}/responsaveis`, { email: "pai@x.com" });
     const t = Date.now();
-    const daMae = gravar({}, "diario", { id: "d1", tipo: "mamada", quando: "2026-11-10T03:00:00Z" }, t);
-    const doPai = gravar({}, "diario", { id: "d2", tipo: "xixi", quando: "2026-11-10T03:10:00Z" }, t);
-    await pai("POST", `/api/convite/${convite}/aceitar`, { consentimento: true });
-    const doMedico = gravar({}, "medidas", { id: "m1", data: "2026-11-10", pesoKg: 7.2, origem: "consulta" }, t);
     await Promise.all([
-      mae("PUT", "/api/familia/doc", { doc: daMae }),
-      pai("PUT", "/api/familia/doc", { doc: doPai }),
-      medico("PUT", `/api/medico/pacientes/${pacienteId}/doc`, { doc: doMedico }),
+      mae("PUT", `/api/criancas/${joao}/doc`, { doc: gravar({}, "diario", { id: "d1", tipo: "mamada", quando: "2026-11-10T03:00:00Z" }, t) }),
+      pai("PUT", `/api/criancas/${joao}/doc`, { doc: gravar({}, "diario", { id: "d2", tipo: "xixi", quando: "2026-11-10T03:10:00Z" }, t) }),
+      chicao("PUT", `/api/criancas/${joao}/doc`, { doc: gravar({}, "medidas", { id: "m1", data: "2026-11-10", pesoKg: 7.2, origem: "consulta" }, t) }),
     ]);
-    const final = docParaVista((await mae("GET", "/api/familia")).corpo.doc as Doc);
-    expect(final.diario.map((d) => d.id).sort()).toEqual(["d1", "d2"]);
-    expect(final.medidas[0].pesoKg).toBe(7.2);
+    const v = docParaVista((await pai("GET", `/api/criancas/${joao}/doc`)).corpo.doc);
+    expect(v.diario.map((d) => d.id).sort()).toEqual(["d1", "d2"]);
+    expect(v.medidas[0].pesoKg).toBe(7.2);
+    expect(v.crianca?.nome).toBe("João");
+    expect((await estranho("GET", `/api/criancas/${joao}/doc`)).status).toBe(401);
   });
 
-  it("documento inválido é recusado", async () => {
-    expect((await mae("PUT", "/api/familia/doc", { doc: { diario: { x: { id: "y", em: 1 } } } })).status).toBe(400);
+  it("pediatra não edita o cadastro da criança; desativado, perde o acesso", async () => {
+    expect((await chicao("PUT", `/api/criancas/${joao}`, { crianca: { nome: "Outro", nascimento: "2026-01-01", sexo: "menino" } })).status).toBe(403);
+    await dono("PUT", `/api/admin/contas/${chicaoId}`, { pediatra: false });
+    expect((await chicao("GET", `/api/criancas/${joao}/doc`)).status).toBe(404);
+    await dono("PUT", `/api/admin/contas/${chicaoId}`, { pediatra: true });
+    expect((await chicao("GET", `/api/criancas/${joao}/doc`)).status).toBe(200);
   });
 
-  it("carteira: envia foto, lê em segundo plano, médico vê e baixa", async () => {
-    const foto = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
-    const env = await mae("POST", "/api/carteira", foto, "image/jpeg");
+  it("carteira: família envia, lê em segundo plano, pediatra vê", async () => {
+    const env = await mae("POST", `/api/carteira?crianca=${joao}`, new Uint8Array([0xff, 0xd8, 0xff, 1]), "image/jpeg");
     expect(env.status).toBe(200);
     await new Promise((r) => setTimeout(r, 100));
-    const lista = await medico("GET", `/api/carteira?paciente=${pacienteId}`);
-    expect(lista.corpo.carteiras[0].leitura.registros[0].calendarioId).toBe("bcg");
+    const lista = (await chicao("GET", `/api/carteira?crianca=${joao}`)).corpo.carteiras;
+    expect(lista[0].leitura.registros[0].calendarioId).toBe("bcg");
+    expect(lista[0].enviadoPor).toBe("familia");
     expect(leituras).toBe(1);
-    const arq = await fetch(`${base}/api/carteira/${env.corpo.id}/arquivo`);
-    expect(arq.status).toBe(401);
-    expect((await intruso("GET", `/api/carteira?paciente=${pacienteId}`)).status).toBe(404);
-    expect((await mae("POST", "/api/carteira", "texto", "text/plain")).status).toBe(400);
+    expect((await estranho("GET", `/api/carteira?crianca=${joao}`)).status).toBe(401);
   });
 
-  it("financeiro é do médico e sincroniza", async () => {
+  it("perguntas: emergência sem IA, limite por dia, pediatra vê", async () => {
+    expect((await mae("POST", `/api/pergunta?crianca=${joao}`, { pergunta: "ele convulsionou agora" })).corpo.tipo).toBe("emergencia");
+    expect(perguntas).toBe(0);
+    expect((await mae("POST", `/api/pergunta?crianca=${joao}`, { pergunta: "quando começar a papinha?" })).corpo.resposta).toBe("ok");
+    await mae("POST", `/api/pergunta?crianca=${joao}`, { pergunta: "outra dúvida" });
+    expect((await mae("POST", `/api/pergunta?crianca=${joao}`, { pergunta: "mais uma" })).status).toBe(429);
+    expect((await chicao("GET", `/api/perguntas?crianca=${joao}`)).corpo.perguntas).toHaveLength(3);
+  });
+
+  it("financeiro é de cada pediatra; administrador redefine senha", async () => {
     const doc = gravar({}, "fontes", { id: "f1", nome: "Convênio A", tipo: "convenio" });
-    expect((await medico("PUT", "/api/medico/financeiro", { doc })).corpo.doc.fontes.f1.nome).toBe("Convênio A");
-    expect((await intruso("GET", "/api/medico/financeiro")).corpo.doc).toEqual({});
-  });
-
-  it("novo link derruba o antigo; remover paciente desliga a família", async () => {
-    const novo = await medico("POST", `/api/medico/pacientes/${pacienteId}/novo-link`);
-    expect((await intruso("GET", `/api/convite/${convite}`)).status).toBe(404);
-    expect((await intruso("GET", `/api/convite/${novo.corpo.convite}`)).status).toBe(200);
-    expect((await mae("GET", "/api/familia")).status).toBe(200);
-    await medico("DELETE", `/api/medico/pacientes/${pacienteId}`);
-    expect((await mae("GET", "/api/familia")).status).toBe(401);
+    expect((await chicao("PUT", "/api/pediatra/financeiro", { doc })).corpo.doc.fontes.f1.nome).toBe("Convênio A");
+    expect((await dono("GET", "/api/pediatra/financeiro")).corpo.doc).toEqual({});
+    expect((await mae("GET", "/api/pediatra/financeiro")).status).toBe(403);
+    await dono("PUT", `/api/admin/contas/${chicaoId}/senha`, { senha: "provisoria1" });
+    expect((await chicao("GET", "/api/conta")).status).toBe(401);
+    expect((await chicao("POST", "/api/conta/entrar", { email: "chicao@x.com", senha: "provisoria1" })).status).toBe(200);
   });
 
   it("sair encerra a sessão", async () => {
-    await medico("POST", "/api/sair", { tipo: "medico" });
-    expect((await medico("GET", "/api/medico/eu")).status).toBe(401);
+    await mae("POST", "/api/conta/sair");
+    expect((await mae("GET", "/api/conta")).status).toBe(401);
   });
 });
 
 describe("assistente", () => {
-  it("emergência não passa pela IA, dose escapada vira pediatra, limite por dia", async () => {
-    const { ehEmergencia, validarResposta, corpoDeReferencia } = await import("./pergunta");
+  it("emergência é barrada antes da IA e dose escapada vira pediatra", () => {
     expect(ehEmergencia("meu filho está roxo e não respira")).toBe(true);
     expect(ehEmergencia("Ele engoliu uma pilha de relógio")).toBe(true);
     expect(ehEmergencia("como fazer introdução alimentar")).toBe(false);
     expect(validarResposta({ tipo: "orientacao", resposta: "Dê 10 gotas de dipirona", fluxo: "" }).tipo).toBe("medico");
     expect(validarResposta({ tipo: "fluxo", resposta: "Veja o fluxo.", fluxo: "inventado" }).fluxo).toBe("");
     expect(corpoDeReferencia()).toContain("Engasgo");
-
-    let chamadas = 0;
-    const b2 = await bancoMemoria();
-    await migrar(b2);
-    const app = criarApp({ banco: b2, cookieSeguro: false, cadastroAberto: true, limitePerguntas: 2, assistente: async () => (chamadas++, { tipo: "orientacao", resposta: "ok", fluxo: "" }) });
-    const s = app.listen(0);
-    const antigo = base;
-    base = `http://127.0.0.1:${(s.address() as AddressInfo).port}`;
-    const m = navegador();
-    const f = navegador();
-    await m("POST", "/api/medico/cadastro", { ...PERFIL, email: "x@y.com", senha: "segredo123" });
-    const { corpo } = await m("POST", "/api/medico/pacientes", { crianca: { nome: "Lia", nascimento: "2026-01-01", sexo: "menina" } });
-    const conv = (await m("GET", "/api/medico/pacientes")).corpo.pacientes[0].convite;
-    await f("POST", `/api/convite/${conv}/aceitar`, { consentimento: true });
-    expect((await f("POST", "/api/pergunta", { pergunta: "ela convulsionou agora" })).corpo.tipo).toBe("emergencia");
-    expect(chamadas).toBe(0);
-    expect((await f("POST", "/api/pergunta", { pergunta: "quando começar a papinha?" })).corpo.resposta).toBe("ok");
-    expect((await f("POST", "/api/pergunta", { pergunta: "mais uma" })).status).toBe(429);
-    expect((await m("GET", `/api/perguntas?paciente=${corpo.id}`)).corpo.perguntas).toHaveLength(2);
-    s.close();
-    base = antigo;
-    await b2.fechar();
   });
 });

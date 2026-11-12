@@ -6,7 +6,7 @@ import { dataBr, hojeIso } from "../../lib/idade";
 import { gravar, remover } from "../../lib/sinc";
 import { novoId } from "../../lib/store";
 import { FormLancamento } from "./Agenda";
-import type { useDocRemoto } from "./useDocRemoto";
+import type { useDocRemoto } from "../../lib/useDocRemoto";
 
 type DocRemoto = ReturnType<typeof useDocRemoto>;
 type Aba = "resumo" | "receber" | "despesas" | "contador";

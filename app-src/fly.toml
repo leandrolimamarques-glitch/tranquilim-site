@@ -14,8 +14,6 @@ primary_region = "gru"
   LLM_EFFORT = "high"
   # Assistente das famílias: modelo barato, preso ao conteúdo do app (server/pergunta.ts).
   LLM_MODELO_ASSISTENTE = "claude-haiku-5-5"
-  # Ambiente controlado: qualquer médico com o link do painel cria conta. "0" fecha.
-  CADASTRO_ABERTO = "1"
 
 [http_service]
   internal_port = 8080

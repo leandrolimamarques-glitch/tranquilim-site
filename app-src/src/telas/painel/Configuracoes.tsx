@@ -6,25 +6,25 @@ import { CONTADOR_VAZIO, lerFinanceiro, ROTULO_FONTE, ROTULO_RECEBE, type ComoRe
 import type { ConfigFiscal, Regime } from "../../lib/impostos";
 import { gravar } from "../../lib/sinc";
 import { novoId } from "../../lib/store";
-import type { MedicoConta } from "./Painel";
-import type { useDocRemoto } from "./useDocRemoto";
+import type { ContaInfo } from "../../lib/store";
+import type { useDocRemoto } from "../../lib/useDocRemoto";
 
 type DocRemoto = ReturnType<typeof useDocRemoto>;
 const CORES = ["#4F8A6E", "#1E2A47", "#F2A93B", "#C0392B", "#6C5CE7", "#00897B", "#8D6E63", "#5D6378"];
 
-export function Configuracoes({ conta, setConta, financeiro, desconectar, sair }: { conta: MedicoConta; setConta: (m: MedicoConta) => void; financeiro: DocRemoto; desconectar: () => void; sair: () => void }) {
+export function Configuracoes({ conta, recarregar, financeiro }: { conta: ContaInfo; recarregar: () => Promise<void>; financeiro: DocRemoto }) {
   const [tela, setTela] = useState<"menu" | "perfil" | "fonte" | "impostos">("menu");
   const [fonteEditada, setFonteEditada] = useState<Fonte | null>(null);
   const fin = useMemo(() => lerFinanceiro(financeiro.doc), [financeiro.doc]);
   const voltar = () => { setTela("menu"); window.scrollTo(0, 0); };
 
-  if (tela === "perfil") return <Perfil conta={conta} setConta={setConta} voltar={voltar} />;
+  if (tela === "perfil") return <Perfil conta={conta} recarregar={recarregar} voltar={voltar} />;
   if (tela === "fonte") return <FormFonte inicial={fonteEditada} financeiro={financeiro} voltar={voltar} />;
   if (tela === "impostos") return <Impostos config={fin.config} financeiro={financeiro} voltar={voltar} />;
 
   return (
     <>
-      <h1 style={{ fontSize: 26 }}>Ajustes</h1>
+      <h1 style={{ fontSize: 26 }}>Perfil e pagamentos</h1>
       <div className="card">
         <h3>{conta.nome}</h3>
         <p className="muted">{[conta.titulo, conta.registro].filter(Boolean).join(" · ")}</p>
@@ -50,21 +50,19 @@ export function Configuracoes({ conta, setConta, financeiro, desconectar, sair }
         <p className="muted pequeno">{{ simples: "Simples Nacional", presumido: "Lucro presumido", pf: "Pessoa física (carnê-leão)", manual: `Alíquota própria (${fin.config.aliquotaManual}%)` }[fin.config.regime]}{fin.config.contador.nome ? ` · contador: ${fin.config.contador.nome}` : ""}</p>
         <button className="btn sec bloco" onClick={() => setTela("impostos")}>Configurar</button>
       </div>
-      <button className="btn contorno bloco" onClick={desconectar}>Sair da conta</button>
-      <button className="voltar" onClick={sair}>‹ App da família</button>
     </>
   );
 }
 
-function Perfil({ conta, setConta, voltar }: { conta: MedicoConta; setConta: (m: MedicoConta) => void; voltar: () => void }) {
-  const [p, setP] = useState({ nome: conta.nome, registro: conta.registro, titulo: conta.titulo ?? "", whatsapp: conta.whatsapp ?? "", telefone: conta.telefone ?? "", local: conta.local ?? "" });
+function Perfil({ conta, recarregar, voltar }: { conta: ContaInfo; recarregar: () => Promise<void>; voltar: () => void }) {
+  const [p, setP] = useState({ nome: conta.nome, registro: conta.registro ?? "", titulo: conta.titulo ?? "", whatsapp: conta.whatsapp ?? "", telefone: conta.telefone ?? "", local: conta.local ?? "" });
   const [erro, setErro] = useState("");
   const campo = (k: keyof typeof p) => ({ value: p[k], onChange: (e: ChangeEvent<HTMLInputElement>) => setP({ ...p, [k]: e.target.value }) });
   const ok = (t: string) => !t.trim() || !!telefoneBr(t);
   const salvar = async () => {
     try {
-      const r = await api.put<{ medico: MedicoConta }>("/api/medico/perfil", p);
-      setConta({ ...r.medico, email: conta.email });
+      await api.put("/api/conta/perfil", p);
+      await recarregar();
       voltar();
     } catch (e) {
       setErro((e as Error).message);

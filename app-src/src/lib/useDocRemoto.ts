@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { api, ErroApi } from "../../lib/api";
-import { docValido, juntarDocs, type Doc } from "../../lib/sinc";
+import { api, ErroApi } from "./api";
+import { docValido, juntarDocs, type Doc } from "./sinc";
 
 export type EstadoDoc = "carregando" | "ok" | "enviando" | "sem-conexao" | "sem-acesso";
 

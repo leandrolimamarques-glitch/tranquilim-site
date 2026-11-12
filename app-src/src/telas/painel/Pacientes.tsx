@@ -1,43 +1,32 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "../../lib/api";
-import { formatarTelefone, linkConvite, linkWhatsApp, mensagemConvite, telefoneBr, type Medico } from "../../lib/convite";
-import { aplicarVista, docParaVista, type Crianca, type Medida } from "../../lib/familia";
+import type { Medico } from "../../lib/convite";
+import { aplicarVista, docParaVista, type Crianca } from "../../lib/familia";
 import { dataBr, hojeIso, idadeTexto } from "../../lib/idade";
-import type { Sexo } from "../../lib/oms";
 import { gravar } from "../../lib/sinc";
 import { novoId, type Atualizar, type Dados } from "../../lib/store";
+import { useDocRemoto } from "../../lib/useDocRemoto";
 import { lerFinanceiro, ROTULO_TIPO, valorBruto, type Lancamento } from "../../lib/financeiro";
 import { reais } from "../../lib/dinheiro";
+import type { Alerta } from "../../lib/alertas";
 import { Caderneta, type SecaoCaderneta } from "../Caderneta";
-import { useDocRemoto } from "./useDocRemoto";
 
 type DocRemoto = ReturnType<typeof useDocRemoto>;
 
-export type PacienteResumo = {
-  id: string;
-  crianca: Crianca;
-  responsavel: string;
-  whatsapp: string;
-  convite: string;
-  conviteEm: string | null;
-  ativadoEm: string | null;
-  atualizadoEm: string | null;
-  alertas: { id: string; nivel: "atencao" | "info"; texto: string }[];
-  resumo: { vacinasPendentes: number; vacinasConfirmadas: number; ultimaMedida: Medida | null; ultimoDiario: string | null };
-};
-
-type Tela = { t: "lista" } | { t: "novo" } | { t: "editar"; id: string } | { t: "ver"; id: string };
-
-const BASE_APP = () => `${location.origin}/`;
+type Paciente = { id: string; crianca: Crianca; responsaveis: string; email: string; desde: string | null; atualizadoEm: string | null; alertas: Alerta[] };
+type PedidoEnviado = { id: string; email: string; criadoEm: string };
 
 export function Pacientes({ medico, financeiro }: { medico: Medico; financeiro: DocRemoto }) {
-  const [lista, setLista] = useState<PacienteResumo[] | null>(null);
+  const [lista, setLista] = useState<Paciente[] | null>(null);
+  const [pedidos, setPedidos] = useState<PedidoEnviado[]>([]);
   const [erro, setErro] = useState("");
-  const [tela, setTela] = useState<Tela>({ t: "lista" });
+  const [aberto, setAberto] = useState<string | null>(null);
 
   const carregar = useCallback(async () => {
     try {
-      setLista((await api.get<{ pacientes: PacienteResumo[] }>("/api/medico/pacientes")).pacientes);
+      const r = await api.get<{ pacientes: Paciente[]; pedidos: PedidoEnviado[] }>("/api/pediatra/pacientes");
+      setLista(r.pacientes);
+      setPedidos(r.pedidos);
       setErro("");
     } catch (e) {
       setErro((e as Error).message);
@@ -47,173 +36,106 @@ export function Pacientes({ medico, financeiro }: { medico: Medico; financeiro: 
     void carregar();
   }, [carregar]);
 
-  const ir = (t: Tela) => {
-    setTela(t);
-    window.scrollTo(0, 0);
-    if (t.t === "lista" || t.t === "ver") void carregar();
-  };
-
-  if (tela.t === "novo" || tela.t === "editar") {
-    const atual = tela.t === "editar" ? lista?.find((p) => p.id === tela.id) : undefined;
-    return <FormPaciente inicial={atual} voltar={() => ir(atual ? { t: "ver", id: atual.id } : { t: "lista" })} aoSalvar={(id) => ir({ t: "ver", id })} />;
-  }
-  if (tela.t === "ver") {
-    const p = lista?.find((x) => x.id === tela.id);
-    if (p) return <VerPaciente key={p.id} p={p} medico={medico} financeiro={financeiro} ir={ir} recarregar={carregar} />;
-    if (!erro) return <p className="muted" role="status">Carregando…</p>;
-  }
-  return <Lista lista={lista} erro={erro} ir={ir} />;
+  const p = lista?.find((x) => x.id === aberto);
+  if (p) return <VerPaciente key={p.id} p={p} medico={medico} financeiro={financeiro} voltar={() => { setAberto(null); void carregar(); window.scrollTo(0, 0); }} />;
+  return <Lista lista={lista} pedidos={pedidos} erro={erro} abrir={(id) => { setAberto(id); window.scrollTo(0, 0); }} recarregar={carregar} />;
 }
 
-function Lista({ lista, erro, ir }: { lista: PacienteResumo[] | null; erro: string; ir: (t: Tela) => void }) {
+function Lista({ lista, pedidos, erro, abrir, recarregar }: { lista: Paciente[] | null; pedidos: PedidoEnviado[]; erro: string; abrir: (id: string) => void; recarregar: () => Promise<void> }) {
   const [busca, setBusca] = useState("");
-  const [filtro, setFiltro] = useState<"todos" | "atrasadas" | "sem-convite">("todos");
+  const [soAviso, setSoAviso] = useState(false);
+  const [email, setEmail] = useState("");
+  const [msg, setMsg] = useState("");
   const hoje = hojeIso();
   const termo = busca.trim().toLocaleLowerCase("pt-BR");
-  const visiveis = (lista ?? []).filter(
-    (p) =>
-      (!termo || `${p.crianca.nome} ${p.responsavel}`.toLocaleLowerCase("pt-BR").includes(termo)) &&
-      (filtro === "todos" || (filtro === "atrasadas" ? p.alertas.some((a) => a.nivel === "atencao") : !p.ativadoEm)),
-  );
-  const ativos = lista?.filter((p) => p.ativadoEm).length ?? 0;
-  const comAtraso = lista?.filter((p) => p.ativadoEm && p.alertas.some((a) => a.nivel === "atencao")).length ?? 0;
+  const comAviso = (x: Paciente) => x.alertas.some((a) => a.nivel === "atencao");
+  const visiveis = (lista ?? []).filter((x) => (!termo || `${x.crianca.nome} ${x.responsaveis}`.toLocaleLowerCase("pt-BR").includes(termo)) && (!soAviso || comAviso(x)));
+
+  const pedir = async () => {
+    setMsg("");
+    try {
+      const r = await api.post<{ temConta: boolean }>("/api/pediatra/pedidos", { email });
+      setMsg(r.temConta ? "Pedido enviado. Assim que a família aceitar no app, a criança aparece aqui." : "Esse e-mail ainda não tem conta. Peça para a família criar a conta em tranquilim.com.br com este e-mail: o pedido estará esperando quando ela entrar.");
+      setEmail("");
+      await recarregar();
+    } catch (e) {
+      setMsg((e as Error).message);
+    }
+  };
 
   return (
     <>
-      <h1 style={{ fontSize: 26 }}>Pacientes</h1>
+      <h1 style={{ fontSize: 26 }}>Meus pacientes</h1>
       {lista && (
-        <div className="grade4" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
-          <div className="contador"><b>{lista.length}</b><span>cadastrados</span></div>
-          <div className="contador"><b>{ativos}</b><span>usando o app</span></div>
-          <div className="contador"><b style={{ color: comAtraso ? "var(--ps)" : undefined }}>{comAtraso}</b><span>com aviso</span></div>
+        <div className="grade2">
+          <div className="contador"><b>{lista.length}</b><span>acompanhando</span></div>
+          <div className="contador"><b style={{ color: lista.some(comAviso) ? "var(--ps)" : undefined }}>{lista.filter(comAviso).length}</b><span>com aviso</span></div>
         </div>
       )}
-      <button className="btn bloco" onClick={() => ir({ t: "novo" })}>+ Cadastrar paciente</button>
+      <div className="card">
+        <h3>Adicionar paciente</h3>
+        <p className="muted">Digite o e-mail que a família usa no Tranquilim. Ela recebe o pedido no app e escolhe quais filhos você vai acompanhar. A família também pode escolher você na lista de pediatras.</p>
+        <div className="grade2">
+          <label className="campo">E-mail da família<input id="email-familia" type="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+          <button className="btn" style={{ alignSelf: "end" }} disabled={!email.includes("@")} onClick={() => void pedir()}>Pedir</button>
+        </div>
+        {msg && <p className="pequeno">{msg}</p>}
+        {pedidos.length > 0 && (
+          <>
+            <p className="muted pequeno" style={{ fontWeight: 700 }}>Aguardando a família aceitar</p>
+            {pedidos.map((d) => (
+              <div key={d.id} className="linha" style={{ borderTop: "1px solid var(--line)", paddingTop: 6 }}>
+                <span className="pequeno">{d.email} <span className="muted">· {dataBr(d.criadoEm.slice(0, 10))}</span></span>
+                <button className="btn contorno" style={{ minHeight: 36, padding: "4px 10px" }} onClick={() => void api.del(`/api/pediatra/pedidos/${d.id}`).then(recarregar)}>Cancelar</button>
+              </div>
+            ))}
+          </>
+        )}
+      </div>
       {erro && <p className="alerta">{erro}</p>}
-      {lista && lista.length > 0 && (
-        <>
-          <label className="campo">Buscar<input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Nome da criança ou do responsável" /></label>
-          <div className="segmento">
-            <button className={filtro === "todos" ? "ativa" : ""} onClick={() => setFiltro("todos")}>Todos</button>
-            <button className={filtro === "atrasadas" ? "ativa" : ""} onClick={() => setFiltro("atrasadas")}>Com aviso</button>
-            <button className={filtro === "sem-convite" ? "ativa" : ""} onClick={() => setFiltro("sem-convite")}>Sem app</button>
-          </div>
-        </>
-      )}
-      {lista && lista.length === 0 && (
-        <div className="card">
-          <h3>Nenhum paciente ainda</h3>
-          <p className="muted">Cadastre a criança e mande o convite pelo WhatsApp. A família abre o link, autoriza, e o que ela registrar (vacinas, medidas, diário, foto da carteira) aparece aqui.</p>
-        </div>
+      {lista && lista.length > 5 && <label className="campo">Buscar<input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Nome da criança ou do responsável" /></label>}
+      {lista && lista.some(comAviso) && (
+        <label className="sinal" style={{ borderWidth: 1, padding: "8px 12px" }}>
+          <input type="checkbox" checked={soAviso} onChange={(e) => setSoAviso(e.target.checked)} />
+          <span>Só quem tem aviso</span>
+        </label>
       )}
       {visiveis.length > 0 && (
         <div className="card" style={{ gap: 0, padding: "4px 16px" }}>
-          {visiveis.map((p, i) => (
-            <button key={p.id} className="item-lista" style={{ borderBottom: i < visiveis.length - 1 ? "1px solid var(--line)" : 0 }} onClick={() => ir({ t: "ver", id: p.id })}>
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <b style={{ display: "block" }}>{p.crianca.nome}</b>
-                <span className="muted pequeno">{idadeTexto(p.crianca.nascimento, hoje)}{p.responsavel ? ` · ${p.responsavel}` : ""}</span>
-              </span>
-              {!p.ativadoEm ? (
-                <span className="chip pendente">{p.conviteEm ? "convidado" : "sem convite"}</span>
-              ) : p.alertas.some((a) => a.nivel === "atencao") ? (
-                <span className="chip" style={{ background: "var(--ps-soft)", color: "var(--ps)" }}>{p.alertas.filter((a) => a.nivel === "atencao").length} aviso{p.alertas.filter((a) => a.nivel === "atencao").length > 1 ? "s" : ""}</span>
-              ) : (
-                <span className="chip aplicada">em dia</span>
-              )}
-            </button>
-          ))}
+          {visiveis.map((x, i) => {
+            const n = x.alertas.filter((a) => a.nivel === "atencao").length;
+            return (
+              <button key={x.id} className="item-lista" style={{ borderBottom: i < visiveis.length - 1 ? "1px solid var(--line)" : 0 }} onClick={() => abrir(x.id)}>
+                <span style={{ flex: 1, minWidth: 0 }}>
+                  <b style={{ display: "block" }}>{x.crianca.nome}</b>
+                  <span className="muted pequeno">{idadeTexto(x.crianca.nascimento, hoje)}{x.responsaveis ? ` · ${x.responsaveis}` : ""}</span>
+                </span>
+                {n > 0 ? <span className="chip" style={{ background: "var(--ps-soft)", color: "var(--ps)" }}>{n} aviso{n > 1 ? "s" : ""}</span> : <span className="chip aplicada">em dia</span>}
+              </button>
+            );
+          })}
         </div>
       )}
+      {lista && lista.length === 0 && <p className="muted">Nenhum paciente ainda.</p>}
     </>
   );
 }
 
-function FormPaciente({ inicial, voltar, aoSalvar }: { inicial?: PacienteResumo; voltar: () => void; aoSalvar: (id: string) => void }) {
-  const [nome, setNome] = useState(inicial?.crianca.nome ?? "");
-  const [nascimento, setNascimento] = useState(inicial?.crianca.nascimento ?? "");
-  const [sexo, setSexo] = useState<Sexo | "">(inicial?.crianca.sexo ?? "");
-  const [responsavel, setResponsavel] = useState(inicial?.responsavel ?? "");
-  const [whatsapp, setWhatsapp] = useState(inicial?.whatsapp ?? "");
-  const [erro, setErro] = useState("");
-  const [enviando, setEnviando] = useState(false);
-  const hoje = hojeIso();
-  const zapOk = !whatsapp.trim() || !!telefoneBr(whatsapp);
-  const valido = nome.trim().length > 0 && nascimento !== "" && nascimento <= hoje && sexo !== "" && zapOk;
-
-  const salvar = async () => {
-    setEnviando(true);
-    setErro("");
-    const corpo = { crianca: { nome: nome.trim(), nascimento, sexo }, responsavel: responsavel.trim(), whatsapp: whatsapp.trim() };
-    try {
-      if (inicial) {
-        await api.put(`/api/medico/pacientes/${inicial.id}`, corpo);
-        aoSalvar(inicial.id);
-      } else aoSalvar((await api.post<{ id: string }>("/api/medico/pacientes", corpo)).id);
-    } catch (e) {
-      setErro((e as Error).message);
-      setEnviando(false);
-    }
-  };
-
-  return (
-    <>
-      <button className="voltar" onClick={voltar}>‹ Voltar</button>
-      <h1 style={{ fontSize: 26 }}>{inicial ? "Editar paciente" : "Novo paciente"}</h1>
-      <div className="card">
-        <label className="campo">Nome ou apelido da criança<input id="p-nome" value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="off" /></label>
-        <label className="campo">Data de nascimento<input id="p-nascimento" type="date" value={nascimento} max={hoje} onChange={(e) => setNascimento(e.target.value)} /></label>
-        <div className="campo">
-          Sexo (para as curvas)
-          <div className="segmento">
-            <button type="button" className={sexo === "menina" ? "ativa" : ""} onClick={() => setSexo("menina")}>Menina</button>
-            <button type="button" className={sexo === "menino" ? "ativa" : ""} onClick={() => setSexo("menino")}>Menino</button>
-          </div>
-        </div>
-        <label className="campo">Nome do responsável (opcional)<input id="p-resp" value={responsavel} onChange={(e) => setResponsavel(e.target.value)} autoComplete="off" /></label>
-        <label className="campo">
-          WhatsApp do responsável (opcional)
-          <input id="p-zap" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} inputMode="tel" placeholder="(11) 90000-0000" />
-          {!zapOk && <span className="pequeno" style={{ color: "var(--ps)" }}>Use DDD e número.</span>}
-        </label>
-        {erro && <p className="pequeno" style={{ color: "var(--ps)" }}>{erro}</p>}
-        <button className="btn bloco" disabled={!valido || enviando} onClick={salvar}>Salvar</button>
-      </div>
-    </>
-  );
-}
-
-function VerPaciente({ p, medico, financeiro, ir, recarregar }: { p: PacienteResumo; medico: Medico; financeiro: DocRemoto; ir: (t: Tela) => void; recarregar: () => Promise<void> }) {
-  const remoto = useDocRemoto(`/api/medico/pacientes/${p.id}/doc`);
+function VerPaciente({ p, medico, financeiro, voltar }: { p: Paciente; medico: Medico; financeiro: DocRemoto; voltar: () => void }) {
+  const remoto = useDocRemoto(`/api/criancas/${p.id}/doc`);
   const [secao, setSecao] = useState<SecaoCaderneta>("vacinas");
-  const [removendo, setRemovendo] = useState(false);
-  const [copiado, setCopiado] = useState<"" | "ok" | "falhou">("");
-  const [convite, setConvite] = useState(p.convite);
+  const [saindo, setSaindo] = useState(false);
   const hoje = hojeIso();
-  const link = linkConvite(BASE_APP(), convite);
-  const mensagem = mensagemConvite(medico, p.crianca, p.responsavel, link);
+  void medico;
 
   const vista = useMemo(() => docParaVista(remoto.doc), [remoto.doc]);
-  const dados: Dados = { ...vista, crianca: vista.crianca ?? p.crianca, medico: null, vinculo: null, sincronia: "ok" };
-  const atualizar: Atualizar = (f) => remoto.mudar((doc) => {
-    const antes: Dados = { ...docParaVista(doc), medico: null, vinculo: null, sincronia: "ok" };
-    if (!antes.crianca) antes.crianca = p.crianca;
-    return aplicarVista(doc, antes, f(antes));
-  });
-
-  const marcarEnviado = () => void api.post(`/api/medico/pacientes/${p.id}/convite-enviado`).then(recarregar);
-  const copiar = async () => {
-    try {
-      await navigator.clipboard.writeText(mensagem);
-      setCopiado("ok");
-      marcarEnviado();
-    } catch {
-      setCopiado("falhou");
-    }
+  const base = (doc: typeof remoto.doc): Dados => {
+    const v = docParaVista(doc);
+    return { ...v, crianca: v.crianca ?? p.crianca, criancaId: p.id, medico: null, vinculo: null, sincronia: "ok" };
   };
-  const novoLink = async () => setConvite((await api.post<{ convite: string }>(`/api/medico/pacientes/${p.id}/novo-link`)).convite);
+  const dados: Dados = { ...vista, crianca: vista.crianca ?? p.crianca, criancaId: p.id, medico: null, vinculo: null, sincronia: remoto.estado };
+  const atualizar: Atualizar = (f) => remoto.mudar((doc) => aplicarVista(doc, base(doc), f(base(doc))));
 
-  // Atendimentos deste paciente no financeiro
   const fin = lerFinanceiro(financeiro.doc);
   const atendimentos = fin.lancamentos.filter((l) => l.pacienteId === p.id).sort((a, b) => b.data.localeCompare(a.data));
   const fontesConsultorio = fin.fontes.filter((f) => f.ativo && f.tipo !== "plantao");
@@ -224,48 +146,36 @@ function VerPaciente({ p, medico, financeiro, ir, recarregar }: { p: PacienteRes
     const l: Lancamento = { id: novoId(), fonteId: f.id, tipo, data: hoje, quantidade: 1, valorUnit: tipo === "retorno" ? f.valorRetorno : f.valorConsulta, pacienteId: p.id };
     financeiro.mudar((d) => gravar(d, "lancamentos", l));
   };
+  const parar = async () => {
+    const r = await api.get<{ conta: { id: string } }>("/api/conta");
+    await api.del(`/api/criancas/${p.id}/pediatra/${r.conta.id}`);
+    voltar();
+  };
 
   return (
     <>
-      <button className="voltar" onClick={() => ir({ t: "lista" })}>‹ Pacientes</button>
+      <button className="voltar" onClick={voltar}>‹ Pacientes</button>
       <div className="linha">
         <h1 style={{ fontSize: 26 }}>{p.crianca.nome}</h1>
         <span className="chip">{idadeTexto(p.crianca.nascimento, hoje)}</span>
       </div>
-      <p className="muted">
-        {dataBr(p.crianca.nascimento)} · {p.crianca.sexo === "menina" ? "menina" : "menino"}
-        {p.responsavel && ` · ${p.responsavel}`}
-        {p.whatsapp && ` · ${formatarTelefone(p.whatsapp)}`}
-      </p>
-
-      {!p.ativadoEm ? (
-        <div className="card">
-          <h3>Convite</h3>
-          <p className="muted">{p.conviteEm ? `Enviado em ${dataBr(p.conviteEm.slice(0, 10))}, ainda não aberto.` : "A família ainda não recebeu o convite."}</p>
-          <a className="btn bloco" href={linkWhatsApp(p.whatsapp, mensagem)} target="_blank" rel="noopener noreferrer" onClick={marcarEnviado}>Enviar pelo WhatsApp</a>
-          <button className="btn sec bloco" onClick={copiar}>{copiado === "ok" ? "Mensagem copiada" : "Copiar mensagem com o link"}</button>
-          <a className="btn contorno bloco" href={link} target="_blank" rel="noopener noreferrer">Abrir como a família (teste)</a>
-          {copiado === "falhou" && <textarea readOnly value={mensagem} rows={6} className="area-texto" onFocus={(e) => e.currentTarget.select()} />}
-        </div>
-      ) : (
-        <div className="card">
-          <div className="linha"><h3>Usando o app</h3><span className="chip aplicada">desde {dataBr(p.ativadoEm.slice(0, 10))}</span></div>
-          <p className="muted pequeno">{p.atualizadoEm ? `Última atualização: ${dataBr(p.atualizadoEm.slice(0, 10))}.` : ""} A família autorizou o acompanhamento.</p>
-          <div className="grade2">
-            <a className="btn sec" href={linkWhatsApp(p.whatsapp, `Olá${p.responsavel ? `, ${p.responsavel.split(" ")[0]}` : ""}! Aqui é ${medico.nome}.`)} target="_blank" rel="noopener noreferrer">WhatsApp</a>
-            <button className="btn sec" onClick={copiar}>{copiado === "ok" ? "Link copiado" : "Reenviar link"}</button>
-          </div>
+      <p className="muted">{dataBr(p.crianca.nascimento)} · {p.crianca.sexo}{p.responsaveis && ` · ${p.responsaveis}`}{p.email && ` · ${p.email}`}</p>
+      {p.alertas.length > 0 && (
+        <div className="card" style={{ borderColor: p.alertas.some((a) => a.nivel === "atencao") ? "var(--ps)" : "var(--line)" }}>
+          <h3>Avisos</h3>
+          {p.alertas.map((a) => <p key={a.id} className={a.nivel === "info" ? "muted" : ""}>{a.nivel === "atencao" ? "● " : "○ "}{a.texto}</p>)}
         </div>
       )}
-
       {remoto.estado === "carregando" && <p className="muted" role="status">Carregando…</p>}
       {remoto.estado === "sem-conexao" && <p className="alerta">Sem conexão. O que você mudar aqui vai quando a internet voltar.</p>}
       <Caderneta dados={dados} atualizar={atualizar} secao={secao} setSecao={setSecao} modo={{ quem: "medico", carteira: true, pacienteId: p.id }} />
 
+      <PerguntasDaFamilia criancaId={p.id} />
+
       <div className="card">
         <h3>Atendimentos</h3>
         {fontesConsultorio.length === 0 ? (
-          <p className="muted">Cadastre um convênio ou o particular em Ajustes para registrar consultas com valor.</p>
+          <p className="muted">Cadastre um convênio ou o particular em Perfil para registrar consultas com valor.</p>
         ) : (
           <>
             <label className="campo">Como foi
@@ -287,25 +197,14 @@ function VerPaciente({ p, medico, financeiro, ir, recarregar }: { p: PacienteRes
         ))}
       </div>
 
-      {p.alertas.length > 0 && (
-        <div className="card" style={{ borderColor: p.alertas.some((a) => a.nivel === "atencao") ? "var(--ps)" : "var(--line)" }}>
-          <h3>Avisos</h3>
-          {p.alertas.map((a) => <p key={a.id} className={a.nivel === "info" ? "muted" : ""}>{a.nivel === "atencao" ? "● " : "○ "}{a.texto}</p>)}
-        </div>
-      )}
-      <PerguntasDaFamilia pacienteId={p.id} />
-
-      <div className="grade2">
-        <button className="btn sec" onClick={() => ir({ t: "editar", id: p.id })}>Editar</button>
-        <button className="btn contorno" onClick={() => setRemovendo(true)}>Remover</button>
-      </div>
-      <button className="voltar pequeno" onClick={() => void novoLink()}>Gerar link novo (o anterior para de funcionar)</button>
-      {removendo && (
+      {!saindo ? (
+        <button className="btn contorno bloco" onClick={() => setSaindo(true)}>Parar de acompanhar</button>
+      ) : (
         <div className="card">
-          <p>Remover {p.crianca.nome}? O celular da família deixa de sincronizar com você.</p>
+          <p>Parar de acompanhar {p.crianca.nome}? A família continua com tudo; só você deixa de ver.</p>
           <div className="grade2">
-            <button className="btn sec" onClick={() => setRemovendo(false)}>Cancelar</button>
-            <button className="btn ps" onClick={() => void api.del(`/api/medico/pacientes/${p.id}`).then(() => ir({ t: "lista" }))}>Remover</button>
+            <button className="btn sec" onClick={() => setSaindo(false)}>Cancelar</button>
+            <button className="btn ps" onClick={() => void parar()}>Parar</button>
           </div>
         </div>
       )}
@@ -313,11 +212,11 @@ function VerPaciente({ p, medico, financeiro, ir, recarregar }: { p: PacienteRes
   );
 }
 
-function PerguntasDaFamilia({ pacienteId }: { pacienteId: string }) {
+function PerguntasDaFamilia({ criancaId }: { criancaId: string }) {
   const [lista, setLista] = useState<{ pergunta: string; tipo: string; resposta: string; criadoEm: string }[] | null>(null);
   useEffect(() => {
-    api.get<{ perguntas: NonNullable<typeof lista> }>(`/api/perguntas?paciente=${pacienteId}`).then((r) => setLista(r.perguntas)).catch(() => setLista([]));
-  }, [pacienteId]);
+    api.get<{ perguntas: NonNullable<typeof lista> }>(`/api/perguntas?crianca=${criancaId}`).then((r) => setLista(r.perguntas)).catch(() => setLista([]));
+  }, [criancaId]);
   if (!lista || lista.length === 0) return null;
   const ROT: Record<string, string> = { orientacao: "respondida", fluxo: "mandada ao Vai ao PS", medico: "encaminhada a você", emergencia: "192", fora: "fora do conteúdo" };
   return (

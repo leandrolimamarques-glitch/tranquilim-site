@@ -1,4 +1,3 @@
-import { Coruja } from "../Coruja";
 import type { Navegar } from "../App";
 import { dataBr, hojeIso, idadeEmMesesDecimal, idadeTexto } from "../lib/idade";
 import { descreverPercentil, IDADE_MAXIMA_CURVA_MESES, percentil } from "../lib/oms";
@@ -30,10 +29,7 @@ export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar:
 
   return (
     <>
-      <div className="topo">
-        <div className="marca"><Coruja titulo="Tranquilim" /><span>Tranquilim</span></div>
-        <button className="icone-btn" aria-label="Ajustes" onClick={() => navegar("ajustes")}>⚙</button>
-      </div>
+
 
       <div className="card">
         <div className="linha"><h2>{c.nome}</h2><span className="chip">{idadeTexto(c.nascimento, hoje)}</span></div>
@@ -57,7 +53,7 @@ export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar:
         </div>
       )}
 
-      {dados.vinculo && (
+      {(
         <button className="card" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => navegar("pergunta")}>
           <h3>Pergunte ao Tranquilim</h3>
           <p className="muted">Dúvida de amamentação, sono, comida, desenvolvimento? Escreva aqui.</p>

@@ -34,7 +34,6 @@ const app = criarApp({
   assistente: assistenteFalso,
   cookieSeguro: false,
   pastaPublica: process.env.SERVIR_BUILD ? path.join(aqui, "..", "dist", "public") : undefined,
-  cadastroAberto: true,
 });
 const porta = Number(process.env.PORT ?? 8080);
 app.listen(porta, () => console.log(`dev: http://localhost:${porta}`));

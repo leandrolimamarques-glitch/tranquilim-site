@@ -94,6 +94,87 @@ const MIGRACOES: string[] = [
      criado_em timestamptz not null default now()
    );
    create index perguntas_paciente on perguntas(paciente_id, criado_em)`,
+  // Login único para todos (família, pediatra, dono). Os dados de teste do modelo
+  // anterior (convite por link) são descartados.
+  `drop table if exists perguntas;
+   drop table if exists carteiras;
+   drop table if exists sessoes;
+   drop table if exists pacientes;
+   drop table if exists medicos;
+   delete from documentos;
+   create table contas (
+     id uuid primary key,
+     email text not null unique,
+     senha_hash text not null,
+     nome text not null,
+     dono boolean not null default false,
+     pediatra boolean not null default false,
+     registro text,
+     titulo text,
+     whatsapp text,
+     telefone text,
+     local text,
+     email_verificado_em timestamptz,
+     criado_em timestamptz not null default now()
+   );
+   create table criancas (
+     id uuid primary key,
+     nome text not null,
+     nascimento date not null,
+     sexo text not null check (sexo in ('menina','menino')),
+     criado_por uuid not null references contas(id),
+     criado_em timestamptz not null default now(),
+     removido_em timestamptz
+   );
+   create table responsaveis (
+     crianca_id uuid not null references criancas(id),
+     conta_id uuid not null references contas(id),
+     criado_em timestamptz not null default now(),
+     primary key (crianca_id, conta_id)
+   );
+   create table acompanhamentos (
+     crianca_id uuid not null references criancas(id),
+     pediatra_id uuid not null references contas(id),
+     desde timestamptz not null default now(),
+     primary key (crianca_id, pediatra_id)
+   );
+   create table pedidos (
+     id uuid primary key,
+     pediatra_id uuid not null references contas(id),
+     email text not null,
+     criado_em timestamptz not null default now(),
+     resolvido_em timestamptz
+   );
+   create index pedidos_email on pedidos(email);
+   create table sessoes (
+     hash text primary key,
+     conta_id uuid not null references contas(id),
+     criada_em timestamptz not null default now(),
+     expira_em timestamptz not null
+   );
+   create table carteiras (
+     id uuid primary key,
+     crianca_id uuid not null references criancas(id),
+     enviado_por uuid not null references contas(id),
+     mime text not null,
+     bytes bytea not null,
+     tamanho integer not null,
+     leitura jsonb,
+     erro text,
+     criado_em timestamptz not null default now()
+   );
+   create index carteiras_crianca on carteiras(crianca_id);
+   create table perguntas (
+     id uuid primary key,
+     crianca_id uuid not null references criancas(id),
+     conta_id uuid not null references contas(id),
+     pergunta text not null,
+     tipo text not null,
+     resposta text not null,
+     fluxo text not null default '',
+     criado_em timestamptz not null default now()
+   );
+   create index perguntas_crianca on perguntas(crianca_id, criado_em)`,
 ];
 
 export async function migrar(banco: Banco): Promise<number> {

@@ -4,7 +4,7 @@ import { hojeIso } from "../lib/idade";
 import type { Crianca } from "../lib/store";
 import type { Sexo } from "../lib/oms";
 
-export function Onboarding({ onSalvar, inicial }: { onSalvar: (c: Crianca) => void; inicial?: Crianca }) {
+export function Onboarding({ onSalvar, inicial, titulo }: { onSalvar: (c: Crianca) => void; inicial?: Crianca; titulo?: string }) {
   const [nome, setNome] = useState(inicial?.nome ?? "");
   const [nascimento, setNascimento] = useState(inicial?.nascimento ?? "");
   const [sexo, setSexo] = useState<Sexo | "">(inicial?.sexo ?? "");
@@ -21,7 +21,7 @@ export function Onboarding({ onSalvar, inicial }: { onSalvar: (c: Crianca) => vo
         </div>
       )}
       <div className="card">
-        <h2>{inicial ? "Dados da criança" : "Vamos começar pela criança"}</h2>
+        <h2>{titulo ?? (inicial ? "Dados da criança" : "Vamos começar pela criança")}</h2>
         <label className="campo">
           Nome ou apelido
           <input id="nome" value={nome} onChange={(e) => setNome(e.target.value)} autoComplete="off" />
@@ -38,9 +38,9 @@ export function Onboarding({ onSalvar, inicial }: { onSalvar: (c: Crianca) => vo
           </div>
         </div>
         <button className="btn bloco" disabled={!valido} onClick={() => sexo && onSalvar({ nome: nome.trim(), nascimento, sexo })}>
-          {inicial ? "Salvar" : "Entrar"}
+          {inicial ? "Salvar" : "Cadastrar"}
         </button>
-        <p className="muted pequeno">Os dados ficam só neste celular. Nada é enviado para servidor.</p>
+        <p className="muted pequeno">Os dados ficam na sua conta. Só você e o pediatra que você escolher veem.</p>
       </div>
     </>
   );

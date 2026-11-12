@@ -4,7 +4,7 @@ import { dataPrevista, gerarSerie, lerFinanceiro, mesDe, ROTULO_SITUACAO, ROTULO
 import { dataBr, hojeIso } from "../../lib/idade";
 import { gravar, remover } from "../../lib/sinc";
 import { novoId } from "../../lib/store";
-import type { useDocRemoto } from "./useDocRemoto";
+import type { useDocRemoto } from "../../lib/useDocRemoto";
 
 type DocRemoto = ReturnType<typeof useDocRemoto>;
 

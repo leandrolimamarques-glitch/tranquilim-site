@@ -26,7 +26,6 @@ async function iniciar() {
     assistente,
     cookieSeguro: process.env.NODE_ENV === "production",
     pastaPublica: path.join(aqui, "public"),
-    cadastroAberto: process.env.CADASTRO_ABERTO !== "0",
   });
   const porta = Number(process.env.PORT ?? 8080);
   app.listen(porta, "0.0.0.0", () => console.log(`Tranquilim ouvindo na porta ${porta}`));

@@ -18,15 +18,15 @@ export function Pergunta({ dados, navegar }: { dados: Dados; navegar: Navegar })
   const [historico, setHistorico] = useState<Hist[]>([]);
 
   useEffect(() => {
-    api.get<{ perguntas: Hist[] }>("/api/perguntas").then((r) => setHistorico(r.perguntas)).catch(() => undefined);
-  }, []);
+    api.get<{ perguntas: Hist[] }>(`/api/perguntas?crianca=${dados.criancaId}`).then((r) => setHistorico(r.perguntas)).catch(() => undefined);
+  }, [dados.criancaId]);
 
   const enviar = async (q = texto) => {
     if (q.trim().length < 3) return;
     setEnviando(true);
     setErro("");
     try {
-      const r = await api.post<Resp>("/api/pergunta", { pergunta: q.trim() });
+      const r = await api.post<Resp>(`/api/pergunta?crianca=${dados.criancaId}`, { pergunta: q.trim() });
       setHistorico((h) => [{ ...r, pergunta: q.trim(), criadoEm: new Date().toISOString() }, ...h]);
       setTexto("");
     } catch (e) {
@@ -36,15 +36,6 @@ export function Pergunta({ dados, navegar }: { dados: Dados; navegar: Navegar })
     }
   };
 
-  if (!dados.vinculo) {
-    return (
-      <>
-        <button className="voltar" onClick={() => navegar("inicio")}>‹ Início</button>
-        <h1 style={{ fontSize: 28 }}>Pergunte ao Tranquilim</h1>
-        <p className="muted">Disponível para famílias ligadas a um consultório que usa o Tranquilim. Peça o link de convite ao seu pediatra.</p>
-      </>
-    );
-  }
 
   return (
     <>

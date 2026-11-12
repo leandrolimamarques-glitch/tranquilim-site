@@ -31,7 +31,7 @@ async function prepararArquivo(f: File): Promise<Blob> {
 }
 
 export function Carteira({ dados, atualizar, pacienteId }: { dados: Dados; atualizar: Atualizar; pacienteId?: string }) {
-  const sufixo = pacienteId ? `?paciente=${pacienteId}` : "";
+  const sufixo = `?crianca=${pacienteId ?? dados.criancaId}`;
   const [itens, setItens] = useState<ItemCarteira[] | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");

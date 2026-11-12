@@ -131,9 +131,9 @@ function VerPaciente({ p, medico, financeiro, voltar }: { p: Paciente; medico: M
   const vista = useMemo(() => docParaVista(remoto.doc), [remoto.doc]);
   const base = (doc: typeof remoto.doc): Dados => {
     const v = docParaVista(doc);
-    return { ...v, crianca: v.crianca ?? p.crianca, criancaId: p.id, medico: null, vinculo: null, sincronia: "ok" };
+    return { ...v, crianca: p.crianca ?? v.crianca, criancaId: p.id, medico: null, vinculo: null, sincronia: "ok" };
   };
-  const dados: Dados = { ...vista, crianca: vista.crianca ?? p.crianca, criancaId: p.id, medico: null, vinculo: null, sincronia: remoto.estado };
+  const dados: Dados = { ...vista, crianca: p.crianca ?? vista.crianca, criancaId: p.id, medico: null, vinculo: null, sincronia: remoto.estado };
   const atualizar: Atualizar = (f) => remoto.mudar((doc) => aplicarVista(doc, base(doc), f(base(doc))));
 
   const fin = lerFinanceiro(financeiro.doc);

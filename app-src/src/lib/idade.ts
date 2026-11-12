@@ -43,6 +43,22 @@ export function idadeEmMesesDecimal(nascimento: string, data: string): number {
   return idadeEmDias(nascimento, data) / 30.4375;
 }
 
+/**
+ * Idade em meses para avaliar crescimento e desenvolvimento: corrigida para prematuros
+ * (nascidos com menos de 37 semanas), descontando as semanas que faltaram para 40, até
+ * "ateMeses" de idade real; depois, a idade real. Vacina segue sempre a idade real.
+ * Fonte: Sociedade Brasileira de Pediatria, Manual de Seguimento do Recém-nascido de Alto
+ * Risco, 2ª ed., 2024 (desenvolvimento: idade corrigida nos 3 primeiros anos; peso e
+ * comprimento: até 2 a 3 anos; perímetro cefálico: até 1 ano).
+ */
+export function idadeParaAvaliacao(nascimento: string, data: string, semanasGestacao?: number, ateMeses = 36): number {
+  const real = idadeEmMesesDecimal(nascimento, data);
+  if (!semanasGestacao || semanasGestacao >= 37 || real >= ateMeses) return real;
+  return real - ((40 - semanasGestacao) * 7) / 30.4375;
+}
+
+export const ehPrematuro = (semanasGestacao?: number) => !!semanasGestacao && semanasGestacao < 37;
+
 export function idadeTexto(nascimento: string, hoje: string): string {
   const dias = idadeEmDias(nascimento, hoje);
   if (dias < 0) return "ainda não nasceu";

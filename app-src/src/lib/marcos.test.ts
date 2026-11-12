@@ -56,3 +56,24 @@ describe("marcos do desenvolvimento (Caderneta da Criança, MS)", () => {
     expect(docParaVista(desmarcado).marcos).toEqual({});
   });
 });
+
+describe("idade corrigida do prematuro (SBP, Manual de Seguimento do RN de Alto Risco, 2024)", () => {
+  it("desconta as semanas que faltaram para 40, só abaixo de 37 semanas e até 3 anos", async () => {
+    const { idadeParaAvaliacao } = await import("./idade");
+    const real = idadeParaAvaliacao("2026-01-01", "2026-07-01");
+    expect(idadeParaAvaliacao("2026-01-01", "2026-07-01", 32)).toBeCloseTo(real - (8 * 7) / 30.4375, 5);
+    expect(idadeParaAvaliacao("2026-01-01", "2026-07-01", 37)).toBe(real);
+    expect(idadeParaAvaliacao("2026-01-01", "2026-07-01", undefined)).toBe(real);
+    expect(idadeParaAvaliacao("2023-01-01", "2026-07-01", 28)).toBe(idadeParaAvaliacao("2023-01-01", "2026-07-01"));
+  });
+
+  it("prematuro de 28 semanas com 4 meses reais é avaliado na faixa de 1 a 2 meses", () => {
+    const nao = { faz: false, data: "2026-05-01" };
+    // 4 meses reais - 12 semanas (~2,8 meses) = ~1,2 mês corrigido: "sorri" é da faixa atual, não atraso.
+    const r = resumoMarcos("2026-01-01", "2026-05-01", { "m01-sorri": nao }, 28);
+    expect(r.conversar).toHaveLength(0);
+    expect(r.aindaNaIdade.map((m) => m.id)).toEqual(["m01-sorri"]);
+    // Sem informar a prematuridade, o mesmo "ainda não" já seria de faixa passada.
+    expect(resumoMarcos("2026-01-01", "2026-05-01", { "m01-sorri": nao }).conversar.map((m) => m.id)).toEqual(["m01-sorri"]);
+  });
+});

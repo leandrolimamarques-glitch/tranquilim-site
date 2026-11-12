@@ -1,7 +1,7 @@
 // Avisos sobre a criança, a partir do que a família (ou o consultório) registrou.
 // Aparecem para o pediatra no painel e, para a família, como "converse com o pediatra".
 
-import { idadeEmDias, idadeEmMesesDecimal } from "./idade";
+import { idadeEmDias, idadeEmMesesDecimal, idadeParaAvaliacao } from "./idade";
 import { IDADE_MAXIMA_CURVA_MESES, percentil } from "./oms";
 import { situacaoDasVacinas } from "./vacinas";
 import type { Vista } from "./familia";
@@ -18,7 +18,7 @@ export function alertasDaCrianca(v: Vista, hoje: string): Alerta[] {
 
   const medidas = [...v.medidas].sort((a, b) => a.data.localeCompare(b.data));
   const naCurva = (data: string) => {
-    const m = idadeEmMesesDecimal(c.nascimento, data);
+    const m = idadeParaAvaliacao(c.nascimento, data, c.semanasGestacao);
     return m >= 0 && m <= IDADE_MAXIMA_CURVA_MESES ? m : null;
   };
   for (const ind of ["peso", "comprimento"] as const) {
@@ -47,7 +47,7 @@ export function alertasDaCrianca(v: Vista, hoje: string): Alerta[] {
   }
 
   // Marcos do desenvolvimento (relato da família; Caderneta da Criança, MS).
-  const rm = resumoMarcos(c.nascimento, hoje, v.marcos ?? {});
+  const rm = resumoMarcos(c.nascimento, hoje, v.marcos ?? {}, c.semanasGestacao);
   if (rm.perdeuHabilidade) saida.push({ id: "marcos-perda", nivel: "atencao", texto: "Deixou de fazer algo que já fazia, pelo que a família marcou" });
   if (rm.conversar.length) {
     const nomes = rm.conversar.map((m) => m.nome.toLowerCase());

@@ -5,7 +5,8 @@
 import { gravar, remover, vivos, type Doc, type Item } from "./sinc";
 import type { Sexo } from "./oms";
 
-export type Crianca = { nome: string; nascimento: string; sexo: Sexo };
+/** semanasGestacao: idade gestacional ao nascer, em semanas completas (só quando informada). */
+export type Crianca = { nome: string; nascimento: string; sexo: Sexo; semanasGestacao?: number };
 export type Medida = { id: string; data: string; pesoKg?: number; comprimentoCm?: number; perimetroCefalicoCm?: number; origem?: "familia" | "consulta" };
 export type TipoRegistro = "mamada" | "xixi" | "coco" | "sono";
 export type Registro = { id: string; tipo: TipoRegistro; quando: string };

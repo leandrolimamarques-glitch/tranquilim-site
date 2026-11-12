@@ -109,7 +109,7 @@ export function useCrianca(c: CriancaDaConta): [Dados, Atualizar] {
   const montar = useCallback(
     (doc: Parameters<typeof docParaVista>[0], estado: EstadoDoc): Dados => {
       const v = docParaVista(doc);
-      return { ...v, crianca: v.crianca ?? c.crianca, criancaId: c.id, medico, vinculo: medico ? { pacienteId: c.id } : null, sincronia: estado };
+      return { ...v, crianca: c.crianca ?? v.crianca, criancaId: c.id, medico, vinculo: medico ? { pacienteId: c.id } : null, sincronia: estado };
     },
     [c, medico],
   );

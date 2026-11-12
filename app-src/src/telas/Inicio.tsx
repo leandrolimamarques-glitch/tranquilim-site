@@ -1,5 +1,5 @@
 import type { Navegar } from "../App";
-import { dataBr, hojeIso, idadeEmMesesDecimal, idadeTexto } from "../lib/idade";
+import { dataBr, hojeIso, idadeEmMesesDecimal, idadeTexto, idadeParaAvaliacao } from "../lib/idade";
 import { descreverPercentil, IDADE_MAXIMA_CURVA_MESES, percentil } from "../lib/oms";
 import type { Atualizar, Dados, TipoRegistro } from "../lib/store";
 import { novoId } from "../lib/store";
@@ -19,7 +19,7 @@ export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar:
   const trilha = trilhasDaIdade(meses).find((t) => t.aulas.some((a) => !dados.aulasVistas.includes(a.id))) ?? trilhasDaIdade(meses)[0];
   const vistas = trilha ? trilha.aulas.filter((a) => dados.aulasVistas.includes(a.id)).length : 0;
   const ultimaComPeso = [...dados.medidas].filter((m) => m.pesoKg).sort((a, b) => b.data.localeCompare(a.data))[0];
-  const mesesMedida = ultimaComPeso ? idadeEmMesesDecimal(c.nascimento, ultimaComPeso.data) : -1;
+  const mesesMedida = ultimaComPeso ? idadeParaAvaliacao(c.nascimento, ultimaComPeso.data, c.semanasGestacao) : -1;
   const pPeso = ultimaComPeso && mesesMedida >= 0 && mesesMedida <= IDADE_MAXIMA_CURVA_MESES ? percentil(c.sexo, "peso", mesesMedida, ultimaComPeso.pesoKg!) : null;
   const contagem = contarHoje(dados.diario, hoje);
 

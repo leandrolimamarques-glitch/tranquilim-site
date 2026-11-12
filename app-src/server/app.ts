@@ -66,7 +66,9 @@ function validarCrianca(c: Partial<Crianca> | undefined): Crianca {
   if (!nome) throw new Erro(400, "Informe o nome da criança.");
   if (!dataValida(c?.nascimento)) throw new Erro(400, "Data de nascimento inválida.");
   if (c?.sexo !== "menina" && c?.sexo !== "menino") throw new Erro(400, "Informe menina ou menino.");
-  return { nome, nascimento: c.nascimento as string, sexo: c.sexo };
+  const sg = c.semanasGestacao;
+  if (sg !== undefined && sg !== null && !(Number.isInteger(sg) && sg >= 22 && sg <= 42)) throw new Erro(400, "Semanas de gestação: um número de 22 a 42.");
+  return { nome, nascimento: c.nascimento as string, sexo: c.sexo, ...(typeof sg === "number" ? { semanasGestacao: sg } : {}) };
 }
 
 function validarTelefone(v: unknown): string | null {
@@ -360,7 +362,7 @@ export function criarApp(o: Opcoes) {
   conta.get("/", rota(async (req) => {
     const c = req.conta!;
     const criancas = await banco.q<Record<string, unknown>>(
-      `select k.id, k.nome, k.nascimento::text as nascimento, k.sexo from criancas k
+      `select k.id, k.nome, k.nascimento::text as nascimento, k.sexo, k.semanas_gestacao from criancas k
          join responsaveis r on r.crianca_id = k.id where r.conta_id = $1 and k.removido_em is null order by k.nascimento desc`,
       [c.id],
     );
@@ -382,7 +384,7 @@ export function criarApp(o: Opcoes) {
       conta: { id: c.id, email: c.email, nome: c.nome, dono: c.dono, pediatra: c.pediatra, emailVerificado: !!(c as Conta & { email_verificado_em?: unknown }).email_verificado_em, registro: c.registro, titulo: c.titulo, whatsapp: c.whatsapp, telefone: c.telefone, local: c.local, lembretes: c.lembretes !== false },
       criancas: criancas.map((k) => ({
         id: k.id,
-        crianca: { nome: k.nome, nascimento: k.nascimento, sexo: k.sexo },
+        crianca: { nome: k.nome, nascimento: k.nascimento, sexo: k.sexo, ...(k.semanas_gestacao ? { semanasGestacao: Number(k.semanas_gestacao) } : {}) },
         pediatras: peds.filter((p) => p.crianca_id === k.id).map((p) => pediatraPublico(p as unknown as Conta)),
       })),
       pedidos: pedidos.map((d) => ({ id: d.id, pediatra: pediatraPublico({ ...(d as unknown as Conta), id: String(d.pid) }), criadoEm: iso(d.criado_em) })),
@@ -402,8 +404,8 @@ export function criarApp(o: Opcoes) {
       `select nome, email, criado_em, email_verificado_em, consentimento_em, consentimento_versao, pediatra, registro, titulo, whatsapp, telefone, local from contas where id = $1`,
       [c.id],
     );
-    const ks = await banco.q<{ id: string; nome: string; nascimento: string; sexo: string; criado_em: unknown }>(
-      `select k.id, k.nome, k.nascimento::text as nascimento, k.sexo, k.criado_em from criancas k join responsaveis r on r.crianca_id = k.id where r.conta_id = $1`,
+    const ks = await banco.q<{ id: string; nome: string; nascimento: string; sexo: string; semanas_gestacao: number | null; criado_em: unknown }>(
+      `select k.id, k.nome, k.nascimento::text as nascimento, k.sexo, k.semanas_gestacao, k.criado_em from criancas k join responsaveis r on r.crianca_id = k.id where r.conta_id = $1`,
       [c.id],
     );
     const criancasExp = [];
@@ -413,7 +415,7 @@ export function criarApp(o: Opcoes) {
       const carts = await banco.q<{ mime: string; bytes: Buffer | Uint8Array; leitura: unknown; criado_em: unknown }>(`select mime, bytes, leitura, criado_em from carteiras where crianca_id = $1 order by criado_em`, [k.id]);
       const pergs = await banco.q<Record<string, unknown>>(`select pergunta, tipo, resposta, criado_em from perguntas where crianca_id = $1 order by criado_em`, [k.id]);
       criancasExp.push({
-        nome: k.nome, nascimento: k.nascimento, sexo: k.sexo, cadastradaEm: iso(k.criado_em),
+        nome: k.nome, nascimento: k.nascimento, sexo: k.sexo, semanasGestacao: k.semanas_gestacao, cadastradaEm: iso(k.criado_em),
         responsaveis: resp, pediatras: peds,
         registros: await lerDoc(`crianca:${k.id}`),
         carteiras: carts.map((x) => ({ tipo: x.mime, enviadaEm: iso(x.criado_em), leitura: x.leitura ? comoJson(x.leitura) : null, arquivoBase64: Buffer.from(x.bytes).toString("base64") })),
@@ -509,7 +511,7 @@ export function criarApp(o: Opcoes) {
   criancas.post("/", rota(async (req) => {
     const k = validarCrianca((req.body as { crianca?: Partial<Crianca> }).crianca);
     const id = randomUUID();
-    await banco.q(`insert into criancas (id, nome, nascimento, sexo, criado_por) values ($1,$2,$3,$4,$5)`, [id, k.nome, k.nascimento, k.sexo, req.conta!.id]);
+    await banco.q(`insert into criancas (id, nome, nascimento, sexo, criado_por, semanas_gestacao) values ($1,$2,$3,$4,$5,$6)`, [id, k.nome, k.nascimento, k.sexo, req.conta!.id, k.semanasGestacao ?? null]);
     await banco.q(`insert into responsaveis (crianca_id, conta_id) values ($1,$2)`, [id, req.conta!.id]);
     const doc = (req.body as { doc?: unknown }).doc;
     await juntarDoc(`crianca:${id}`, docValido(doc) ? juntarDocs(doc, docInicial(k)) : docInicial(k));
@@ -520,7 +522,7 @@ export function criarApp(o: Opcoes) {
     const a = await acessoACrianca(req.conta!, req.params.id);
     if (a.como !== "familia") throw new Erro(403, "Só a família edita os dados da criança.");
     const k = validarCrianca((req.body as { crianca?: Partial<Crianca> }).crianca);
-    await banco.q(`update criancas set nome=$1, nascimento=$2, sexo=$3 where id=$4`, [k.nome, k.nascimento, k.sexo, a.id]);
+    await banco.q(`update criancas set nome=$1, nascimento=$2, sexo=$3, semanas_gestacao=$4 where id=$5`, [k.nome, k.nascimento, k.sexo, k.semanasGestacao ?? null, a.id]);
     await juntarDoc(`crianca:${a.id}`, docInicial(k));
     return { ok: true };
   }));
@@ -589,7 +591,7 @@ export function criarApp(o: Opcoes) {
 
   ped.get("/pacientes", rota(async (req) => {
     const linhas = await banco.q<Record<string, unknown>>(
-      `select k.id, k.nome, k.nascimento::text as nascimento, k.sexo, a.desde, d.doc, d.atualizado_em,
+      `select k.id, k.nome, k.nascimento::text as nascimento, k.sexo, k.semanas_gestacao, a.desde, d.doc, d.atualizado_em,
               (select string_agg(c.nome, ', ') from responsaveis r join contas c on c.id = r.conta_id where r.crianca_id = k.id) as responsaveis,
               (select c.email from responsaveis r join contas c on c.id = r.conta_id where r.crianca_id = k.id order by r.criado_em limit 1) as email
          from acompanhamentos a join criancas k on k.id = a.crianca_id
@@ -601,7 +603,7 @@ export function criarApp(o: Opcoes) {
     const pedidos = await banco.q<Record<string, unknown>>(`select id, email, criado_em from pedidos where pediatra_id = $1 and resolvido_em is null order by criado_em desc`, [req.conta!.id]);
     return {
       pacientes: linhas.map((p) => {
-        const crianca = { nome: String(p.nome), nascimento: String(p.nascimento), sexo: p.sexo as "menina" | "menino" };
+        const crianca = { nome: String(p.nome), nascimento: String(p.nascimento), sexo: p.sexo as "menina" | "menino", ...(p.semanas_gestacao ? { semanasGestacao: Number(p.semanas_gestacao) } : {}) };
         const vista = docParaVista(p.doc ? comoJson<Doc>(p.doc) : {});
         return {
           id: p.id,

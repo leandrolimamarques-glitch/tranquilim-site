@@ -12,7 +12,7 @@
 // Perda de habilidade em qualquer idade é sinal de alerta: Sociedade Brasileira de Pediatria,
 // Manual de Orientação nº 5, Transtorno do Espectro do Autismo, 2019.
 
-import { idadeEmMesesDecimal } from "./idade";
+import { idadeParaAvaliacao } from "./idade";
 import type { RespostaMarco } from "./familia";
 
 export const FONTE_MARCOS =
@@ -153,8 +153,8 @@ export function marcosParaMostrar(mesesIdade: number): { atual: Faixa; anterior:
 
 export type ResumoMarcos = { conversar: Marco[]; aindaNaIdade: Marco[]; perdeuHabilidade: boolean };
 
-export function resumoMarcos(nascimento: string, hoje: string, respostas: Record<string, RespostaMarco>): ResumoMarcos {
-  const meses = idadeEmMesesDecimal(nascimento, hoje);
+export function resumoMarcos(nascimento: string, hoje: string, respostas: Record<string, RespostaMarco>, semanasGestacao?: number): ResumoMarcos {
+  const meses = Math.max(0, idadeParaAvaliacao(nascimento, hoje, semanasGestacao));
   const { marcos } = marcosParaMostrar(meses);
   return {
     conversar: marcos.filter((m) => situacaoMarco(m, meses, respostas[m.id]) === "conversar"),

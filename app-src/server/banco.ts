@@ -220,6 +220,8 @@ const MIGRACOES: string[] = [
   `alter table contas add column lembretes boolean not null default true;
    alter table contas add column lembrete_em timestamptz;
    alter table contas add column lembrete_verificado_em timestamptz`,
+  // Idade gestacional ao nascer (semanas), para a idade corrigida dos prematuros.
+  `alter table criancas add column semanas_gestacao smallint check (semanas_gestacao between 22 and 42)`,
 ];
 
 export async function migrar(banco: Banco): Promise<number> {

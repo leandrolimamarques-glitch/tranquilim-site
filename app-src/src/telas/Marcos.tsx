@@ -1,4 +1,4 @@
-import { hojeIso, idadeEmMesesDecimal } from "../lib/idade";
+import { ehPrematuro, hojeIso, idadeEmMesesDecimal, idadeParaAvaliacao } from "../lib/idade";
 import type { Atualizar, Dados } from "../lib/store";
 import {
   FONTE_MARCOS, FONTE_MCHAT, FONTE_REGRESSAO, ID_REGRESSAO, marcosParaMostrar, naJanelaMchat, rotuloFaixa, situacaoMarco,
@@ -10,7 +10,8 @@ type Quem = "familia" | "medico";
 export function Marcos({ dados, atualizar, quem }: { dados: Dados; atualizar: Atualizar; quem: Quem }) {
   const c = dados.crianca!;
   const hoje = hojeIso();
-  const meses = idadeEmMesesDecimal(c.nascimento, hoje);
+  const meses = Math.max(0, idadeParaAvaliacao(c.nascimento, hoje, c.semanasGestacao));
+  const corrigida = ehPrematuro(c.semanasGestacao) && idadeEmMesesDecimal(c.nascimento, hoje) < 36;
   const { atual, anterior, marcos } = marcosParaMostrar(meses);
   const primeiro = c.nome.split(" ")[0];
   const marcar = (id: string, faz: boolean | null) =>
@@ -36,6 +37,9 @@ export function Marcos({ dados, atualizar, quem }: { dados: Dados; atualizar: At
           ? `Marque o que ${primeiro} já faz. Não é prova: cada criança tem seu ritmo dentro da faixa de idade. Se ainda não faz algo da idade, brinque estimulando; se a idade passar, converse com o pediatra.`
           : "Relato da família e o que o consultório marcar. Classificação conforme o Instrumento de Vigilância do Desenvolvimento da Caderneta da Criança."}
       </p>
+      {corrigida && (
+        <p className="pequeno"><b>Usando a idade corrigida</b> ({Math.floor(meses)} {Math.floor(meses) === 1 ? "mês" : "meses"}), porque {primeiro} nasceu com {c.semanasGestacao} semanas.</p>
+      )}
       {grupo(atual, meses >= 72 ? "Última faixa da caderneta" : "Idade atual")}
       {anterior && grupo(anterior, "Faixa anterior (a caderneta pede para conferir)")}
 
@@ -62,7 +66,7 @@ export function Marcos({ dados, atualizar, quem }: { dados: Dados; atualizar: At
       )}
 
       <p className="muted pequeno">
-        Nasceu prematuro? Pergunte ao pediatra sobre a idade corrigida, que vale para os marcos. Fontes: {FONTE_MARCOS} {FONTE_REGRESSAO}{naJanelaMchat(meses) ? ` ${FONTE_MCHAT}` : ""}
+        {ehPrematuro(c.semanasGestacao) ? "Para prematuros, os marcos usam a idade corrigida até 3 anos (SBP, Manual de Seguimento do RN de Alto Risco, 2024)." : "Nasceu prematuro? Informe as semanas de gestação no cadastro da criança, em Ajustes: os marcos passam a usar a idade corrigida."} Fontes: {FONTE_MARCOS} {FONTE_REGRESSAO}{naJanelaMchat(meses) ? ` ${FONTE_MCHAT}` : ""}
       </p>
     </>
   );

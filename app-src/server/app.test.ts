@@ -348,3 +348,15 @@ describe("lembrete de vacina por e-mail", () => {
     expect((await f("GET", "/api/conta")).corpo.conta.lembretes).toBe(true);
   });
 });
+
+describe("prematuro: semanas de gestação no cadastro", () => {
+  it("guarda, valida e devolve à família e ao pediatra", async () => {
+    const f = navegador();
+    await f("POST", "/api/conta/cadastro", { nome: "Júlia", email: "julia@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
+    expect((await f("POST", "/api/criancas", { crianca: { nome: "Leo", nascimento: "2026-05-01", sexo: "menino", semanasGestacao: 50 } })).status).toBe(400);
+    const id = (await f("POST", "/api/criancas", { crianca: { nome: "Leo", nascimento: "2026-05-01", sexo: "menino", semanasGestacao: 31 } })).corpo.id;
+    expect((await f("GET", "/api/conta")).corpo.criancas[0].crianca.semanasGestacao).toBe(31);
+    await f("PUT", `/api/criancas/${id}`, { crianca: { nome: "Leo", nascimento: "2026-05-01", sexo: "menino" } });
+    expect((await f("GET", "/api/conta")).corpo.criancas[0].crianca.semanasGestacao).toBeUndefined();
+  });
+});

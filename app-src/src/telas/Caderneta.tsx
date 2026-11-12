@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { dataBr, hojeIso, idadeEmMesesDecimal } from "../lib/idade";
+import { dataBr, ehPrematuro, hojeIso, idadeEmMesesDecimal, idadeParaAvaliacao } from "../lib/idade";
 import { curva, descreverPercentil, IDADE_MAXIMA_CURVA_MESES, LINHAS_PERCENTIL, percentil, type Indicador, type Sexo } from "../lib/oms";
 import { novoId, type Atualizar, type Dados, type Medida, type Registro, type TipoRegistro } from "../lib/store";
 import { FONTE_CALENDARIO, situacaoDasVacinas, type VacinaComSituacao } from "../lib/vacinas";
@@ -184,13 +184,14 @@ function Crescimento({ dados, atualizar, modo }: { dados: Dados; atualizar: Atua
         <button className={indicador === "peso" ? "ativa" : ""} onClick={() => setIndicador("peso")}>Peso</button>
         <button className={indicador === "comprimento" ? "ativa" : ""} onClick={() => setIndicador("comprimento")}>Comprimento</button>
       </div>
-      <Grafico sexo={c.sexo} indicador={indicador} nascimento={c.nascimento} medidas={dados.medidas} />
+      <Grafico sexo={c.sexo} indicador={indicador} nascimento={c.nascimento} semanas={c.semanasGestacao} medidas={dados.medidas} />
+      {ehPrematuro(c.semanasGestacao) && idadeEmMesesDecimal(c.nascimento, hojeIso()) < 36 && <p className="muted pequeno">Curva pela idade corrigida: {c.nome.split(" ")[0]} nasceu com {c.semanasGestacao} semanas (SBP, Manual de Seguimento do RN de Alto Risco, 2024).</p>}
 
       {medidas.length > 0 && (
         <div className="card">
           <h3>Medidas</h3>
           {medidas.map((m) => {
-            const meses = idadeEmMesesDecimal(c.nascimento, m.data);
+            const meses = idadeParaAvaliacao(c.nascimento, m.data, c.semanasGestacao);
             const naCurva = meses >= 0 && meses <= IDADE_MAXIMA_CURVA_MESES;
             return (
               <div key={m.id} className="linha" style={{ borderTop: "1px solid var(--line)", paddingTop: 8 }}>
@@ -214,13 +215,13 @@ function Crescimento({ dados, atualizar, modo }: { dados: Dados; atualizar: Atua
   );
 }
 
-function Grafico({ sexo, indicador, nascimento, medidas }: { sexo: Sexo; indicador: Indicador; nascimento: string; medidas: Medida[] }) {
+function Grafico({ sexo, indicador, nascimento, semanas, medidas }: { sexo: Sexo; indicador: Indicador; nascimento: string; semanas?: number; medidas: Medida[] }) {
   const pontos = medidas
-    .map((m) => ({ meses: idadeEmMesesDecimal(nascimento, m.data), valor: indicador === "peso" ? m.pesoKg : m.comprimentoCm }))
+    .map((m) => ({ meses: idadeParaAvaliacao(nascimento, m.data, semanas), valor: indicador === "peso" ? m.pesoKg : m.comprimentoCm }))
     .filter((p): p is { meses: number; valor: number } => p.valor !== undefined && p.meses >= 0 && p.meses <= IDADE_MAXIMA_CURVA_MESES)
     .sort((a, b) => a.meses - b.meses);
   // Eixo do tempo acompanha a idade da criança: mínimo de 6 meses, máximo de 24.
-  const idadeHoje = idadeEmMesesDecimal(nascimento, hojeIso());
+  const idadeHoje = idadeParaAvaliacao(nascimento, hojeIso(), semanas);
   const ultimoPonto = pontos.length ? pontos[pontos.length - 1].meses : 0;
   const xMax = Math.min(IDADE_MAXIMA_CURVA_MESES, Math.max(6, Math.ceil(Math.max(idadeHoje, ultimoPonto) + 2)));
   const linhas = LINHAS_PERCENTIL.map((l) => ({ ...l, pontos: curva(sexo, indicador, l.z, xMax) }));

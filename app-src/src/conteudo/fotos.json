@@ -1,4 +1,119 @@
 {
+ "es-acompanhar-com-olhar": {
+  "u": "https://images.unsplash.com/photo-1547160548-4ab0c1942a6a?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8N3x8YmFieSUyMGxvb2tpbmclMjBhdCUyMHRveXxlbnwxfDB8fHwxNzk0NTIzMTcyfDA",
+  "a": "Meghan Thompson",
+  "p": "megpiephoto"
+ },
+ "es-ajudar-em-casa": {
+  "u": "https://images.unsplash.com/photo-1758874960422-01db639167e7?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8Nnx8dG9kZGxlciUyMGhlbHBpbmclMjBraXRjaGVufGVufDF8MHx8fDE3OTQ1MjMxNzh8MA",
+  "a": "Vitaly Gariev",
+  "p": "silverkblack"
+ },
+ "es-andar-com-apoio": {
+  "u": "https://images.unsplash.com/flagged/photo-1567992048345-13c287937208?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8NXx8YmFieSUyMGZpcnN0JTIwc3RlcHMlMjBob2xkaW5nJTIwaGFuZHN8ZW58MXwwfHx8MTc5NDUyMzE3Nnww",
+  "a": "David Veksler",
+  "p": "davidveksler"
+ },
+ "es-ar-livre": {
+  "u": "https://images.unsplash.com/photo-1627764940620-90393d0e8c34?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8MXx8Y2hpbGRyZW4lMjBwbGF5aW5nJTIwb3V0ZG9vcnMlMjBwYXJrfGVufDF8MHx8fDE3OTQ1MjMxODB8MA",
+  "a": "Jay Chen",
+  "p": "forhiskingdom"
+ },
+ "es-barriga-para-baixo": {
+  "u": "https://images.unsplash.com/photo-1593303734329-7ccb05372c46?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8NXx8YmFieSUyMHR1bW15JTIwdGltZXxlbnwxfDB8fHwxNzk0NTIzMTcxfDA",
+  "a": "Marcin Jozwiak",
+  "p": "marcinjozwiak"
+ },
+ "es-cesto-de-tesouros": {
+  "u": "https://images.unsplash.com/photo-1696563541384-bf48ecbaac45?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8MXx8YmFieSUyMHdvb2RlbiUyMHRveXMlMjBiYXNrZXR8ZW58MXwwfHx8MTc5NDUyMzIzNHww",
+  "a": "Rei Yamazaki",
+  "p": "kryhd"
+ },
+ "es-contar-historias": {
+  "u": "https://images.unsplash.com/photo-1758874961197-893028499f9f?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8MXx8cGFyZW50JTIwc3Rvcnl0ZWxsaW5nJTIwY2hpbGQlMjBiZWR8ZW58MXwwfHx8MTc5NDUyMzE4MXww",
+  "a": "Vitaly Gariev",
+  "p": "silverkblack"
+ },
+ "es-conversa-olho-no-olho": {
+  "u": "https://images.unsplash.com/photo-1780329939084-3f907c60ce47?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8M3x8bW90aGVyJTIwdGFsa2luZyUyMHRvJTIwYmFieSUyMGZhY2V8ZW58MXwwfHx8MTc5NDUyMzE3MXww",
+  "a": "Rohit Dey",
+  "p": "rohit16dey"
+ },
+ "es-coordenacao-fina": {
+  "u": "https://images.unsplash.com/photo-1528577516329-a492c1bc9d88?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8MXx8Y2hpbGQlMjB0aHJlYWRpbmclMjBiZWFkc3xlbnwxfDB8fHwxNzk0NTIzMTgwfDA",
+  "a": "Lisa Woakes",
+  "p": "lisawoakesdesigns"
+ },
+ "es-empilhar": {
+  "u": "https://images.unsplash.com/photo-1537655561018-82667b44c7a4?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8N3x8dG9kZGxlciUyMHN0YWNraW5nJTIwYmxvY2tzfGVufDF8MHx8fDE3OTQ1MjMxNzd8MA",
+  "a": "Marisa Howenstine",
+  "p": "marisahowenstine"
+ },
+ "es-esconde-achou": {
+  "u": "https://images.unsplash.com/photo-1660800954845-ad9ed78efc56?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8M3x8cGVlayUyMGElMjBib298ZW58MXwwfHx8MTc5NDUyMzIzM3ww",
+  "a": "Juliia Abramova",
+  "p": "juliia_abramova"
+ },
+ "es-faz-de-conta": {
+  "u": "https://images.unsplash.com/photo-1758691462322-be12d399df01?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8M3x8Y2hpbGQlMjBwcmV0ZW5kJTIwcGxheXxlbnwxfDB8fHwxNzk0NTIzMTc5fDA",
+  "a": "Vitaly Gariev",
+  "p": "silverkblack"
+ },
+ "es-imitar-sons": {
+  "u": "https://images.unsplash.com/photo-1535571393765-ea44927160be?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8NXx8YmFieSUyMGJhYmJsaW5nJTIwcGFyZW50fGVufDF8MHx8fDE3OTQ1MjMxNzN8MA",
+  "a": "Zach Lucero",
+  "p": "zlucerophoto"
+ },
+ "es-jogos-com-regras": {
+  "u": "https://images.unsplash.com/photo-1577896849786-738ed6c78bd3?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8M3x8Y2hpbGRyZW4lMjBwbGF5aW5nJTIwYm9hcmQlMjBnYW1lfGVufDF8MHx8fDE3OTQ1MjMxODF8MA",
+  "a": "National Cancer Institute",
+  "p": "nci"
+ },
+ "es-leitura-compartilhada": {
+  "u": "https://images.unsplash.com/photo-1666888736026-62d89f6cc7a3?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8OHx8cGFyZW50JTIwcmVhZGluZyUyMGJvb2slMjB0b2RkbGVyfGVufDF8MHx8fDE3OTQ1MjMxNzV8MA",
+  "a": "Nappy",
+  "p": "nappystudio"
+ },
+ "es-massinha-caseira": {
+  "u": "https://images.unsplash.com/photo-1517588166688-529a7f4dc7ef?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8M3x8Y2hpbGQlMjBwbGF5aW5nJTIwcGxheSUyMGRvdWdofGVufDF8MHx8fDE3OTQ1MjMxNzl8MA",
+  "a": "Kelly Sikkema",
+  "p": "kellysikkema"
+ },
+ "es-musica-e-colo": {
+  "u": "https://images.unsplash.com/photo-1715433486116-21180427a309?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8M3x8cGFyZW50JTIwc2luZ2luZyUyMGhvbGRpbmclMjBiYWJ5fGVufDF8MHx8fDE3OTQ1MjMxNzJ8MA",
+  "a": "Gabriel Rodrigues",
+  "p": "gabrielrodriguesoficial"
+ },
+ "es-nomear-coisas": {
+  "u": "https://images.unsplash.com/photo-1580153670846-7693b1530d06?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8Mnx8dG9kZGxlciUyMHBvaW50aW5nJTIwcGFyZW50fGVufDF8MHx8fDE3OTQ1MjMxNzd8MA",
+  "a": "🇻🇪 Jose G. Ortega Castro 🇲🇽",
+  "p": "j0rt"
+ },
+ "es-pegar-objetos": {
+  "u": "https://images.unsplash.com/photo-1589827711524-0fb39b96e630?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8MXx8YmFieSUyMGdyYWJiaW5nJTIwdG95fGVufDF8MHx8fDE3OTQ1MjMxNzN8MA",
+  "a": "Tai's Captures",
+  "p": "taiscaptures"
+ },
+ "es-potes-e-tampas": {
+  "u": "https://images.unsplash.com/photo-1638366834146-4222376925c6?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8Mnx8YmFieSUyMHBsYXlpbmclMjB3aXRoJTIwcG90cyUyMGFuZCUyMHBhbnN8ZW58MXwwfHx8MTc5NDUyMzIzM3ww",
+  "a": "Anup Mobdal",
+  "p": "anupfpi"
+ },
+ "es-rabiscar": {
+  "u": "https://images.unsplash.com/photo-1587252229459-0ed15d55a715?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8OHx8dG9kZGxlciUyMGRyYXdpbmclMjBjcmF5b25zfGVufDF8MHx8fDE3OTQ1MjMxNzh8MA",
+  "a": "Gabe Pierce",
+  "p": "gaberce"
+ },
+ "es-rolar-e-alcancar": {
+  "u": "https://images.unsplash.com/photo-1758687126058-742cf8befacd?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8M3x8YmFieSUyMHJvbGxpbmclMjBvdmVyJTIwZmxvb3J8ZW58MXwwfHx8MTc5NDUyMzE3NHww",
+  "a": "Vitaly Gariev",
+  "p": "silverkblack"
+ },
+ "es-tchau-e-palminhas": {
+  "u": "https://images.unsplash.com/photo-1507250671672-b76f9dde4188?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8Mnx8YmFieSUyMGNsYXBwaW5nJTIwaGFuZHN8ZW58MXwwfHx8MTc5NDUyMzE3Nnww",
+  "a": "Patrick Fore",
+  "p": "patrickian4"
+ },
  "rc-abacate-amassado": {
   "u": "https://images.unsplash.com/photo-1730725512479-45452912fa13?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8N3x8bWFzaGVkJTIwYXZvY2FkbyUyMGJvd2x8ZW58MXwwfHx8MTc5NDUxOTAwNnww",
   "a": "Kat von Wood",
@@ -39,6 +154,11 @@
   "a": "Yu Jinyang",
   "p": "jinyang222"
  },
+ "rc-cuscuz-ovo": {
+  "u": "https://images.unsplash.com/photo-1638024014766-28fc1dd75e69?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8NXx8c3RlYW1lZCUyMGNvcm4lMjBjb3VzY291c3xlbnwxfDB8fHwxNzk0NTIzMTY5fDA",
+  "a": "0xk",
+  "p": "0xk"
+ },
  "rc-escondidinho-mandioca-carne": {
   "u": "https://images.unsplash.com/photo-1726455431752-fed6c661a31e?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8N3x8Y2Fzc2F2YSUyMGdyYXRpbiUyMGNhc3Nlcm9sZXxlbnwxfDB8fHwxNzk0NTE5MDA3fDA",
   "a": "David Trinks",
@@ -53,6 +173,11 @@
   "u": "https://images.unsplash.com/photo-1646314951096-ed41d80638b6?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8MXx8YmFieSUyMGVhdGluZyUyMGZydWl0JTIwcGllY2VzfGVufDF8MHx8fDE3OTQ1MTkwMTJ8MA",
   "a": "lucas Favre",
   "p": "we_are_rising"
+ },
+ "rc-hamburguer-caseiro": {
+  "u": "https://images.unsplash.com/photo-1625425753502-f5cae7bb45dd?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8MXx8cmF3JTIwYmVlZiUyMHBhdHRpZXMlMjBiYWtpbmclMjB0cmF5fGVufDF8MHx8fDE3OTQ1MjMxNjl8MA",
+  "a": "Paras Kapoor",
+  "p": "kapoorparas28"
  },
  "rc-iogurte-natural-fruta": {
   "u": "https://images.unsplash.com/photo-1670331553160-0cfbe585edfa?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8NXx8cGxhaW4lMjB5b2d1cnQlMjBmcnVpdCUyMGJvd2x8ZW58MXwwfHx8MTc5NDUxOTAxN3ww",
@@ -93,6 +218,11 @@
   "u": "https://images.unsplash.com/photo-1518310532637-f5225f94f3c3?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8MXx8c2F2b3J5JTIwdmVnZXRhYmxlJTIwbXVmZmluc3xlbnwxfDB8fHwxNzk0NTE5MDIwfDA",
   "a": "Kaitlyn Chow",
   "p": "kaitlynraeann"
+ },
+ "rc-nuggets-caseiros-frango": {
+  "u": "https://images.unsplash.com/photo-1781737857663-f1f14a60ba46?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8NXx8aG9tZW1hZGUlMjBiYWtlZCUyMGNoaWNrZW4lMjBudWdnZXRzfGVufDF8MHx8fDE3OTQ1MjMxNzB8MA",
+  "a": "Fujiphilm",
+  "p": "fujiphilm"
  },
  "rc-omelete-forno-legumes": {
   "u": "https://images.unsplash.com/photo-1551978155-63d44a16fe24?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8Nnx8YmFrZWQlMjBmcml0dGF0YSUyMHZlZ2V0YWJsZXN8ZW58MXwwfHx8MTc5NDUxOTAxM3ww",
@@ -198,6 +328,11 @@
   "u": "https://images.unsplash.com/photo-1570654265967-bdf0aa5078ad?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8NXx8cHVtcGtpbiUyMHB1cmVlJTIwc2hyZWRkZWQlMjBjaGlja2VufGVufDF8MHx8fDE3OTQ1MTkwMTF8MA",
   "a": "Kristina Petrick",
   "p": "dayinmydreams"
+ },
+ "rc-salada-frutas": {
+  "u": "https://images.unsplash.com/photo-1767334573999-4c98e11817e6?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8M3x8Y2hvcHBlZCUyMGZydWl0JTIwc2FsYWQlMjBtYW5nbyUyMHBhcGF5YXxlbnwxfDB8fHwxNzk0NTIzMTcwfDA",
+  "a": "You Le",
+  "p": "le_y0u"
  },
  "rc-sanduiche-frango-cenoura": {
   "u": "https://images.unsplash.com/photo-1760000899287-dddf6e7d9ec9?ixid=M3wxMTMxOTU4fDB8MXxzZWFyY2h8NHx8Y2hpY2tlbiUyMHNhbmR3aWNoJTIwd2hvbGUlMjBncmFpbnxlbnwxfDB8fHwxNzk0NTE5MDE5fDA",

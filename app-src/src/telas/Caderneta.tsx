@@ -4,10 +4,11 @@ import { curva, descreverPercentil, IDADE_MAXIMA_CURVA_MESES, LINHAS_PERCENTIL, 
 import { novoId, type Atualizar, type Dados, type Medida, type Registro, type TipoRegistro } from "../lib/store";
 import { FONTE_CALENDARIO, situacaoDasVacinas, type VacinaComSituacao } from "../lib/vacinas";
 import { Carteira } from "./Carteira";
+import { Marcos } from "./Marcos";
 import { CALENDARIO_PARTICULAR, FONTE_PARTICULAR, NOTA_PARTICULAR } from "../lib/vacinas-particular";
 import { somarMeses } from "../lib/idade";
 
-export type SecaoCaderneta = "vacinas" | "crescimento" | "diario";
+export type SecaoCaderneta = "vacinas" | "crescimento" | "marcos" | "diario";
 
 export const ROTULOS_REGISTRO: Record<TipoRegistro, string> = { mamada: "Mamada", xixi: "Xixi", coco: "Cocô", sono: "Sono" };
 
@@ -30,10 +31,12 @@ export function Caderneta({ dados, atualizar, secao, setSecao, modo = MODO_FAMIL
       <div className="segmento" role="tablist">
         <button className={secao === "vacinas" ? "ativa" : ""} onClick={() => setSecao("vacinas")}>Vacinas</button>
         <button className={secao === "crescimento" ? "ativa" : ""} onClick={() => setSecao("crescimento")}>Crescimento</button>
+        <button className={secao === "marcos" ? "ativa" : ""} onClick={() => setSecao("marcos")}>Marcos</button>
         <button className={secao === "diario" ? "ativa" : ""} onClick={() => setSecao("diario")}>Diário</button>
       </div>
       {secao === "vacinas" && <Vacinas dados={dados} atualizar={atualizar} modo={modo} />}
       {secao === "crescimento" && <Crescimento dados={dados} atualizar={atualizar} modo={modo} />}
+      {secao === "marcos" && <Marcos dados={dados} atualizar={atualizar} quem={modo.quem} />}
       {secao === "diario" && <Diario dados={dados} atualizar={atualizar} modo={modo} />}
     </>
   );

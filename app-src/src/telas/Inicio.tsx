@@ -111,10 +111,10 @@ export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar:
       </div>
 
       {avisos.length > 0 && (
-        <button className="card" style={{ textAlign: "left", cursor: "pointer", borderColor: "var(--hoje)", borderWidth: 2 }} onClick={() => navegar("caderneta", { secao: "crescimento" })}>
+        <button className="card" style={{ textAlign: "left", cursor: "pointer", borderColor: "var(--hoje)", borderWidth: 2 }} onClick={() => navegar("caderneta", { secao: avisos[0].id.startsWith("marcos") ? "marcos" : "crescimento" })}>
           <h3>Vale conversar com {dados.medico ? dados.medico.nome : "o pediatra"}</h3>
           {avisos.map((a) => <p key={a.id} className="muted">{a.texto}.</p>)}
-          <p className="muted pequeno">{dados.vinculo ? "O consultório também vê este aviso." : "Mostre a curva na próxima consulta."} Fora da curva não quer dizer doença, mas merece um olhar.</p>
+          <p className="muted pequeno">{dados.vinculo ? "O consultório também vê este aviso." : "Mostre na próxima consulta."} Não quer dizer doença, mas merece um olhar.</p>
         </button>
       )}
       <button className="card" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => navegar("caderneta", { secao: "crescimento" })}>

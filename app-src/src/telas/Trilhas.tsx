@@ -5,7 +5,7 @@ import { hojeIso, idadeEmMesesDecimal } from "../lib/idade";
 import type { Atualizar, Dados } from "../lib/store";
 import { Dicas } from "./Dicas";
 import { DICAS } from "../conteudo";
-import { imagemDe } from "../conteudo/imagens";
+import { FotoConteudo } from "./FotoConteudo";
 
 export function Trilhas({ dados, atualizar }: { dados: Dados; atualizar: Atualizar }) {
   const [parte, setParte] = useState<"trilhas" | "dicas">("trilhas");
@@ -61,7 +61,7 @@ function Aulas({ dados, atualizar }: { dados: Dados; atualizar: Atualizar }) {
         <button className="voltar" onClick={() => setAulaIdx(null)}>‹ {trilha.titulo}</button>
         <span className="muted pequeno" style={{ fontWeight: 700 }}>Aula {aulaIdx + 1} de {trilha.aulas.length}</span>
         <h1 style={{ fontSize: 26 }}>{a.titulo}</h1>
-        {imagemDe(a.id) && <img className="foto" src={imagemDe(a.id)!} alt="" loading="lazy" />}
+        <FotoConteudo id={a.id} />
         <p style={{ fontFamily: "var(--f-d)", fontSize: 19, fontWeight: 500, color: "var(--hoje)" }}>{a.gancho}</p>
         <div className="card">
           {a.simples ? a.simples.map((p) => <p key={p} style={{ fontSize: 17 }}>{p}</p>) : <ul className="lista">{a.pontos.map((p) => <li key={p}>{p}</li>)}</ul>}

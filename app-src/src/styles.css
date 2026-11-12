@@ -125,3 +125,4 @@ button { font: inherit; color: inherit; }
 .chip-filtro.ativa { background: var(--noite); color: #F6EFE4; border-color: var(--noite); }
 .foto { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; border-radius: 16px; display: block; }
 .foto-mini { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 10px; display: block; margin-bottom: 8px; }
+figcaption a { color: inherit; text-decoration: underline; }

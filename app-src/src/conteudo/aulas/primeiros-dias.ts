@@ -90,7 +90,7 @@ export const PRIMEIROS_DIAS: Trilha = {
       aprofundado: [
         "A pele do recém-nascido é mais fina e perde água com mais facilidade. Banho longo, água quente e muito sabonete tiram a proteção natural da pele. Por isso o recomendado é banho curto, com água morna e pouco sabonete líquido próprio para bebê, secando com toalha macia, sem esfregar.",
         "Afogamento pode acontecer em pouca água, em segundos e sem barulho. Separe tudo antes de começar (toalha, roupa, fralda) para não precisar sair de perto. Se precisar sair, leve o bebê enrolado na toalha.",
-        "Na área da fralda, a umidade e o contato com xixi e cocô causam a dermatite de fralda (assadura). Trocar logo, limpar com água e algodão e deixar a pele secar previne a maioria dos casos. Talco, perfume e óleos podem irritar a pele, e o pó do talco pode ser respirado pelo bebê.",
+        "Na área da fralda, a umidade e o contato com xixi e cocô causam a dermatite de fralda (assadura). Trocar logo, limpar com água e algodão e deixar a pele secar previne a maioria dos casos. Talco, perfume e óleos não são necessários e podem irritar a pele do bebê.",
         "Assadura com feridas, bolhas ou pus pode estar infectada e precisa de avaliação. Manchas roxas na pele com febre ou bebê molinho podem ser sinal de infecção grave: pronto-socorro.",
       ],
     },

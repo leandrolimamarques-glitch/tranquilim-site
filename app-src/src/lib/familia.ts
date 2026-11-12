@@ -12,6 +12,8 @@ export type Registro = { id: string; tipo: TipoRegistro; quando: string };
 export type OrigemVacina = "familia" | "medico" | "carteira";
 export type InfoVacina = { data?: string; origem?: OrigemVacina };
 export type OutraVacina = { id: string; nome: string; data?: string; origem?: OrigemVacina };
+/** Resposta da família a um marco do desenvolvimento: faz ou ainda não, e quando marcou. */
+export type RespostaMarco = { faz: boolean; data: string };
 
 export type Vista = {
   crianca: Crianca | null;
@@ -21,9 +23,10 @@ export type Vista = {
   medidas: Medida[];
   diario: Registro[];
   aulasVistas: string[];
+  marcos: Record<string, RespostaMarco>;
 };
 
-export const VISTA_VAZIA: Vista = { crianca: null, vacinasAplicadas: [], vacinaInfo: {}, outrasVacinas: [], medidas: [], diario: [], aulasVistas: [] };
+export const VISTA_VAZIA: Vista = { crianca: null, vacinasAplicadas: [], vacinaInfo: {}, outrasVacinas: [], medidas: [], diario: [], aulasVistas: [], marcos: {} };
 
 function semControle<T>(i: Item): T {
   const { em: _em, removido: _r, ...resto } = i;
@@ -49,6 +52,7 @@ export function docParaVista(doc: Doc): Vista {
     medidas: vivos(doc, "medidas").map((i) => semControle<Medida>(i)).sort((a, b) => a.data.localeCompare(b.data)),
     diario: vivos(doc, "diario").map((i) => semControle<Registro>(i)).sort((a, b) => b.quando.localeCompare(a.quando)),
     aulasVistas: vivos(doc, "aulas").map((a) => a.id).sort(),
+    marcos: Object.fromEntries(vivos(doc, "marcos").map((m) => [m.id, { faz: m.faz === true, data: String(m.data ?? "") }])),
   };
 }
 
@@ -81,6 +85,8 @@ export function aplicarVista(doc: Doc, antes: Vista, depois: Vista, agora: numbe
   saida = aplicarLista(saida, "diario", antes.diario, depois.diario, agora);
   const aulas = (v: Vista) => v.aulasVistas.map((id) => ({ id }));
   saida = aplicarLista(saida, "aulas", aulas(antes), aulas(depois), agora);
+  const marcos = (v: Vista) => Object.entries(v.marcos ?? {}).map(([id, r]) => ({ id, ...r }));
+  saida = aplicarLista(saida, "marcos", marcos(antes), marcos(depois), agora);
   return saida;
 }
 

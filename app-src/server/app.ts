@@ -40,6 +40,8 @@ const sha = (s: string) => createHash("sha256").update(s).digest("hex");
 const iso = (v: unknown) => (v instanceof Date ? v.toISOString() : typeof v === "string" ? v : null);
 const comoJson = <T>(v: unknown): T => (typeof v === "string" ? (JSON.parse(v) as T) : (v as T));
 const texto = (v: unknown, max: number) => (typeof v === "string" ? v.trim().replace(/\s+/g, " ").slice(0, max) : "");
+/** Como texto(), mas mantém as quebras de linha. */
+const textoLongo = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 const emailDe = (v: unknown) => texto(v, 120).toLowerCase();
 const emailOk = (e: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e);
 
@@ -193,6 +195,33 @@ export function criarApp(o: Opcoes) {
     if (!c || (!c.resp && !(c.ped && conta.pediatra))) throw new Erro(404, "Criança não encontrada.");
     return { id: c.id, nome: c.nome, nascimento: c.nascimento, sexo: c.sexo, como: c.resp ? "familia" : "pediatra" };
   }
+
+  // ---------- erros do aparelho e sugestões ----------
+  const limiteErros = new Map<string, { n: number; desde: number }>();
+  app.post("/api/erro", json, rota(async (req) => {
+    const ip = String(req.ip ?? "");
+    const agora = Date.now();
+    const l = limiteErros.get(ip);
+    if (!l || agora - l.desde > 10 * 60_000) limiteErros.set(ip, { n: 1, desde: agora });
+    else if (++l.n > 30) return { ok: true };
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const mensagem = texto(b.mensagem, 500);
+    if (!mensagem) return { ok: true };
+    const c = await contaDa(req).catch(() => null);
+    await banco.q(`insert into erros (conta_id, onde, mensagem, pilha, navegador) values ($1, $2, $3, $4, $5)`, [
+      c?.id ?? null, texto(b.onde, 200), mensagem, textoLongo(b.pilha, 3000), texto(req.get("user-agent"), 200),
+    ]);
+    // Guarda 90 dias.
+    if (Math.random() < 0.05) await banco.q(`delete from erros where em < now() - interval '90 days'`);
+    return { ok: true };
+  }));
+
+  app.post("/api/sugestao", logado, json, rota(async (req) => {
+    const t = textoLongo((req.body as { texto?: unknown })?.texto, 4000);
+    if (t.length < 3) throw new Erro(400, "Escreva a sugestão.");
+    await banco.q(`insert into sugestoes (conta_id, texto) values ($1, $2)`, [req.conta!.id, t]);
+    return { ok: true };
+  }));
 
   // ---------- saúde ----------
   app.get("/api/saude", (_req, res) => {
@@ -531,6 +560,34 @@ export function criarApp(o: Opcoes) {
     await banco.q(`update contas set senha_hash = $1 where id = $2`, [await bcrypt.hash(nova, 10), req.params.id]);
     await banco.q(`delete from sessoes where conta_id = $1`, [req.params.id]);
     return { ok: true };
+  }));
+
+  /** Números do uso, sugestões e erros recentes. */
+  adm.get("/painel", rota(async () => {
+    const [n] = await banco.q<Record<string, number>>(`select
+        (select count(*)::int from contas) as contas,
+        (select count(*)::int from contas where criado_em > now() - interval '7 days') as contas7,
+        (select count(distinct conta_id)::int from responsaveis) as familias,
+        (select count(*)::int from contas where pediatra) as pediatras,
+        (select count(*)::int from criancas where removido_em is null) as criancas,
+        (select count(*)::int from acompanhamentos) as acompanhadas,
+        (select count(*)::int from perguntas) as perguntas,
+        (select count(*)::int from perguntas where criado_em > now() - interval '7 days') as perguntas7,
+        (select count(*)::int from erros where em > now() - interval '7 days') as erros7,
+        (select count(*)::int from sugestoes) as sugestoes`);
+    const porTipo = await banco.q<{ tipo: string; n: number }>(`select tipo, count(*)::int as n from perguntas group by tipo order by n desc`);
+    const sugestoes = await banco.q<Record<string, unknown>>(
+      `select s.texto, s.em, c.nome, c.email from sugestoes s left join contas c on c.id = s.conta_id order by s.em desc limit 100`,
+    );
+    const erros = await banco.q<Record<string, unknown>>(
+      `select e.mensagem, e.onde, e.pilha, e.navegador, e.em, c.email from erros e left join contas c on c.id = e.conta_id order by e.em desc limit 50`,
+    );
+    return {
+      numeros: n,
+      porTipo,
+      sugestoes: sugestoes.map((x) => ({ texto: x.texto, nome: x.nome ?? "", email: x.email ?? "", em: iso(x.em) })),
+      erros: erros.map((x) => ({ mensagem: x.mensagem, onde: x.onde, pilha: x.pilha, navegador: x.navegador, email: x.email ?? "", em: iso(x.em) })),
+    };
   }));
 
   /** Regras que os médicos impõem à IA, e o que as famílias têm perguntado. */

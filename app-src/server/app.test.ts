@@ -182,6 +182,19 @@ describe("contas, crianças e pediatras", () => {
     expect(r.perguntas.length).toBeGreaterThan(0);
   });
 
+  it("erros do aparelho e sugestões chegam ao painel do dono", async () => {
+    await mae("POST", "/api/erro", { mensagem: "TypeError: x is undefined", pilha: "at A\nat B", onde: "#/caderneta" });
+    await estranho("POST", "/api/erro", { mensagem: "sem conta" });
+    expect((await estranho("POST", "/api/sugestao", { texto: "oi" })).status).toBe(401);
+    expect((await mae("POST", "/api/sugestao", { texto: "Faltou receita\nde sopa" })).status).toBe(200);
+    expect((await mae("GET", "/api/admin/painel")).status).toBe(403);
+    const p = (await dono("GET", "/api/admin/painel")).corpo;
+    expect(p.numeros.contas).toBeGreaterThanOrEqual(4);
+    expect(p.numeros.erros7).toBe(2);
+    expect(p.sugestoes[0].texto).toBe("Faltou receita\nde sopa");
+    expect(p.erros.find((e: { mensagem: string }) => e.mensagem.startsWith("TypeError")).pilha).toBe("at A\nat B");
+  });
+
   it("sair encerra a sessão", async () => {
     await mae("POST", "/api/conta/sair");
     expect((await mae("GET", "/api/conta")).status).toBe(401);

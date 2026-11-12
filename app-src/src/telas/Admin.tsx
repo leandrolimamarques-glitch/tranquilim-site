@@ -22,6 +22,7 @@ export function Admin({ voltar, euId }: { voltar: () => void; euId: string }) {
       <button className="voltar" onClick={voltar}>‹ Ajustes</button>
       <h1 style={{ fontSize: 26 }}>Administração</h1>
       <p className="muted">Quem criou conta. Para liberar a função de pediatra, abra a pessoa e ative.</p>
+      <Painel />
       <TesteEmail />
       <RegrasIA />
       <h2 style={{ marginTop: 8 }}>Contas</h2>
@@ -134,6 +135,68 @@ function TesteEmail() {
         }
       }}>Mandar e-mail de teste</button>
       {msg && <p className="pequeno">{msg}</p>}
+    </div>
+  );
+}
+
+type PainelDados = {
+  numeros: Record<string, number>;
+  porTipo: { tipo: string; n: number }[];
+  sugestoes: { texto: string; nome: string; email: string; em: string }[];
+  erros: { mensagem: string; onde: string; pilha: string; navegador: string; email: string; em: string }[];
+};
+
+const ROTULO_TIPO: Record<string, string> = { orientacao: "orientação", fluxo: "mandou ao Vai ao PS?", medico: "é com o pediatra", emergencia: "emergência (192)", fora: "fora do conteúdo" };
+
+function quando(iso: string) {
+  const d = new Date(iso);
+  return `${dataBr(iso.slice(0, 10))} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
+function Painel() {
+  const [d, setD] = useState<PainelDados | null>(null);
+  const [erro, setErro] = useState("");
+  const [ver, setVer] = useState<"" | "sugestoes" | "erros">("");
+  useEffect(() => {
+    api.get<PainelDados>("/api/admin/painel").then(setD).catch((e: Error) => setErro(e.message));
+  }, []);
+  if (erro) return <div className="card"><p className="muted">{erro}</p></div>;
+  if (!d) return <div className="card"><p className="muted">Carregando números…</p></div>;
+  const n = d.numeros;
+  const linhas: [string, string][] = [
+    ["Contas", `${n.contas} (${n.contas7} nesta semana)`],
+    ["Famílias com criança", String(n.familias)],
+    ["Crianças", `${n.criancas} (${n.acompanhadas} com pediatra)`],
+    ["Pediatras ativos", String(n.pediatras)],
+    ["Perguntas à IA", `${n.perguntas} (${n.perguntas7} nesta semana)`],
+    ["Erros no aparelho (7 dias)", String(n.erros7)],
+  ];
+  return (
+    <div className="card">
+      <h3>Números</h3>
+      {linhas.map(([k, v]) => (
+        <div key={k} className="linha" style={{ borderTop: "1px solid var(--line)", paddingTop: 4 }}><span className="muted">{k}</span><b>{v}</b></div>
+      ))}
+      {d.porTipo.length > 0 && (
+        <p className="muted pequeno">Respostas da IA: {d.porTipo.map((t) => `${ROTULO_TIPO[t.tipo] ?? t.tipo} ${t.n}`).join(" · ")}</p>
+      )}
+      <div className="grade2">
+        <button className={`btn ${ver === "sugestoes" ? "" : "sec"}`} onClick={() => setVer(ver === "sugestoes" ? "" : "sugestoes")}>Sugestões ({n.sugestoes})</button>
+        <button className={`btn ${ver === "erros" ? "" : "sec"}`} onClick={() => setVer(ver === "erros" ? "" : "erros")}>Erros recentes</button>
+      </div>
+      {ver === "sugestoes" && (d.sugestoes.length === 0 ? <p className="muted">Nenhuma sugestão ainda.</p> : d.sugestoes.map((x, i) => (
+        <div key={i} style={{ borderTop: "1px solid var(--line)", paddingTop: 6 }}>
+          <p style={{ whiteSpace: "pre-wrap", margin: 0 }}>{x.texto}</p>
+          <p className="muted pequeno" style={{ margin: 0 }}>{x.nome} · {x.email} · {quando(x.em)}</p>
+        </div>
+      )))}
+      {ver === "erros" && (d.erros.length === 0 ? <p className="muted">Nenhum erro registrado.</p> : d.erros.map((x, i) => (
+        <details key={i} style={{ borderTop: "1px solid var(--line)", paddingTop: 6 }}>
+          <summary style={{ minHeight: 44, cursor: "pointer" }}>{x.mensagem} <span className="muted pequeno">· {quando(x.em)}</span></summary>
+          <p className="muted pequeno" style={{ margin: 0 }}>{x.onde} · {x.email || "sem conta"} · {x.navegador}</p>
+          <pre style={{ fontSize: 13, whiteSpace: "pre-wrap", overflowWrap: "anywhere", margin: 0 }}>{x.pilha}</pre>
+        </details>
+      )))}
     </div>
   );
 }

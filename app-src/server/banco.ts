@@ -187,6 +187,23 @@ const MIGRACOES: string[] = [
      expira_em timestamptz not null,
      usado_em timestamptz
    )`,
+  // O que dá errado no aparelho das pessoas e o que elas sugerem.
+  `create table erros (
+     id bigserial primary key,
+     conta_id uuid references contas(id) on delete set null,
+     onde text not null default '',
+     mensagem text not null,
+     pilha text not null default '',
+     navegador text not null default '',
+     em timestamptz not null default now()
+   );
+   create index erros_em on erros(em);
+   create table sugestoes (
+     id bigserial primary key,
+     conta_id uuid references contas(id) on delete set null,
+     texto text not null,
+     em timestamptz not null default now()
+   )`,
 ];
 
 export async function migrar(banco: Banco): Promise<number> {

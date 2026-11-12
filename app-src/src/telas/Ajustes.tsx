@@ -56,6 +56,8 @@ export function Ajustes({ sessao, atual, escolher, recarregar, navegar, novaCria
         </div>
       )}
 
+      <Sugestao />
+
       <button className="card" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => setTela("sobre")}>
         <h3>Quem somos</h3>
         <p className="muted">Por que criamos o Tranquilim e quem são os médicos por trás dele.</p>
@@ -187,5 +189,38 @@ function TrocarSenha({ voltar }: { voltar: () => void }) {
         }}>Salvar</button>
       </div>
     </>
+  );
+}
+
+function Sugestao() {
+  const [aberto, setAberto] = useState(false);
+  const [t, setT] = useState("");
+  const [msg, setMsg] = useState("");
+  return (
+    <div className="card">
+      <h3>Sugestão ou problema</h3>
+      <p className="muted">Algo não funcionou, faltou um assunto, ficou confuso? Os médicos do Tranquilim leem tudo. Não é canal para dúvida sobre a criança nem para urgência.</p>
+      {!aberto ? (
+        <button className="btn sec bloco" onClick={() => { setAberto(true); setMsg(""); }}>Escrever</button>
+      ) : (
+        <>
+          <label className="campo">Sua mensagem<textarea rows={4} value={t} onChange={(e) => setT(e.target.value)} maxLength={4000} /></label>
+          <div className="grade2">
+            <button className="btn sec" onClick={() => setAberto(false)}>Cancelar</button>
+            <button className="btn" disabled={t.trim().length < 3} onClick={async () => {
+              try {
+                await api.post("/api/sugestao", { texto: t });
+                setT("");
+                setAberto(false);
+                setMsg("Recebido. Obrigado!");
+              } catch (e) {
+                setMsg((e as Error).message);
+              }
+            }}>Enviar</button>
+          </div>
+        </>
+      )}
+      {msg && <p className="pequeno" role="status">{msg}</p>}
+    </div>
   );
 }

@@ -46,6 +46,11 @@ p{margin:0}
 .pill-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
 .pill-row span{font-size:14px;padding:7px 13px;border-radius:999px;border:1px solid #3A4772;color:#E6E9F4}
 .hero-art{display:flex;justify-content:center}
+.entrar{color:var(--noite);background:var(--luz);font-weight:800;text-decoration:none;border-radius:999px;padding:10px 18px;min-height:44px;display:inline-flex;align-items:center}
+.acoes{display:flex;gap:12px;flex-wrap:wrap;margin-top:24px}
+.btn-luz,.btn-linha{min-height:52px;display:inline-flex;align-items:center;justify-content:center;padding:12px 22px;border-radius:14px;font-weight:800;text-decoration:none;font-size:17px}
+.btn-luz{background:var(--luz);color:var(--noite)}
+.btn-linha{border:2px solid var(--pluma);color:var(--pluma)}
 .hero-art svg{width:min(320px,70vw);height:auto;filter:drop-shadow(0 20px 40px rgba(0,0,0,.25))}
 
 /* seções */
@@ -120,13 +125,14 @@ footer b{color:var(--pluma);font-family:var(--f-d);font-weight:600}
   </svg>
   <div class="wrap top">
     <a class="brand" href="/" aria-label="Tranquilim"><svg style="--o-b:#F6EFE4;--o-e:#F6EFE4;--o-s:#1E2A47"><use href="#owl"/></svg><span>Tranquilim</span></a>
-    <span class="soon">Em breve</span>
+    <a class="entrar" href="https://app.tranquilim.com.br/">Entrar no app</a>
   </div>
   <div class="wrap hero-grid">
     <div>
       <h1>A dúvida da madrugada <em>tem resposta.</em></h1>
       <p class="sub">Orientação em saúde infantil escrita e revisada por médicos, da gestação aos 6 anos. Para mães, pais e quem cuida, na hora em que a dúvida aparece.</p>
       <div class="pill-row"><span>Gestação aos 6 anos</span><span>Feito por médicos</span><span>Linguagem simples</span></div>
+      <div class="acoes"><a class="btn-luz" href="https://app.tranquilim.com.br/">Abrir o Tranquilim</a><a class="btn-linha" href="https://app.tranquilim.com.br/#/pediatra">Sou pediatra</a></div>
     </div>
     <div class="hero-art"><svg viewBox="0 0 120 120" role="img" aria-label="Duas corujas tranquilas, uma adulta e um filhote, sob a lua" style="--o-b:#F6EFE4;--o-e:#F6EFE4;--o-s:#1E2A47"><use href="#owl"/></svg></div>
   </div>

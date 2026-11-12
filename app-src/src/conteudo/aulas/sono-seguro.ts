@@ -150,7 +150,7 @@ export const SONO_SEGURO: Trilha = {
         "O recém-nascido dorme a maior parte do dia, em sonos curtos, e ainda não diferencia dia e noite. Ele acorda para mamar, inclusive de madrugada.",
         "Por volta dos 2 a 3 meses, o sono começa a se concentrar mais à noite, e os períodos acordado durante o dia ficam mais longos.",
         "Dos 4 aos 12 meses, o esperado é de 12 a 16 horas de sono em 24 horas, somando os cochilos.",
-        "Entre 6 e 9 meses, a maioria dos bebês passa a dormir a noite inteira e faz dois ou três cochilos de dia. A maioria, não todos.",
+        "Entre 6 e 9 meses, muitos bebês passam a dormir um bloco mais longo à noite e fazem dois ou três cochilos de dia. Acordar à noite ainda é comum e normal.",
         "Para ajudar a diferenciar dia e noite: de dia, cochilos com a claridade e os barulhos normais da casa; à noite, quarto escuro e silencioso.",
       ],
       alerta: "Recém-nascido que dorme tanto que não acorda para mamar: pediatra ou UBS no mesmo dia. Bebê muito sonolento, difícil de acordar ou molinho: pronto-socorro.",

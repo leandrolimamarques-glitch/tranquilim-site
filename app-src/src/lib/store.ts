@@ -20,10 +20,11 @@ export type ContaInfo = {
   whatsapp: string | null;
   telefone: string | null;
   local: string | null;
+  emailVerificado?: boolean;
 };
 export type CriancaDaConta = { id: string; crianca: Crianca; pediatras: Pediatra[] };
 export type Pedido = { id: string; pediatra: Pediatra; criadoEm: string };
-export type Sessao = { conta: ContaInfo; criancas: CriancaDaConta[]; pedidos: Pedido[] };
+export type Sessao = { conta: ContaInfo; criancas: CriancaDaConta[]; pedidos: Pedido[]; emailLigado?: boolean };
 
 /** null = fora da conta; undefined = carregando. */
 export function useSessao(): [Sessao | null | undefined, () => Promise<void>, string] {

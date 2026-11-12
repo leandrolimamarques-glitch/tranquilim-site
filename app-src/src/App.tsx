@@ -13,6 +13,7 @@ import { Pergunta } from "./telas/Pergunta";
 import { Consultorio } from "./telas/painel/Consultorio";
 import { Coruja } from "./Coruja";
 import { Sobre } from "./telas/Sobre";
+import { Confirmar, Redefinir } from "./telas/Senha";
 
 export type Aba = "inicio" | "ps" | "trilhas" | "caderneta" | "ajustes" | "pergunta" | "consultorio" | "sobre";
 export type Navegar = (aba: Aba, opcoes?: { secao?: SecaoCaderneta; fluxo?: string }) => void;
@@ -20,6 +21,13 @@ export type Navegar = (aba: Aba, opcoes?: { secao?: SecaoCaderneta; fluxo?: stri
 const CHAVE_CRIANCA = "tq:crianca";
 
 export function App() {
+  const h = location.hash;
+  if (h.startsWith("#/redefinir/")) return <div className="app"><main className="conteudo sem-abas"><Redefinir token={h.slice(12)} /></main></div>;
+  if (h.startsWith("#/confirmar/")) return <div className="app"><main className="conteudo sem-abas"><Confirmar token={h.slice(12)} /></main></div>;
+  return <ComSessao />;
+}
+
+function ComSessao() {
   const [sessao, recarregar, erro] = useSessao();
   if (sessao === undefined) {
     return (
@@ -130,6 +138,7 @@ function Logado({ sessao, recarregar }: { sessao: Sessao; recarregar: () => Prom
         return (
           <>
             <Topo navegar={navegar} />
+            {sessao.emailLigado && !sessao.conta.emailVerificado && <ConfirmeEmail email={sessao.conta.email} />}
             <Pedidos sessao={sessao} recarregar={recarregar} />
             {sessao.criancas.length > 1 && <Seletor criancas={sessao.criancas} atual={c?.id ?? ""} escolher={escolher} />}
             {precisaCrianca(<Inicio dados={dados} atualizar={atualizar} navegar={navegar} />)}
@@ -233,6 +242,17 @@ function Topo({ navegar }: { navegar: Navegar }) {
     <div className="topo">
       <div className="marca"><Coruja titulo="Tranquilim" /><span>Tranquilim</span></div>
       <button className="icone-btn" aria-label="Ajustes" onClick={() => navegar("ajustes")}>⚙</button>
+    </div>
+  );
+}
+
+function ConfirmeEmail({ email }: { email: string }) {
+  const [msg, setMsg] = useState("");
+  return (
+    <div className="card" style={{ borderColor: "var(--luz)" }}>
+      <p><b>Confirme seu e-mail.</b> Mandamos um link para {email}. Veja também a caixa de spam.</p>
+      <button className="btn sec bloco" onClick={() => void api.post("/api/conta/reenviar-confirmacao").then(() => setMsg("Enviado de novo.")).catch((e: Error) => setMsg(e.message))}>Mandar de novo</button>
+      {msg && <p className="pequeno">{msg}</p>}
     </div>
   );
 }

@@ -200,3 +200,39 @@ describe("assistente", () => {
     expect(corpoDeReferencia()).toContain("Engasgo");
   });
 });
+
+describe("e-mail: confirmação e esqueci a senha", () => {
+  it("manda link de confirmação e de senha nova; o link vale uma vez", async () => {
+    const b2 = await bancoMemoria();
+    await migrar(b2);
+    const caixa: { para: string; texto: string }[] = [];
+    const app = criarApp({ banco: b2, cookieSeguro: false, urlBase: "https://app.x", carteiro: async (m) => void caixa.push({ para: m.para, texto: m.texto }) });
+    const s = app.listen(0);
+    const antigo = base;
+    base = `http://127.0.0.1:${(s.address() as AddressInfo).port}`;
+    try {
+      const a = navegador();
+      await a("POST", "/api/conta/cadastro", { nome: "Ana", email: "ana@x.com", senha: "segredo123" });
+      await new Promise((r) => setTimeout(r, 50));
+      expect((await a("GET", "/api/conta")).corpo.conta.emailVerificado).toBe(false);
+      const conf = caixa[0].texto.match(/#\/confirmar\/(\S+)/)![1];
+      expect((await a("POST", "/api/conta/confirmar", { token: conf })).status).toBe(200);
+      expect((await a("POST", "/api/conta/confirmar", { token: conf })).status).toBe(400);
+      expect((await a("GET", "/api/conta")).corpo.conta.emailVerificado).toBe(true);
+
+      const outro = navegador();
+      await outro("POST", "/api/conta/esqueci", { email: "ninguem@x.com" });
+      expect(caixa).toHaveLength(1);
+      await outro("POST", "/api/conta/esqueci", { email: "ana@x.com" });
+      const t = caixa[1].texto.match(/#\/redefinir\/(\S+)/)![1];
+      expect((await outro("POST", "/api/conta/redefinir", { token: t, senha: "novasenha1" })).status).toBe(200);
+      expect((await a("GET", "/api/conta")).status).toBe(401);
+      expect((await outro("GET", "/api/conta")).corpo.conta.email).toBe("ana@x.com");
+      expect((await outro("POST", "/api/conta/redefinir", { token: t, senha: "outra12345" })).status).toBe(400);
+    } finally {
+      s.close();
+      base = antigo;
+      await b2.fechar();
+    }
+  });
+});

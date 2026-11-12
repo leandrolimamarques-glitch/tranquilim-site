@@ -180,6 +180,13 @@ const MIGRACOES: string[] = [
      valor text not null,
      atualizado_em timestamptz not null default now()
    )`,
+  `create table tokens (
+     hash text primary key,
+     conta_id uuid not null references contas(id),
+     tipo text not null check (tipo in ('confirmar','senha')),
+     expira_em timestamptz not null,
+     usado_em timestamptz
+   )`,
 ];
 
 export async function migrar(banco: Banco): Promise<number> {

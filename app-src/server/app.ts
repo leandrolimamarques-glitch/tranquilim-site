@@ -5,6 +5,7 @@ import path from "node:path";
 import bcrypt from "bcryptjs";
 import type { Banco } from "./banco";
 import type { LeitorCarteira } from "./leitura";
+import { mensagem, type Carteiro } from "./email";
 import { emergenciaDe, type Assistente } from "./pergunta";
 import { docValido, juntarDocs, type Doc } from "../src/lib/sinc";
 import { docInicial, docParaVista, type Crianca } from "../src/lib/familia";
@@ -23,6 +24,9 @@ export type Opcoes = {
   limitePerguntas?: number;
   cookieSeguro: boolean;
   pastaPublica?: string;
+  carteiro?: Carteiro;
+  /** Endereço do app nos links dos e-mails. */
+  urlBase?: string;
 };
 
 type Conta = { id: string; email: string; nome: string; dono: boolean; pediatra: boolean; registro: string | null; titulo: string | null; whatsapp: string | null; telefone: string | null; local: string | null };
@@ -102,11 +106,34 @@ export function criarApp(o: Opcoes) {
     res.cookie(COOKIE, t, { httpOnly: true, secure: o.cookieSeguro, sameSite: "lax", path: "/", expires: expira });
   }
 
+  async function novoToken(contaId: string, tipo: "confirmar" | "senha", horas: number): Promise<string> {
+    const t = randomBytes(24).toString("base64url");
+    await banco.q(`insert into tokens (hash, conta_id, tipo, expira_em) values ($1,$2,$3,$4)`, [sha(t), contaId, tipo, new Date(Date.now() + horas * 3600_000).toISOString()]);
+    return t;
+  }
+
+  async function usarToken(t: unknown, tipo: "confirmar" | "senha"): Promise<string> {
+    if (typeof t !== "string" || t.length < 20) throw new Erro(400, "Link inválido.");
+    const [r] = await banco.q<{ conta_id: string }>(
+      `update tokens set usado_em = now() where hash = $1 and tipo = $2 and usado_em is null and expira_em > now() returning conta_id`,
+      [sha(t), tipo],
+    );
+    if (!r) throw new Erro(400, "Este link expirou ou já foi usado. Peça outro.");
+    return r.conta_id;
+  }
+
+  async function enviarConfirmacao(contaId: string, email: string, nome: string) {
+    if (!o.carteiro) return;
+    const t = await novoToken(contaId, "confirmar", 72);
+    const m = mensagem(`Olá, ${nome.split(" ")[0]}! Confirme seu e-mail`, ["Falta só um passo para usar o Tranquilim com tudo funcionando: confirmar que este e-mail é seu."], { texto: "Confirmar meu e-mail", url: `${o.urlBase ?? ""}/#/confirmar/${t}` });
+    await o.carteiro({ para: email, assunto: "Confirme seu e-mail no Tranquilim", ...m }).catch((e) => console.error("e-mail de confirmação falhou", e));
+  }
+
   async function contaDa(req: Request): Promise<Conta | null> {
     const t = lerCookie(req);
     if (!t) return null;
     const [c] = await banco.q<Conta>(
-      `select c.id, c.email, c.nome, c.dono, c.pediatra, c.registro, c.titulo, c.whatsapp, c.telefone, c.local
+      `select c.id, c.email, c.nome, c.dono, c.pediatra, c.registro, c.titulo, c.whatsapp, c.telefone, c.local, c.email_verificado_em
          from sessoes s join contas c on c.id = s.conta_id where s.hash = $1 and s.expira_em > now()`,
       [sha(t)],
     );
@@ -195,6 +222,41 @@ export function criarApp(o: Opcoes) {
     const id = randomUUID();
     await banco.q(`insert into contas (id, email, senha_hash, nome, dono, pediatra) values ($1,$2,$3,$4,$5,$5)`, [id, email, await bcrypt.hash(senha, 10), nome, primeira]);
     await abrirSessao(res, id);
+    void enviarConfirmacao(id, email, nome);
+    return { ok: true };
+  }));
+
+  app.get("/api/publico", (_req, res) => {
+    res.json({ email: !!o.carteiro });
+  });
+
+  app.post("/api/conta/confirmar", json, rota(async (req) => {
+    const id = await usarToken((req.body as { token?: unknown }).token, "confirmar");
+    await banco.q(`update contas set email_verificado_em = coalesce(email_verificado_em, now()) where id = $1`, [id]);
+    return { ok: true };
+  }));
+
+  /** Sempre responde igual, para não revelar quem tem conta. */
+  app.post("/api/conta/esqueci", json, rota(async (req) => {
+    const email = emailDe((req.body as { email?: unknown }).email);
+    limitar(`esqueci|${req.ip}`);
+    if (!o.carteiro) throw new Erro(503, "Envio de e-mail ainda não ligado. Peça ao administrador uma senha provisória.");
+    const [c] = await banco.q<{ id: string; nome: string }>(`select id, nome from contas where email = $1`, [email]);
+    if (c) {
+      const t = await novoToken(c.id, "senha", 2);
+      const m = mensagem("Criar uma senha nova", [`Olá, ${c.nome.split(" ")[0]}. Alguém (esperamos que você) pediu para trocar a senha do Tranquilim. O link vale por 2 horas.`, "Se não foi você, é só ignorar este e-mail: nada muda."], { texto: "Criar senha nova", url: `${o.urlBase ?? ""}/#/redefinir/${t}` });
+      await o.carteiro({ para: email, assunto: "Sua senha nova do Tranquilim", ...m }).catch((e) => console.error("e-mail de senha falhou", e));
+    }
+    return { ok: true };
+  }));
+
+  app.post("/api/conta/redefinir", json, rota(async (req, res) => {
+    const b = req.body as { token?: unknown; senha?: unknown };
+    if (typeof b.senha !== "string" || b.senha.length < 8) throw new Erro(400, "A senha precisa de pelo menos 8 caracteres.");
+    const id = await usarToken(b.token, "senha");
+    await banco.q(`update contas set senha_hash = $1, email_verificado_em = coalesce(email_verificado_em, now()) where id = $2`, [await bcrypt.hash(b.senha, 10), id]);
+    await banco.q(`delete from sessoes where conta_id = $1`, [id]);
+    await abrirSessao(res, id);
     return { ok: true };
   }));
 
@@ -240,7 +302,8 @@ export function criarApp(o: Opcoes) {
       [c.email],
     );
     return {
-      conta: { id: c.id, email: c.email, nome: c.nome, dono: c.dono, pediatra: c.pediatra, registro: c.registro, titulo: c.titulo, whatsapp: c.whatsapp, telefone: c.telefone, local: c.local },
+      emailLigado: !!o.carteiro,
+      conta: { id: c.id, email: c.email, nome: c.nome, dono: c.dono, pediatra: c.pediatra, emailVerificado: !!(c as Conta & { email_verificado_em?: unknown }).email_verificado_em, registro: c.registro, titulo: c.titulo, whatsapp: c.whatsapp, telefone: c.telefone, local: c.local },
       criancas: criancas.map((k) => ({
         id: k.id,
         crianca: { nome: k.nome, nascimento: k.nascimento, sexo: k.sexo },
@@ -248,6 +311,12 @@ export function criarApp(o: Opcoes) {
       })),
       pedidos: pedidos.map((d) => ({ id: d.id, pediatra: pediatraPublico({ ...(d as unknown as Conta), id: String(d.pid) }), criadoEm: iso(d.criado_em) })),
     };
+  }));
+
+  conta.post("/reenviar-confirmacao", rota(async (req) => {
+    if (!o.carteiro) throw new Erro(503, "Envio de e-mail ainda não ligado.");
+    await enviarConfirmacao(req.conta!.id, req.conta!.email, req.conta!.nome);
+    return { ok: true };
   }));
 
   conta.put("/perfil", rota(async (req) => {

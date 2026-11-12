@@ -4,6 +4,7 @@ import { bancoPostgres, migrar } from "./banco";
 import { criarApp } from "./app";
 import { criarLeitorClaude } from "./leitura";
 import { criarAssistenteClaude } from "./pergunta";
+import { criarCarteiroResend } from "./email";
 
 const aqui = path.dirname(fileURLToPath(import.meta.url));
 
@@ -20,8 +21,12 @@ async function iniciar() {
   if (!leitor) console.warn("LLM_API_KEY ausente: leitura de carteira desligada.");
 
   const assistente = chave ? criarAssistenteClaude(chave, process.env.LLM_MODELO_ASSISTENTE ?? "claude-haiku-5-5") : undefined;
+  const carteiro = process.env.RESEND_API_KEY ? criarCarteiroResend(process.env.RESEND_API_KEY, process.env.EMAIL_REMETENTE ?? "Tranquilim <nao-responda@tranquilim.com.br>") : undefined;
+  if (!carteiro) console.warn("RESEND_API_KEY ausente: e-mails desligados.");
   const app = criarApp({
     banco,
+    carteiro,
+    urlBase: process.env.URL_BASE ?? "https://app.tranquilim.com.br",
     leitor,
     assistente,
     cookieSeguro: process.env.NODE_ENV === "production",

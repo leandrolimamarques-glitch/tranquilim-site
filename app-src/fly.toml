@@ -14,6 +14,9 @@ primary_region = "gru"
   LLM_EFFORT = "high"
   # Assistente das famílias: modelo barato, preso ao conteúdo do app (server/pergunta.ts).
   LLM_MODELO_ASSISTENTE = "claude-haiku-5-5"
+  # E-mails (confirmação e senha nova). A chave RESEND_API_KEY vai como segredo.
+  EMAIL_REMETENTE = "Tranquilim <nao-responda@tranquilim.com.br>"
+  URL_BASE = "https://app.tranquilim.com.br"
 
 [http_service]
   internal_port = 8080

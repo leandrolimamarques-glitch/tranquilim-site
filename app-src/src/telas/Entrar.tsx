@@ -43,10 +43,31 @@ export function Entrar({ aoEntrar }: { aoEntrar: () => void }) {
         <label className="campo">Senha<input id="senha" {...campo("senha")} type="password" autoComplete={modo === "entrar" ? "current-password" : "new-password"} placeholder={modo === "criar" ? "pelo menos 8 caracteres" : ""} /></label>
         {erro && <p className="pequeno" style={{ color: "var(--ps)" }}>{erro}</p>}
         <button className="btn bloco" type="submit" disabled={!valido || enviando}>{enviando ? "Aguarde…" : modo === "entrar" ? "Entrar" : "Criar conta"}</button>
-        {modo === "entrar" && <p className="muted pequeno">Esqueceu a senha? Fale com quem te convidou para o Tranquilim.</p>}
+        {modo === "entrar" && <Esqueci emailInicial={f.email} />}
       </form>
       <button className="voltar" style={{ alignSelf: "center" }} onClick={() => setSobre(true)}>Quem somos ›</button>
       <a className="link-192" href="tel:192">Emergência: ligar 192</a>
     </>
+  );
+}
+
+function Esqueci({ emailInicial }: { emailInicial: string }) {
+  const [aberto, setAberto] = useState(false);
+  const [email, setEmail] = useState(emailInicial);
+  const [msg, setMsg] = useState("");
+  if (!aberto) return <button type="button" className="voltar pequeno" onClick={() => { setEmail(emailInicial); setAberto(true); }}>Esqueci a senha</button>;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+      <label className="campo">Seu e-mail<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+      <button type="button" className="btn sec bloco" disabled={!email.includes("@")} onClick={async () => {
+        try {
+          await api.post("/api/conta/esqueci", { email });
+          setMsg("Se este e-mail tiver conta, chega um link para criar a senha nova. Veja também o spam.");
+        } catch (e) {
+          setMsg((e as Error).message);
+        }
+      }}>Mandar link</button>
+      {msg && <p className="pequeno">{msg}</p>}
+    </div>
   );
 }

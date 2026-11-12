@@ -23,6 +23,7 @@ jobs:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -59,11 +60,10 @@ jobs:
       - name: Segredos do app
         if: steps.segredos.outputs.pronto == 'sim'
         run: |
-          if [ -n "$LLM_API_KEY" ]; then
-            flyctl secrets set --stage -a tranquilim DATABASE_URL="$DATABASE_URL" LLM_API_KEY="$LLM_API_KEY"
-          else
-            flyctl secrets set --stage -a tranquilim DATABASE_URL="$DATABASE_URL"
-          fi
+          args=(DATABASE_URL="$DATABASE_URL")
+          [ -n "$LLM_API_KEY" ] && args+=(LLM_API_KEY="$LLM_API_KEY")
+          [ -n "$RESEND_API_KEY" ] && args+=(RESEND_API_KEY="$RESEND_API_KEY")
+          flyctl secrets set --stage -a tranquilim "${args[@]}"
 
       - name: Publicar
         if: steps.segredos.outputs.pronto == 'sim'

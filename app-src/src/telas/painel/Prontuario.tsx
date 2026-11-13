@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../lib/api";
-import { criarReconhecedor, temDitado, type Reconhecedor } from "../../lib/ditado";
+import type { Reconhecedor } from "../../lib/ditado";
+import { MSG_TECLADO, iniciarDitado } from "../../lib/voz";
 import { dataBr, hojeIso, idadeTexto } from "../../lib/idade";
 import { compartilharPdf } from "../../lib/pdf";
 
@@ -20,45 +21,46 @@ type Ficha = { paciente: PacienteP; noApp: boolean; registros: Registro[]; docum
 const ROTULO_DOC: Record<TipoDoc, string> = { receita: "Receita", atestado: "Atestado", comparecimento: "Declaração de comparecimento", exame: "Pedido de exames" };
 const hora = (iso: string) => new Date(iso).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-/** Campo de texto com botão de ditado. */
+/** Campo de texto com botão de ditado (no iPhone, abre o teclado com o microfone). */
 function CampoDitado({ rotulo, valor, mudar, linhas = 3, dica }: { rotulo: string; valor: string; mudar: (v: string) => void; linhas?: number; dica?: string }) {
   const [ouvindo, setOuvindo] = useState(false);
+  const [aviso, setAviso] = useState("");
   const rec = useRef<Reconhecedor | null>(null);
-  const valorRef = useRef(valor);
-  valorRef.current = valor;
+  const campo = useRef<HTMLTextAreaElement | null>(null);
   const ditar = () => {
     if (ouvindo) {
       rec.current?.stop();
       return;
     }
-    const r = criarReconhecedor();
-    if (!r) return;
+    setAviso("");
+    const r = iniciarDitado({
+      antes: valor,
+      continuo: true,
+      aoTexto: mudar,
+      aoFim: () => setOuvindo(false),
+      aoErro: (m) => {
+        setAviso(m);
+        campo.current?.focus();
+      },
+    });
+    if (!r) {
+      campo.current?.focus();
+      setAviso(MSG_TECLADO);
+      return;
+    }
     rec.current = r;
-    r.lang = "pt-BR";
-    r.interimResults = true;
-    r.continuous = true;
-    const antes = valorRef.current ? valorRef.current.trimEnd() + " " : "";
-    r.onresult = (e) => {
-      let dito = "";
-      for (let i = 0; i < e.results.length; i++) dito += e.results[i][0].transcript;
-      mudar(antes + dito.trim());
-    };
-    r.onend = () => setOuvindo(false);
-    r.onerror = () => setOuvindo(false);
     setOuvindo(true);
-    r.start();
   };
   return (
     <label className="campo">
       <span className="linha" style={{ alignItems: "center" }}>
         <span>{rotulo}</span>
-        {temDitado() && (
-          <button type="button" className={`btn ${ouvindo ? "ps" : "contorno"}`} style={{ minHeight: 40, padding: "4px 12px", fontSize: 14 }} onClick={ditar} aria-pressed={ouvindo}>
-            {ouvindo ? "■ Parar" : "🎤 Ditar"}
-          </button>
-        )}
+        <button type="button" className={`btn ${ouvindo ? "ps" : "contorno"}`} style={{ minHeight: 40, padding: "4px 12px", fontSize: 14 }} onClick={ditar} aria-pressed={ouvindo}>
+          {ouvindo ? "■ Parar" : "🎤 Ditar"}
+        </button>
       </span>
-      <textarea rows={linhas} value={valor} onChange={(e) => mudar(e.target.value)} placeholder={dica} />
+      <textarea ref={campo} rows={linhas} value={valor} onChange={(e) => mudar(e.target.value)} onBlur={() => setAviso("")} placeholder={dica} />
+      {aviso && <span className="pequeno" role="status" style={{ fontWeight: 600 }}>{aviso}</span>}
     </label>
   );
 }

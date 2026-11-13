@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import type { Navegar } from "../App";
 import { FLUXOS } from "../conteudo";
 import { api } from "../lib/api";
-import { criarReconhecedor, type Reconhecedor } from "../lib/ditado";
+import type { Reconhecedor } from "../lib/ditado";
+import { MSG_TECLADO, ehIOS, iniciarDitado, lerEmVozAlta, pararLeitura, temLeitura } from "../lib/voz";
 import { linkWhatsApp } from "../lib/convite";
 import { dataBr } from "../lib/idade";
 import type { Dados } from "../lib/store";
@@ -13,16 +14,6 @@ type Hist = Resp & { pergunta: string; criadoEm: string };
 const SUGESTOES = ["Quando começo a introdução alimentar?", "Como deixar o berço seguro?", "Quantas fraldas molhadas por dia é normal?", "Com que idade ela deve falar as primeiras palavras?"];
 
 
-// Ditado: o próprio celular (Safari/Chrome) transforma a fala em texto, sem custo.
-function falar(texto: string) {
-  if (!("speechSynthesis" in window)) return;
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(texto);
-  u.lang = "pt-BR";
-  u.rate = 0.95;
-  speechSynthesis.speak(u);
-}
-
 export function Pergunta({ dados, navegar }: { dados: Dados; navegar: Navegar }) {
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -30,33 +21,33 @@ export function Pergunta({ dados, navegar }: { dados: Dados; navegar: Navegar })
   const [historico, setHistorico] = useState<Hist[]>([]);
   const [ouvindo, setOuvindo] = useState(false);
   const rec = useRef<Reconhecedor | null>(null);
-  const temDitado = typeof window !== "undefined" && !!criarReconhecedor();
+  const campo = useRef<HTMLTextAreaElement | null>(null);
+  const [dica, setDica] = useState("");
 
   const gravar = () => {
     if (ouvindo) {
       rec.current?.stop();
       return;
     }
-    const r = criarReconhecedor();
-    if (!r) return;
-    rec.current = r;
-    r.lang = "pt-BR";
-    r.interimResults = true;
-    r.continuous = false;
-    const antes = texto ? texto.trim() + " " : "";
-    r.onresult = (e) => {
-      let dito = "";
-      for (let i = 0; i < e.results.length; i++) dito += e.results[i][0].transcript;
-      setTexto(antes + dito);
-    };
-    r.onend = () => setOuvindo(false);
-    r.onerror = (e) => {
-      setOuvindo(false);
-      if (e.error === "not-allowed") setErro("Permita o uso do microfone para falar a sua dúvida.");
-    };
     setErro("");
+    setDica("");
+    const r = iniciarDitado({
+      antes: texto,
+      aoTexto: setTexto,
+      aoFim: () => setOuvindo(false),
+      aoErro: (m) => {
+        setDica(m);
+        campo.current?.focus();
+      },
+    });
+    if (!r) {
+      // iPhone (ou navegador sem ditado): abre o teclado, que tem o microfone.
+      campo.current?.focus();
+      setDica(MSG_TECLADO);
+      return;
+    }
+    rec.current = r;
     setOuvindo(true);
-    r.start();
   };
 
   useEffect(() => {
@@ -85,13 +76,10 @@ export function Pergunta({ dados, navegar }: { dados: Dados; navegar: Navegar })
       <h1 style={{ fontSize: 28 }}>Pergunte ao Tranquilim</h1>
       <p className="muted">Escreva ou fale a sua dúvida. As respostas seguem as orientações do app e das sociedades de pediatria. Remédio, dose e diagnóstico ficam com o seu pediatra. Em emergência, ligue 192.</p>
       <div className="card">
-        <textarea className="area-texto" rows={3} maxLength={500} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder={`Sua dúvida sobre ${dados.crianca?.nome ?? "a criança"}`} />
+        <textarea ref={campo} className="area-texto" rows={3} maxLength={500} value={texto} onChange={(e) => setTexto(e.target.value)} placeholder={`Sua dúvida sobre ${dados.crianca?.nome ?? "a criança"}`} />
         {erro && <p className="pequeno" style={{ color: "var(--ps)" }}>{erro}</p>}
-        {temDitado ? (
-          <button className={`btn ${ouvindo ? "ps" : "sec"} bloco`} onClick={gravar} aria-pressed={ouvindo}>{ouvindo ? "● Ouvindo… toque para parar" : "🎤 Falar a dúvida"}</button>
-        ) : (
-          <p className="muted pequeno">Para falar em vez de escrever, toque no microfone do teclado do celular.</p>
-        )}
+        <button className={`btn ${ouvindo ? "ps" : "sec"} bloco`} onClick={gravar} aria-pressed={ouvindo}>{ouvindo ? "● Ouvindo… toque para parar" : "🎤 Falar a dúvida"}</button>
+        {dica && <p className="pequeno" role="status" style={{ fontWeight: 600 }}>{dica}</p>}
         <button className="btn bloco" disabled={enviando || ouvindo || texto.trim().length < 3} onClick={() => void enviar()}>{enviando ? "Pensando…" : "Perguntar"}</button>
       </div>
       {historico.length === 0 && (
@@ -113,12 +101,32 @@ function Bolha({ h, dados, navegar }: { h: Hist; dados: Dados; navegar: Navegar 
       <p className="muted pequeno">{dataBr(h.criadoEm.slice(0, 10))} · você perguntou</p>
       <p style={{ fontWeight: 700 }}>{h.pergunta}</p>
       <p>{h.resposta}</p>
-      {"speechSynthesis" in window && <button className="voltar" style={{ minHeight: 40 }} onClick={() => falar(h.resposta)}>🔊 Ouvir a resposta</button>}
+      <Ouvir texto={h.resposta} />
       {h.tipo === "emergencia" && <a className="btn ps bloco" href="tel:192">Ligar 192</a>}
       {fluxo && <button className="btn bloco" onClick={() => navegar("ps", { fluxo: fluxo.id })}>Abrir: {fluxo.titulo}</button>}
       {h.tipo === "medico" && dados.medico?.whatsapp && (
         <a className="btn sec bloco" href={linkWhatsApp(dados.medico.whatsapp, `Olá! Sou responsável por ${dados.crianca?.nome ?? ""}. Tenho uma dúvida: ${h.pergunta}`)} target="_blank" rel="noopener noreferrer">Perguntar a {dados.medico.nome}</a>
       )}
     </div>
+  );
+}
+
+function Ouvir({ texto }: { texto: string }) {
+  const [tocando, setTocando] = useState(false);
+  const [aviso, setAviso] = useState("");
+  if (!temLeitura()) return null;
+  return (
+    <>
+      <button className="btn contorno" style={{ minHeight: 44, alignSelf: "flex-start" }} onClick={() => {
+        if (tocando) {
+          pararLeitura();
+          setTocando(false);
+          return;
+        }
+        setTocando(lerEmVozAlta(texto, () => setTocando(false)));
+        if (ehIOS()) setAviso("Sem som? Confira se o iPhone não está no silencioso (chave na lateral) e aumente o volume.");
+      }}>{tocando ? "■ Parar" : "🔊 Ouvir a resposta"}</button>
+      {aviso && tocando && <p className="muted pequeno" style={{ margin: 0 }}>{aviso}</p>}
+    </>
   );
 }

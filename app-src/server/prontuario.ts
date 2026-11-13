@@ -293,7 +293,7 @@ export function rotasProntuario(c: CtxProntuario) {
   r.get("/documentos/:id/pdf", rota(async (req, res) => {
     const d = await meuDocumento(req, req.params.id);
     const p = await meuPaciente(req, d.paciente_id);
-    await enviarPdf(res, comoJson<ConteudoDocumento>(d.conteudo), p, req.conta!, iso(d.criado_em)!);
+    await enviarPdf(res, comoJson<ConteudoDocumento>(d.conteudo), p, req.conta!, iso(d.criado_em)!, d.id);
   }));
 
   /** Disponibiliza o documento no app da família (só se a criança é do app e segue com este pediatra). */
@@ -315,8 +315,9 @@ export async function enviarPdf(
   p: { nome: string; nascimento: string; responsavel: string },
   medico: { nome: string; titulo: string | null; registro: string | null; local: string | null; telefone: string | null },
   criadoEm: string,
+  id: string,
 ) {
-  const bytes = await gerarPdfDocumento(conteudo, { nome: p.nome, nascimento: p.nascimento, responsavel: p.responsavel }, medico, criadoEm.slice(0, 10));
+  const bytes = await gerarPdfDocumento(conteudo, { nome: p.nome, nascimento: p.nascimento, responsavel: p.responsavel }, medico, criadoEm.slice(0, 10), id);
   const nome = `${conteudo.tipo}-${p.nome.split(" ")[0].normalize("NFD").replace(/[^\w]/g, "")}-${criadoEm.slice(0, 10)}.pdf`;
   res.setHeader("content-type", "application/pdf");
   res.setHeader("content-disposition", `inline; filename="${nome}"`);
@@ -355,6 +356,7 @@ export function rotasDocumentosFamilia(c: CtxProntuario & { acessoFamilia: (req:
       { nome: String(d.nome), nascimento: String(d.nascimento), responsavel: String(d.responsavel ?? "") },
       { nome: String(d.m_nome), titulo: (d.titulo as string) ?? null, registro: (d.registro as string) ?? null, local: (d.local as string) ?? null, telefone: (d.telefone as string) ?? null },
       iso(d.criado_em)!,
+      String(req.params.id),
     );
   }));
   return r;

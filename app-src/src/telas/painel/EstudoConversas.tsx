@@ -38,7 +38,7 @@ export function EstudoConversas({ voltar }: { voltar: () => void }) {
           <li>Escolha <b>Sem mídia</b>.</li>
           <li>No iPhone, toque em <b>Salvar em Arquivos</b>. No Android, salve no celular.</li>
         </ol>
-        <p className="muted pequeno">Repita com umas 30 conversas recentes. Pode salvar todas na mesma pasta.</p>
+        <p className="muted pequeno">Repita com umas 30 conversas recentes. Pode salvar todas na mesma pasta. Os áudios aparecem como [áudio], sem o conteúdo: a voz e o que é dito identificam a família.</p>
       </div>
 
       <div className="card">

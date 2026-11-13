@@ -12,6 +12,17 @@ const ANDROID = `12/11/2026 22:10 - Paulo Lima: Doutor, a Helena vomitou 3 vezes
 12/11/2026 22:13 - Paulo Lima: <Mídia oculta>`;
 
 describe("anonimizar conversas do WhatsApp", () => {
+  it("áudio vira [áudio] (com ou sem mídia exportada); foto sai", () => {
+    const comMidia = `[12/11/26, 22:10:05] Ana Paula: \u200e<anexado: 00000012-AUDIO-2026-11-12-22-10-05.opus>
+[12/11/26, 22:11:00] Ana Paula: \u200e<anexado: 00000013-PHOTO-2026-11-12-22-11-00.jpg>
+[12/11/26, 22:12:00] Dr. Francisco: Pode dar banho morno.
+12/11/2026 22:13 - Ana Paula: PTT-20261112-WA0003.opus (arquivo anexado)
+[12/11/26, 22:14:00] Ana Paula: áudio ocultado`;
+    const r = anonimizarConversas([comMidia], "Dr. Francisco");
+    expect(r.texto.match(/\[áudio\]/g)).toHaveLength(3);
+    expect(r.texto).not.toMatch(/PHOTO|2026-11-12|opus/);
+  });
+
   it("lê iPhone e Android, com mensagem de várias linhas", () => {
     const m = lerConversa(IOS);
     expect(m).toHaveLength(4);

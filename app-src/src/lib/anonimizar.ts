@@ -2,7 +2,8 @@
 // padrão de dúvidas. Roda no próprio aparelho do médico: nada é enviado ao servidor.
 // Sai: nº da conversa, dia da semana e hora (sem a data), quem fala ("Médico" ou
 // "Família") e o texto com nomes, telefones, e-mails, CPF, links e números longos
-// trocados por marcadores. Mídias e mensagens apagadas saem.
+// trocados por marcadores. Áudio vira "[áudio]" sem o conteúdo; fotos, vídeos e mensagens
+// apagadas saem.
 
 export type Mensagem = { data: string; hora: string; remetente: string; texto: string };
 
@@ -21,7 +22,9 @@ export function lerConversa(txt: string): Mensagem[] {
   return saida;
 }
 
-const MIDIA = /(<m[ií]dia oculta>|<media omitted>|imagem ocultada|v[ií]deo omitido|[áa]udio ocultado|figurinha omitida|documento omitido|gif omitido|anexado:|‎?<anexado:|esta mensagem foi apagada|mensagem apagada|this message was deleted|null)$/i;
+// Áudio vira "[áudio]" (conta para o padrão: quanto chega por áudio e quando); o conteúdo não sai.
+const AUDIO = /(AUDIO-\d|PTT-\d|\.opus\b|\.m4a\b|[áa]udio ocultado|audio omitted)/i;
+const MIDIA = /(<m[ií]dia oculta>|<media omitted>|imagem ocultada|v[ií]deo omitido|figurinha omitida|documento omitido|gif omitido|<anexado:|\(arquivo anexado\)|esta mensagem foi apagada|mensagem apagada|this message was deleted|^null$)/i;
 const DIAS = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
 
 function diaDaSemana(data: string): string {
@@ -70,7 +73,9 @@ export function anonimizarConversas(arquivos: string[], medico: string): Resulta
   let conversas = 0;
   let mensagens = 0;
   arquivos.forEach((txt) => {
-    const msgs = lerConversa(txt).filter((m) => !MIDIA.test(m.texto.trim()));
+    const msgs = lerConversa(txt)
+      .map((m) => (AUDIO.test(m.texto) ? { ...m, texto: "[áudio]" } : m))
+      .filter((m) => m.texto === "[áudio]" || !MIDIA.test(m.texto.trim()));
     if (!msgs.length) return;
     conversas++;
     const nomes = [...new Set(msgs.map((m) => m.remetente))];

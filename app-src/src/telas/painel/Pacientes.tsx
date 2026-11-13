@@ -16,7 +16,7 @@ type DocRemoto = ReturnType<typeof useDocRemoto>;
 type Paciente = { id: string; crianca: Crianca; responsaveis: string; email: string; desde: string | null; atualizadoEm: string | null; alertas: Alerta[] };
 type PedidoEnviado = { id: string; email: string; criadoEm: string };
 
-export function Pacientes({ medico, financeiro }: { medico: Medico; financeiro: DocRemoto }) {
+export function Pacientes({ medico, financeiro, abrirNoProntuario }: { medico: Medico; financeiro: DocRemoto; abrirNoProntuario: (id: string) => void }) {
   const [lista, setLista] = useState<Paciente[] | null>(null);
   const [pedidos, setPedidos] = useState<PedidoEnviado[]>([]);
   const [erro, setErro] = useState("");
@@ -37,7 +37,7 @@ export function Pacientes({ medico, financeiro }: { medico: Medico; financeiro: 
   }, [carregar]);
 
   const p = lista?.find((x) => x.id === aberto);
-  if (p) return <VerPaciente key={p.id} p={p} medico={medico} financeiro={financeiro} voltar={() => { setAberto(null); void carregar(); window.scrollTo(0, 0); }} />;
+  if (p) return <VerPaciente key={p.id} p={p} medico={medico} financeiro={financeiro} abrirNoProntuario={abrirNoProntuario} voltar={() => { setAberto(null); void carregar(); window.scrollTo(0, 0); }} />;
   return <Lista lista={lista} pedidos={pedidos} erro={erro} abrir={(id) => { setAberto(id); window.scrollTo(0, 0); }} recarregar={carregar} />;
 }
 
@@ -121,7 +121,7 @@ function Lista({ lista, pedidos, erro, abrir, recarregar }: { lista: Paciente[] 
   );
 }
 
-function VerPaciente({ p, medico, financeiro, voltar }: { p: Paciente; medico: Medico; financeiro: DocRemoto; voltar: () => void }) {
+function VerPaciente({ p, medico, financeiro, voltar, abrirNoProntuario }: { p: Paciente; medico: Medico; financeiro: DocRemoto; voltar: () => void; abrirNoProntuario: (id: string) => void }) {
   const remoto = useDocRemoto(`/api/criancas/${p.id}/doc`);
   const [secao, setSecao] = useState<SecaoCaderneta>("vacinas");
   const [saindo, setSaindo] = useState(false);
@@ -160,6 +160,7 @@ function VerPaciente({ p, medico, financeiro, voltar }: { p: Paciente; medico: M
         <span className="chip">{idadeTexto(p.crianca.nascimento, hoje)}</span>
       </div>
       <p className="muted">{dataBr(p.crianca.nascimento)} · {p.crianca.sexo}{p.responsaveis && ` · ${p.responsaveis}`}{p.email && ` · ${p.email}`}</p>
+      <button className="btn bloco" onClick={() => void api.post<{ id: string }>("/api/prontuario/pacientes", { criancaId: p.id }).then((r) => abrirNoProntuario(r.id))}>Abrir prontuário</button>
       {p.alertas.length > 0 && (
         <div className="card" style={{ borderColor: p.alertas.some((a) => a.nivel === "atencao") ? "var(--ps)" : "var(--line)" }}>
           <h3>Avisos</h3>

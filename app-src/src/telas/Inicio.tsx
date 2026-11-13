@@ -8,6 +8,7 @@ import { trilhasDaIdade } from "../conteudo";
 import { contarHoje, ROTULOS_REGISTRO } from "./Caderneta";
 import { linhaRegistro, linkLigar, linkWhatsApp } from "../lib/convite";
 import { alertasDaCrianca } from "../lib/alertas";
+import { DocumentosDoPediatra } from "./DocumentosDoPediatra";
 
 export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar: Atualizar; navegar: Navegar }) {
   const c = dados.crianca!;
@@ -117,6 +118,7 @@ export function Inicio({ dados, atualizar, navegar }: { dados: Dados; atualizar:
           <p className="muted pequeno">{dados.vinculo ? "O consultório também vê este aviso." : "Mostre na próxima consulta."} Não quer dizer doença, mas merece um olhar.</p>
         </button>
       )}
+      <DocumentosDoPediatra criancaId={dados.criancaId} nome={c.nome} />
       <button className="card" style={{ textAlign: "left", cursor: "pointer" }} onClick={() => navegar("caderneta", { secao: "crescimento" })}>
         <span className="muted pequeno" style={{ fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>Crescimento</span>
         {ultimaComPeso ? (

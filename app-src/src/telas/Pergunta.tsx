@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Navegar } from "../App";
 import { FLUXOS } from "../conteudo";
 import { api } from "../lib/api";
+import { criarReconhecedor, type Reconhecedor } from "../lib/ditado";
 import { linkWhatsApp } from "../lib/convite";
 import { dataBr } from "../lib/idade";
 import type { Dados } from "../lib/store";
@@ -13,13 +14,6 @@ const SUGESTOES = ["Quando começo a introdução alimentar?", "Como deixar o be
 
 
 // Ditado: o próprio celular (Safari/Chrome) transforma a fala em texto, sem custo.
-type Reconhecedor = { lang: string; interimResults: boolean; continuous: boolean; start: () => void; stop: () => void; onresult: ((e: { results: ArrayLike<ArrayLike<{ transcript: string }> & { isFinal: boolean }> }) => void) | null; onend: (() => void) | null; onerror: ((e: { error: string }) => void) | null };
-function criarReconhecedor(): Reconhecedor | null {
-  const w = window as unknown as { SpeechRecognition?: new () => Reconhecedor; webkitSpeechRecognition?: new () => Reconhecedor };
-  const C = w.SpeechRecognition ?? w.webkitSpeechRecognition;
-  return C ? new C() : null;
-}
-
 function falar(texto: string) {
   if (!("speechSynthesis" in window)) return;
   speechSynthesis.cancel();

@@ -44,6 +44,8 @@ const limpar = (s: string) =>
 class Folha {
   page!: PDFPage;
   y = 0;
+  /** No bloco de assinatura não quebra página (o espaço já foi reservado). */
+  private rodape = false;
   readonly M = 56;
   readonly L = 595.28;
   readonly A = 841.89;
@@ -54,7 +56,8 @@ class Folha {
     this.cabecalho(this);
   }
   garantir(altura: number) {
-    if (this.y - altura < this.M + 120) this.nova();
+    if (this.rodape) return;
+    if (this.y - altura < this.M + 160) this.nova();
   }
   texto(t: string, o: { tam?: number; negrito?: boolean; recuo?: number; cor?: number; centro?: boolean; espaco?: number } = {}) {
     const tam = o.tam ?? 11;
@@ -86,8 +89,8 @@ class Folha {
     this.y -= 12;
   }
   assinatura(medico: MedicoPdf, local: string, data: string) {
-    this.garantir(110);
     this.y = Math.min(this.y, this.M + 150);
+    this.rodape = true;
     this.texto(`${local ? `${local}, ` : ""}${dataBr(data)}`, { tam: 11, espaco: 40 });
     const x0 = this.L / 2 - 120;
     this.page.drawLine({ start: { x: x0, y: this.y }, end: { x: x0 + 240, y: this.y }, thickness: 0.8, color: rgb(0.2, 0.2, 0.25) });

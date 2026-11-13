@@ -24,7 +24,7 @@ export const POLITICA: DocumentoLegal = {
       paragrafos: [
         "Da sua conta: nome, e-mail, senha (guardada embaralhada, de um jeito que nem nós conseguimos ler), a data do cadastro e a data em que você aceitou esta política.",
         "Das crianças que você cadastra: nome, data de nascimento e sexo; vacinas; medidas (peso, comprimento, cabeça); o diário (mamadas, xixi, cocô, sono); as aulas vistas; a foto ou o PDF da carteira de vacinação e o que a leitura encontrou nela; as perguntas feitas no \"Pergunte ao Tranquilim\" e as respostas.",
-        "Se você é pediatra: registro no conselho, título, telefone, WhatsApp, local de atendimento e o que você anota na agenda e no financeiro.",
+        "Se você é pediatra: registro no conselho, título, telefone, WhatsApp, local de atendimento, o que você anota na agenda e no financeiro e o prontuário dos seus pacientes (veja o item \"Prontuário do pediatra\").",
         "Dados técnicos: quando algo dá errado no app, guardamos por 90 dias a mensagem técnica do erro, a tela e o tipo de navegador, para corrigir. Usamos um cookie só para manter você conectado. Não usamos cookies de propaganda nem ferramentas que acompanham o que você faz.",
         "Neste aparelho, o app guarda uma cópia da sua conta para abrir sem internet. Ao sair da conta, essa cópia é apagada.",
       ],
@@ -50,7 +50,15 @@ export const POLITICA: DocumentoLegal = {
         "O pediatra que você escolher, ou cujo pedido você aceitar: ele vê vacinas, medidas, diário, carteira e perguntas das crianças que você marcou. Você pode tirar o pediatra a qualquer momento, em Ajustes.",
         "Os médicos responsáveis pelo Tranquilim, como administradores: veem nome e e-mail das contas e as perguntas feitas à inteligência artificial, com o nome da criança, para conferir se as respostas estão seguras.",
         "Empresas que fazem o app funcionar, só para isso: Fly.io (servidor do app, em São Paulo); Neon (banco de dados, em São Paulo); Anthropic (inteligência artificial que lê a carteira de vacinação e responde às perguntas, nos Estados Unidos; recebe a foto da carteira, a pergunta, o primeiro nome e a idade da criança e o nome do pediatra; pelo contrato dela, não usa esses dados para treinar a inteligência artificial); Resend (envio dos e-mails, nos Estados Unidos; recebe seu nome e e-mail); Unsplash (fotos das receitas e brincadeiras: o seu aparelho baixa as fotos direto da Unsplash, que recebe o endereço de internet do aparelho, mas nenhum dado da conta).",
+        "Ditado por voz: quando você toca em ditar, o reconhecimento de voz do próprio celular ou navegador (Google ou Apple) transforma a fala em texto. O Tranquilim não grava o áudio.",
         "Autoridades, quando a lei obrigar.",
+      ],
+    },
+    {
+      titulo: "Prontuário do pediatra",
+      paragrafos: [
+        "O pediatra pode usar o Tranquilim como prontuário: cadastro do paciente, alergias, antecedentes, atendimentos, receitas, atestados e pedidos de exame. Quem decide sobre esses dados é o pediatra (controlador); o Tranquilim só guarda para ele (operador). Só o próprio pediatra vê o prontuário. A família vê apenas os documentos que o pediatra decidir mandar para o app.",
+        "A lei manda guardar o prontuário por pelo menos 20 anos (Lei 13.787/2018). Por isso o prontuário continua com o pediatra mesmo se a família excluir a conta no app. Para ver, copiar ou corrigir o que está no prontuário, fale com o pediatra.",
       ],
     },
     {
@@ -64,6 +72,7 @@ export const POLITICA: DocumentoLegal = {
       paragrafos: [
         "Enquanto a sua conta existir. Ao excluir a conta, apagamos na hora a conta e as crianças que não têm outro responsável, com tudo delas. Uma criança que tem outro responsável continua na conta dele, sem o vínculo com você.",
         "Ao tirar uma criança da conta, se ninguém mais for responsável por ela, os registros dela são apagados.",
+        "O prontuário que o pediatra escreveu não é apagado com a conta da família: fica com o pediatra pelo prazo da lei.",
         "As cópias de segurança automáticas do banco de dados se apagam sozinhas em até 30 dias. Registros de erro, em 90 dias.",
       ],
     },
@@ -129,6 +138,7 @@ export const TERMOS: DocumentoLegal = {
       titulo: "Pediatras",
       paragrafos: [
         "A função de pediatra é liberada pelos administradores depois de conferir o registro no conselho. O pediatra responde pelos seus atos profissionais. O Tranquilim não marca consultas, não faz teleconsulta e não intermedeia pagamentos. Os valores e impostos do financeiro são estimativas para organização: confirme com o seu contador.",
+        "No prontuário, o pediatra responde pelo que escreve e pelos documentos que emite. Atendimento finalizado não muda; correções entram como adendo, com data e hora. Receita, atestado e pedido de exame saem em PDF sem assinatura digital: valem impressos e assinados. Receita de controle especial não sai pelo app. O app não calcula dose. Para encerrar a conta, o pediatra combina antes com a administração a guarda do prontuário.",
       ],
     },
     {

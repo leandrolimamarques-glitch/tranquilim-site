@@ -1,0 +1,48 @@
+name: Backup do banco
+
+# Cópia diária do banco (Neon) guardada por 30 dias como artefato do GitHub.
+# O repositório é público: a cópia sai cifrada (AES-256) com uma chave derivada do
+# segredo DATABASE_URL. Só quem tem o endereço do banco consegue abrir.
+#
+# Restaurar (com o DATABASE_URL da época do backup):
+#   CHAVE=$(printf '%s' "$DATABASE_URL|backup-tranquilim" | sha256sum | cut -d' ' -f1)
+#   openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -pass env:CHAVE -in tranquilim.dump.enc -out tranquilim.dump
+#   pg_restore --no-owner --clean --if-exists -d "$DESTINO" tranquilim.dump
+on:
+  schedule:
+    - cron: "17 8 * * *" # 5h17 de Brasília
+  workflow_dispatch:
+
+concurrency:
+  group: backup-banco
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - name: Cliente do Postgres 18
+        run: |
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSo /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+      - name: Copiar e cifrar
+        run: |
+          set -euo pipefail
+          test -n "$DATABASE_URL"
+          /usr/lib/postgresql/18/bin/pg_dump --format=custom --no-owner --no-privileges -d "$DATABASE_URL" -f tranquilim.dump
+          CHAVE=$(printf '%s' "$DATABASE_URL|backup-tranquilim" | sha256sum | cut -d' ' -f1)
+          export CHAVE
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -pass env:CHAVE -in tranquilim.dump -out tranquilim.dump.enc
+          rm tranquilim.dump
+          echo "Tamanho cifrado: $(du -h tranquilim.dump.enc | cut -f1)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: banco-${{ github.run_id }}
+          path: tranquilim.dump.enc
+          retention-days: 30
+          if-no-files-found: error

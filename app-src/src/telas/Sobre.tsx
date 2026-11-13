@@ -12,7 +12,7 @@ export function Sobre({ voltar, rotuloVoltar = "Voltar" }: { voltar: () => void;
       {SOBRE.abertura.map((p) => <p key={p} style={{ fontSize: 17 }}>{p}</p>)}
       {SOBRE.medicos.map((m) => (
         <div key={m.nome} className="card">
-          <h2>{m.nome}{m.apelido ? <span className="muted" style={{ fontSize: 16, fontWeight: 500 }}> · {m.apelido}</span> : null}</h2>
+          <h2>{m.nome}</h2>
           <p className="muted">{m.linha}</p>
           <p className="muted pequeno" style={{ fontWeight: 700 }}>{m.registro}</p>
           {m.texto.map((t) => <p key={t}>{t}</p>)}

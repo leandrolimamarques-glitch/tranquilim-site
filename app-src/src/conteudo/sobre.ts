@@ -2,7 +2,7 @@
 // CFM (Resolução 2.336/2023): nome com CRM, sem anunciar especialidade sem RQE,
 // sem superlativos nem promessa de resultado. Edite à vontade, mantendo isso.
 
-export type Medico = { nome: string; apelido?: string; linha: string; registro: string; texto: string[] };
+export type Medico = { nome: string; linha: string; registro: string; texto: string[] };
 
 export const SOBRE = {
   titulo: "Por que criamos o Tranquilim",
@@ -13,11 +13,10 @@ export const SOBRE = {
   medicos: [
     {
       nome: "Dr. Francisco Martiniano",
-      apelido: "Chicão",
       linha: "Médico formado em 2018 pela Universidade de Marília · pós-graduação em pediatria, em geriatria e em autismo infantil",
       registro: "CRM-SP 199456",
       texto: [
-        "O Chicão cuida de crianças e de famílias. No consultório, ouve todos os dias as mesmas perguntas: é febre ou não é, por que ele chora tanto, essa vacina pode atrasar, o peso está bom, quando começar a comida, ele já devia estar falando. Perguntas simples para quem é médico e enormes para quem está vivendo aquilo pela primeira vez.",
+        "O Francisco sempre atendeu urgência e emergência e cuida de crianças e de famílias. No consultório, ouve todos os dias as mesmas perguntas: é febre ou não é, por que ele chora tanto, essa vacina pode atrasar, o peso está bom, quando começar a comida, ele já devia estar falando. Perguntas simples para quem é médico e enormes para quem está vivendo aquilo pela primeira vez.",
         "A pós-graduação em autismo infantil trouxe um olhar atento para o desenvolvimento: perceber cedo o que merece atenção, sem alarmar e sem deixar passar. A formação em geriatria, curiosamente, ensinou a mesma coisa que a pediatria: cuidar bem é cuidar da família inteira, não só de quem está na maca.",
         "Pai do João Francisco, sabe na pele que a dúvida não escolhe horário. É ele quem acompanha as famílias no app, com a carteira de vacinas, a curva de crescimento e as perguntas à vista.",
       ],
@@ -27,13 +26,13 @@ export const SOBRE = {
       linha: "Médico formado em 2020 pela Universidade de Marília · atuação em UTI e emergência · pós-graduação em medicina de emergência",
       registro: "CRM-SP 216.200",
       texto: [
-        "O Leandro trabalha onde a medicina é mais grave: na UTI e na sala vermelha. Ali, cada minuto pesa, e ele vê os dois lados de uma dúvida mal resolvida: a criança que chega tarde, depois de horas tentando entender o que estava acontecendo, e a família que passa a madrugada no pronto-socorro por algo que poderia ser cuidado em casa.",
+        "O Leandro também sempre atendeu urgência e emergência, e esse caminho o levou para a UTI. Hoje trabalha onde a medicina é mais grave: na UTI e na sala vermelha. Ali, cada minuto pesa, e ele vê os dois lados de uma dúvida mal resolvida: a criança que chega tarde, depois de horas tentando entender o que estava acontecendo, e a família que passa a madrugada no pronto-socorro por algo que poderia ser cuidado em casa.",
         "Dessa rotina veio o coração do Tranquilim: o \"Vai ao PS, liga ou espera?\", que faz uma pergunta por vez e termina numa resposta clara, ir agora, procurar atendimento hoje ou cuidar em casa, sempre com os sinais de alerta para não esperar demais.",
         "Também criou o Ductus, aplicativo de apoio à decisão usado por médicos de plantão, e trouxe para cá o mesmo cuidado: tudo com fonte, nada de achismo.",
       ],
     },
   ] as Medico[],
-  juntos: "Os dois se formaram na mesma faculdade e seguiram caminhos diferentes da medicina: um no cuidado do dia a dia, outro na urgência. O Tranquilim junta os dois olhares, o de quem acompanha a criança crescer e o de quem sabe quando não dá para esperar.",
+  juntos: "Os dois se formaram na mesma faculdade e sempre atenderam urgência e emergência: conhecem de perto a família que chega tarde demais e a que chega assustada por algo que podia ser cuidado em casa. Depois, o Francisco seguiu também no consultório, acompanhando as crianças crescerem, e o Leandro foi para a UTI. O Tranquilim junta os dois olhares: o de quem acompanha a criança crescer e o de quem sabe quando não dá para esperar.",
   compromissos: [
     "Tudo o que está no app tem fonte: Ministério da Saúde e Sociedade Brasileira de Pediatria em primeiro lugar.",
     "Linguagem simples para todo mundo, e um \"Entender melhor\" para quem quer saber mais.",

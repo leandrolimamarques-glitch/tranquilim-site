@@ -9,6 +9,7 @@ import type { LeitorCarteira } from "./leitura";
 import { mensagem, type Carteiro } from "./email";
 import { assinaturaConfere, segredoLembretes } from "./lembretes";
 import { rotasDocumentosFamilia, rotasProntuario } from "./prontuario";
+import { TEMAS_RAPIDOS, TEM_DOSE } from "../src/lib/respostas";
 import { emergenciaDe, type Assistente } from "./pergunta";
 import { docValido, juntarDocs, type Doc } from "../src/lib/sinc";
 import { docInicial, docParaVista, type Crianca } from "../src/lib/familia";
@@ -186,6 +187,21 @@ export function criarApp(o: Opcoes) {
     return d;
   };
 
+  /** Respostas rápidas publicadas pelo pediatra que acompanha a criança (o primeiro que tiver). */
+  async function respostasDaCrianca(criancaId: string) {
+    const linhas = await banco.q<{ pid: string; nome: string; whatsapp: string | null; tema: string; texto: string }>(
+      `select p.id as pid, p.nome, p.whatsapp, r.tema, r.texto from acompanhamentos x
+         join contas p on p.id = x.pediatra_id and p.pediatra
+         join respostas_rapidas r on r.pediatra_id = p.id and r.publicado
+        where x.crianca_id = $1 order by x.desde, r.tema`,
+      [criancaId],
+    );
+    if (!linhas.length) return { pediatra: null, respostas: {} as Record<string, string> };
+    const pid = linhas[0].pid;
+    const doPrimeiro = linhas.filter((l) => l.pid === pid);
+    return { pediatra: { nome: linhas[0].nome, whatsapp: linhas[0].whatsapp }, respostas: Object.fromEntries(doPrimeiro.map((l) => [l.tema, l.texto])) };
+  }
+
   // ---------- exclusão (LGPD) ----------
   /** Apaga de vez uma criança e tudo dela. */
   async function apagarCrianca(id: string) {
@@ -211,6 +227,7 @@ export function criarApp(o: Opcoes) {
     await banco.q(`delete from acompanhamentos where pediatra_id = $1`, [c.id]);
     await banco.q(`delete from pedidos where pediatra_id = $1 or email = $2`, [c.id, c.email]);
     await banco.q(`delete from documentos where chave = $1`, [`financeiro:${c.id}`]);
+    await banco.q(`delete from respostas_rapidas where pediatra_id = $1`, [c.id]);
     await banco.q(`delete from sessoes where conta_id = $1`, [c.id]);
     await banco.q(`delete from tokens where conta_id = $1`, [c.id]);
     await banco.q(`delete from contas where id = $1`, [c.id]);
@@ -555,6 +572,11 @@ export function criarApp(o: Opcoes) {
     return { ok: true };
   }));
 
+  criancas.get("/:id/respostas", rota(async (req) => {
+    const a = await acessoACrianca(req.conta!, req.params.id);
+    return await respostasDaCrianca(a.id);
+  }));
+
   criancas.get("/:id/doc", rota(async (req) => {
     const a = await acessoACrianca(req.conta!, req.params.id);
     return { doc: await lerDoc(`crianca:${a.id}`) };
@@ -650,6 +672,26 @@ export function criarApp(o: Opcoes) {
 
   ped.delete("/pedidos/:id", rota(async (req) => {
     await banco.q(`delete from pedidos where id = $1 and pediatra_id = $2`, [req.params.id, req.conta!.id]);
+    return { ok: true };
+  }));
+
+  // Resposta rápida: o pediatra escreve, por tema, o que orienta fazer em casa.
+  ped.get("/respostas", rota(async (req) => {
+    const linhas = await banco.q<{ tema: string; texto: string; publicado: boolean; atualizado_em: unknown }>(`select tema, texto, publicado, atualizado_em from respostas_rapidas where pediatra_id = $1`, [req.conta!.id]);
+    return { respostas: linhas.map((l) => ({ tema: l.tema, texto: l.texto, publicado: l.publicado, atualizadoEm: iso(l.atualizado_em) })) };
+  }));
+  ped.put("/respostas/:tema", rota(async (req) => {
+    const tema = TEMAS_RAPIDOS.find((t) => t.id === req.params.tema);
+    if (!tema) throw new Erro(404, "Tema não encontrado.");
+    const b = req.body as { texto?: unknown; publicado?: unknown };
+    const t = textoLongo(b.texto, 3000);
+    if (TEM_DOSE.test(t)) throw new Erro(400, "Sem dose aqui: cada criança tem a dose pelo peso. Escreva, por exemplo, \"na dose da receita\".");
+    if (b.publicado === true && t.length < 10) throw new Erro(400, "Escreva a orientação antes de mostrar às famílias.");
+    await banco.q(
+      `insert into respostas_rapidas (pediatra_id, tema, texto, publicado) values ($1,$2,$3,$4)
+       on conflict (pediatra_id, tema) do update set texto = excluded.texto, publicado = excluded.publicado, atualizado_em = now()`,
+      [req.conta!.id, tema.id, t, b.publicado === true],
+    );
     return { ok: true };
   }));
 
@@ -826,7 +868,11 @@ export function criarApp(o: Opcoes) {
       if (!o.assistente) throw new Erro(503, "O assistente não está ligado agora.");
       const [cfg] = await banco.q<{ valor: string }>(`select valor from config where chave = 'regras_ia'`);
       const [ped] = await banco.q<{ nome: string }>(`select p.nome from acompanhamentos x join contas p on p.id = x.pediatra_id where x.crianca_id = $1 and p.pediatra order by x.desde limit 1`, [a.id]);
-      r = await o.assistente(pergunta, { nome: a.nome.split(" ")[0], idadeTexto: idadeTexto(a.nascimento, hojeIso()), regrasDosMedicos: cfg?.valor, pediatra: ped?.nome });
+      const rr = await respostasDaCrianca(a.id);
+      const respostasDoPediatra = rr.pediatra
+        ? Object.entries(rr.respostas).map(([tema, t]) => `- ${TEMAS_RAPIDOS.find((x) => x.id === tema)?.titulo ?? tema}: ${t}`).join("\n")
+        : undefined;
+      r = await o.assistente(pergunta, { nome: a.nome.split(" ")[0], idadeTexto: idadeTexto(a.nascimento, hojeIso()), regrasDosMedicos: cfg?.valor, pediatra: ped?.nome, respostasDoPediatra });
     }
     await banco.q(`insert into perguntas (id, crianca_id, conta_id, pergunta, tipo, resposta, fluxo) values ($1,$2,$3,$4,$5,$6,$7)`, [randomUUID(), a.id, req.conta!.id, pergunta, r.tipo, r.resposta, r.fluxo]);
     return r;

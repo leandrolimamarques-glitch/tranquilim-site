@@ -1,4 +1,5 @@
 import { useMemo, useState, type ChangeEvent } from "react";
+import { RespostasRapidas } from "./RespostasRapidas";
 import { api } from "../../lib/api";
 import { telefoneBr } from "../../lib/convite";
 import { centavosParaTexto, paraCentavos, reais } from "../../lib/dinheiro";
@@ -13,13 +14,14 @@ type DocRemoto = ReturnType<typeof useDocRemoto>;
 const CORES = ["#4F8A6E", "#1E2A47", "#F2A93B", "#C0392B", "#6C5CE7", "#00897B", "#8D6E63", "#5D6378"];
 
 export function Configuracoes({ conta, recarregar, financeiro }: { conta: ContaInfo; recarregar: () => Promise<void>; financeiro: DocRemoto }) {
-  const [tela, setTela] = useState<"menu" | "perfil" | "fonte" | "impostos">("menu");
+  const [tela, setTela] = useState<"menu" | "perfil" | "fonte" | "impostos" | "respostas">("menu");
   const [fonteEditada, setFonteEditada] = useState<Fonte | null>(null);
   const fin = useMemo(() => lerFinanceiro(financeiro.doc), [financeiro.doc]);
   const voltar = () => { setTela("menu"); window.scrollTo(0, 0); };
 
   if (tela === "perfil") return <Perfil conta={conta} recarregar={recarregar} voltar={voltar} />;
   if (tela === "fonte") return <FormFonte inicial={fonteEditada} financeiro={financeiro} voltar={voltar} />;
+  if (tela === "respostas") return <RespostasRapidas voltar={voltar} />;
   if (tela === "impostos") return <Impostos config={fin.config} financeiro={financeiro} voltar={voltar} />;
 
   return (
@@ -30,6 +32,11 @@ export function Configuracoes({ conta, recarregar, financeiro }: { conta: ContaI
         <p className="muted">{[conta.titulo, conta.registro].filter(Boolean).join(" · ")}</p>
         <p className="muted pequeno">{conta.email}</p>
         <button className="btn sec bloco" onClick={() => setTela("perfil")}>Editar perfil</button>
+      </div>
+      <div className="card" style={{ borderColor: "var(--luz)", borderWidth: 2 }}>
+        <h3>Resposta rápida para as famílias</h3>
+        <p className="muted pequeno">Febre, tosse, vômito, queda, manchas: escreva o que você orienta fazer em casa. A família vê na hora, depois dos sinais de perigo, e a IA responde com base nisso.</p>
+        <button className="btn bloco" onClick={() => setTela("respostas")}>Escrever respostas</button>
       </div>
       <div className="card">
         <h3>Quem paga você</h3>

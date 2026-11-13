@@ -12,7 +12,7 @@ import { DICAS, FLUXOS, TRILHAS } from "../src/conteudo";
 
 export type TipoResposta = "orientacao" | "fluxo" | "medico" | "emergencia" | "fora";
 export type RespostaAssistente = { tipo: TipoResposta; resposta: string; fluxo: string };
-export type Assistente = (pergunta: string, contexto: { idadeTexto: string; nome: string; regrasDosMedicos?: string; pediatra?: string }) => Promise<RespostaAssistente>;
+export type Assistente = (pergunta: string, contexto: { idadeTexto: string; nome: string; regrasDosMedicos?: string; pediatra?: string; respostasDoPediatra?: string }) => Promise<RespostaAssistente>;
 
 const NFD = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
@@ -125,6 +125,9 @@ export function criarAssistenteClaude(chave: string, modelo: string): Assistente
         { type: "text", text: sistema, cache_control: { type: "ephemeral" } },
         ...(ctx.regrasDosMedicos?.trim()
           ? [{ type: "text" as const, text: `ORIENTAÇÕES DOS MÉDICOS DO TRANQUILIM (siga sempre; se conflitarem com as regras acima, vale a regra mais segura para a criança):\n${ctx.regrasDosMedicos.trim()}` }]
+          : []),
+        ...(ctx.respostasDoPediatra?.trim() && ctx.pediatra
+          ? [{ type: "text" as const, text: `RESPOSTAS DO PEDIATRA DESTA CRIANÇA (${ctx.pediatra}), escritas por ele para as famílias que acompanha. Se a pergunta for sobre um destes temas e não houver sinal de perigo, responda com base nelas, de forma curta e direta, e diga que é a orientação de ${ctx.pediatra}. Pode repetir o que ele escreveu, inclusive sobre antitérmico e hidratação, mas nunca acrescente dose, intervalo ou nome de remédio. Sinal de perigo continua indo para o 192, e na dúvida mande responder as perguntas do "Vai ao PS?".\n${ctx.respostasDoPediatra.trim()}` }]
           : []),
       ],
       messages: [{ role: "user", content: `Criança: ${ctx.nome}, ${ctx.idadeTexto}.${ctx.pediatra ? ` Pediatra no app: ${ctx.pediatra}.` : " Sem pediatra no app."}\nPergunta da família: ${pergunta}` }],

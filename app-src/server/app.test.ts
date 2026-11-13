@@ -15,6 +15,7 @@ let servidor: Server;
 let base = "";
 let leituras = 0;
 let perguntas = 0;
+let ultimoContexto: Record<string, unknown> = {};
 
 const leituraFalsa: LeituraCarteira = {
   legivel: true,
@@ -31,7 +32,7 @@ beforeAll(async () => {
     cookieSeguro: false,
     limitePerguntas: 3,
     leitor: async () => (leituras++, leituraFalsa),
-    assistente: async () => (perguntas++, { tipo: "orientacao", resposta: "ok", fluxo: "" }),
+    assistente: async (_p, ctx) => (perguntas++, (ultimoContexto = ctx), { tipo: "orientacao", resposta: "ok", fluxo: "" }),
   });
   servidor = app.listen(0);
   base = `http://127.0.0.1:${(servidor.address() as AddressInfo).port}`;
@@ -447,5 +448,35 @@ describe("prontuário do pediatra", () => {
       const bytes = await gerarPdfDocumento(c, pac, medico, "2026-11-10");
       expect(Buffer.from(bytes).subarray(0, 5).toString()).toBe("%PDF-");
     }
+  });
+});
+
+describe("resposta rápida do pediatra", () => {
+  it("pediatra escreve sem dose; família dele vê só o publicado; a IA recebe", async () => {
+    const adm = navegador();
+    await adm("POST", "/api/conta/entrar", { email: "dono@x.com", senha: "segredo123" });
+    const ped = navegador();
+    await ped("POST", "/api/conta/cadastro", { nome: "Dr. Francisco", email: "francisco@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
+    const contas = (await adm("GET", "/api/admin/contas?busca=francisco")).corpo.contas as { id: string }[];
+    await adm("PUT", `/api/admin/contas/${contas[0].id}`, { pediatra: true, registro: "CRM-SP 199456" });
+    const fam = navegador();
+    await fam("POST", "/api/conta/cadastro", { nome: "Lu", email: "lu@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
+    const k = (await fam("POST", "/api/criancas", { crianca: { nome: "Gui", nascimento: "2025-01-01", sexo: "menino" } })).corpo.id;
+
+    expect((await ped("PUT", "/api/pediatra/respostas/febre", { texto: "Dar 10 gotas de 6 em 6 horas", publicado: true })).status).toBe(400);
+    expect((await ped("PUT", "/api/pediatra/respostas/inexistente", { texto: "x", publicado: false })).status).toBe(404);
+    await ped("PUT", "/api/pediatra/respostas/febre", { texto: "Antitérmico na dose da receita se estiver desconfortável. Muito líquido e roupa leve.", publicado: true });
+    await ped("PUT", "/api/pediatra/respostas/respiratorio", { texto: "Lavagem nasal com soro várias vezes ao dia.", publicado: false });
+
+    // Antes de escolher o pediatra: nada.
+    expect((await fam("GET", `/api/criancas/${k}/respostas`)).corpo.pediatra).toBeNull();
+    await fam("POST", `/api/criancas/${k}/pediatra`, { pediatraId: contas[0].id });
+    const r = (await fam("GET", `/api/criancas/${k}/respostas`)).corpo;
+    expect(r.pediatra.nome).toBe("Dr. Francisco");
+    expect(Object.keys(r.respostas)).toEqual(["febre"]);
+
+    await fam("POST", `/api/pergunta?crianca=${k}`, { pergunta: "Meu filho está com febre de 38 desde ontem, o que faço?" });
+    expect(String(ultimoContexto.respostasDoPediatra)).toContain("Antitérmico na dose da receita");
+    expect(String(ultimoContexto.respostasDoPediatra)).not.toContain("Lavagem nasal");
   });
 });

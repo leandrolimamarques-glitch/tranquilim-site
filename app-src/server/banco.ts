@@ -262,6 +262,15 @@ const MIGRACOES: string[] = [
      enviado_em timestamptz
    );
    create index prontuario_documentos_paciente on prontuario_documentos(paciente_id)`,
+  // Resposta rápida: o que o pediatra orienta em casa, por tema, para as famílias dele.
+  `create table respostas_rapidas (
+     pediatra_id uuid not null references contas(id),
+     tema text not null,
+     texto text not null,
+     publicado boolean not null default false,
+     atualizado_em timestamptz not null default now(),
+     primary key (pediatra_id, tema)
+   )`,
 ];
 
 export async function migrar(banco: Banco): Promise<number> {

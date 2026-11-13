@@ -57,6 +57,8 @@ function Vacinas({ dados, atualizar, modo }: { dados: Dados; atualizar: Atualiza
   const lista = situacaoDasVacinas(c.nascimento, hojeIso(), new Set(dados.vacinasAplicadas));
   const grupos = new Map<number, VacinaComSituacao[]>();
   for (const v of lista) grupos.set(v.idadeMeses, [...(grupos.get(v.idadeMeses) ?? []), v]);
+  // SUS e particular juntos, na mesma idade (como nas cadernetas mais novas).
+  const idades = [...new Set([...lista.map((v) => v.idadeMeses), ...CALENDARIO_PARTICULAR.map((v) => v.idadeMeses)])].sort((a, b) => a - b);
   const pendentes = lista.filter((v) => v.situacao === "pendente");
   const alternar = (id: string) =>
     atualizar((d) => {
@@ -78,50 +80,49 @@ function Vacinas({ dados, atualizar, modo }: { dados: Dados; atualizar: Atualiza
         </div>
       )}
       <p className="muted">{modo.carteira ? "Ou marque à mão as vacinas que já estão na caderneta física." : "Marque as vacinas que já estão na caderneta física. O app avisa as que faltam e as próximas."}</p>
-      {[...grupos.entries()].map(([idade, vs]) => (
-        <div className="card" key={idade}>
-          <div className="linha"><h3>{rotuloIdade(idade)}</h3><span className="muted pequeno">{dataBr(vs[0].dataPrevista)}</span></div>
-          <div className="tabela-vacina">
-            {vs.map((v) => (
-              <label key={v.id}>
-                <input type="checkbox" checked={v.situacao === "aplicada"} onChange={() => alternar(v.id)} />
-                <span>
-                  <b style={{ fontWeight: 600 }}>{v.nome}</b> <span className="muted">· {v.dose}</span>
-                  {dados.vacinaInfo[v.id]?.origem && (
-                    <span className="muted pequeno" style={{ display: "block" }}>
-                      {dados.vacinaInfo[v.id].data ? `Aplicada em ${dataBr(dados.vacinaInfo[v.id].data!)} · ` : ""}{ORIGEM[dados.vacinaInfo[v.id].origem!]}
+      <p className="muted pequeno">Em cada idade, as vacinas do SUS e as da rede particular aparecem juntas. {NOTA_PARTICULAR}</p>
+      {idades.map((idade) => {
+        const sus = grupos.get(idade) ?? [];
+        const part = CALENDARIO_PARTICULAR.filter((v) => v.idadeMeses === idade);
+        const prevista = somarMeses(c.nascimento, idade);
+        return (
+          <div className="card" key={idade}>
+            <div className="linha"><h3>{rotuloIdade(idade)}</h3><span className="muted pequeno">{dataBr(prevista)}</span></div>
+            <div className="tabela-vacina">
+              {sus.map((v) => (
+                <label key={v.id}>
+                  <input type="checkbox" checked={v.situacao === "aplicada"} onChange={() => alternar(v.id)} />
+                  <span>
+                    <span className="chip" style={{ marginRight: 6, background: "var(--casa-soft)", color: "var(--casa)" }}>SUS</span>
+                    <b style={{ fontWeight: 600 }}>{v.nome}</b> <span className="muted">· {v.dose}</span>
+                    {dados.vacinaInfo[v.id]?.origem && (
+                      <span className="muted pequeno" style={{ display: "block" }}>
+                        {dados.vacinaInfo[v.id].data ? `Aplicada em ${dataBr(dados.vacinaInfo[v.id].data!)} · ` : ""}{ORIGEM[dados.vacinaInfo[v.id].origem!]}
+                      </span>
+                    )}
+                    {v.nota && v.situacao !== "aplicada" && <span className="muted pequeno" style={{ display: "block" }}>{v.nota}</span>}
+                  </span>
+                  {ROTULO_SITUACAO[v.situacao] && <span className={`chip ${v.situacao}`}>{ROTULO_SITUACAO[v.situacao]}</span>}
+                </label>
+              ))}
+              {part.map((v) => {
+                const aplicada = dados.vacinasAplicadas.includes(v.id);
+                return (
+                  <label key={v.id}>
+                    <input type="checkbox" checked={aplicada} onChange={() => alternar(v.id)} />
+                    <span>
+                      <span className="chip" style={{ marginRight: 6, background: "var(--hoje-soft)", color: "var(--hoje)" }}>Particular</span>
+                      <b style={{ fontWeight: 600 }}>{v.nome}</b> <span className="muted">· {v.dose}</span>
+                      {!aplicada && v.nota && <span className="muted pequeno" style={{ display: "block" }}>{v.nota}</span>}
                     </span>
-                  )}
-                  {v.nota && v.situacao !== "aplicada" && <span className="muted pequeno" style={{ display: "block" }}>{v.nota}</span>}
-                </span>
-                {ROTULO_SITUACAO[v.situacao] && <span className={`chip ${v.situacao}`}>{ROTULO_SITUACAO[v.situacao]}</span>}
-              </label>
-            ))}
+                    {aplicada ? <span className="chip aplicada">aplicada</span> : prevista <= hojeIso() ? <span className="chip">converse</span> : null}
+                  </label>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
-      <h2 style={{ marginTop: 10 }}>Rede particular</h2>
-      <p className="muted">{NOTA_PARTICULAR}</p>
-      <div className="card">
-        <div className="tabela-vacina">
-          {CALENDARIO_PARTICULAR.map((v) => {
-            const aplicada = dados.vacinasAplicadas.includes(v.id);
-            const prevista = somarMeses(c.nascimento, v.idadeMeses);
-            const chegou = prevista <= hojeIso();
-            return (
-              <label key={v.id}>
-                <input type="checkbox" checked={aplicada} onChange={() => alternar(v.id)} />
-                <span>
-                  <b style={{ fontWeight: 600 }}>{v.nome}</b> <span className="muted">· {v.dose}</span>
-                  <span className="muted pequeno" style={{ display: "block" }}>{rotuloIdade(v.idadeMeses)} · {dataBr(prevista)}</span>
-                  {!aplicada && v.nota && <span className="muted pequeno" style={{ display: "block" }}>{v.nota}</span>}
-                </span>
-                {aplicada ? <span className="chip aplicada">aplicada</span> : chegou ? <span className="chip">converse</span> : null}
-              </label>
-            );
-          })}
-        </div>
-      </div>
+        );
+      })}
       <p className="fontes">{FONTE_PARTICULAR}</p>
       {dados.outrasVacinas.length > 0 && (
         <div className="card">

@@ -480,3 +480,17 @@ describe("resposta rápida do pediatra", () => {
     expect(String(ultimoContexto.respostasDoPediatra)).not.toContain("Lavagem nasal");
   });
 });
+
+describe("perguntas anônimas para estudo", () => {
+  it("o dono baixa o CSV sem nome da criança nem dos pais; família não baixa", async () => {
+    const adm = navegador();
+    await adm("POST", "/api/conta/entrar", { email: "dono@x.com", senha: "segredo123" });
+    const f = navegador();
+    await f("POST", "/api/conta/cadastro", { nome: "Renata Alves", email: "renata@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
+    const k = (await f("POST", "/api/criancas", { crianca: { nome: "Bernardo", nascimento: "2025-05-01", sexo: "menino" } })).corpo.id;
+    await f("POST", `/api/pergunta?crianca=${k}`, { pergunta: "O Bernardo pode comer ovo? Sou a Renata" });
+    expect((await f("GET", "/api/admin/perguntas.csv")).status).toBe(403);
+    const r = await fetch(`${base0()}/api/admin/perguntas.csv`, { headers: { cookie: "" } });
+    expect(r.status).toBe(401);
+  });
+});

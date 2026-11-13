@@ -8,8 +8,12 @@ async function baixarBlob(url: string): Promise<Blob> {
 
 /** No celular abre a folha de compartilhar (tem Imprimir, WhatsApp, Salvar em Arquivos); no computador, abre o PDF. */
 export async function compartilharPdf(url: string, nome: string): Promise<void> {
-  const blob = await baixarBlob(url);
-  const arquivo = new File([blob], nome, { type: "application/pdf" });
+  await compartilharArquivo(await baixarBlob(url), nome);
+}
+
+/** Compartilha um arquivo gerado no aparelho; sem suporte, abre ou baixa. */
+export async function compartilharArquivo(blob: Blob, nome: string): Promise<void> {
+  const arquivo = new File([blob], nome, { type: blob.type || "application/octet-stream" });
   const nav = navigator as Navigator & { canShare?: (d: { files: File[] }) => boolean };
   if (nav.canShare?.({ files: [arquivo] }) && nav.share) {
     try {

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { api } from "../lib/api";
+import { compartilharPdf } from "../lib/pdf";
 import { dataBr } from "../lib/idade";
 
 type ContaAdm = { id: string; nome: string; email: string; dono: boolean; pediatra: boolean; registro: string | null; criancas: number; pacientes: number; criadoEm: string };
@@ -115,6 +116,9 @@ function RegrasIA() {
         </div>
       ))}
       {perguntas.length > 8 && !verTodas && <button className="voltar" onClick={() => setVerTodas(true)}>Ver todas ({perguntas.length})</button>}
+      {perguntas.length > 0 && (
+        <button className="btn sec bloco" onClick={() => void compartilharPdf("/api/admin/perguntas.csv", "perguntas-anonimas.csv").catch((e: Error) => setMsg(e.message))}>Baixar todas as perguntas (sem nomes)</button>
+      )}
     </div>
   );
 }

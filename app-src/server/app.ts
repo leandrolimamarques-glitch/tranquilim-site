@@ -10,6 +10,7 @@ import { mensagem, type Carteiro } from "./email";
 import { assinaturaConfere, segredoLembretes } from "./lembretes";
 import { rotasDocumentosFamilia, rotasProntuario } from "./prontuario";
 import { TEMAS_RAPIDOS, TEM_DOSE } from "../src/lib/respostas";
+import { mascarar } from "../src/lib/anonimizar";
 import { emergenciaDe, type Assistente } from "./pergunta";
 import { docValido, juntarDocs, type Doc } from "../src/lib/sinc";
 import { docInicial, docParaVista, type Crianca } from "../src/lib/familia";
@@ -745,6 +746,28 @@ export function criarApp(o: Opcoes) {
     await banco.q(`update contas set senha_hash = $1 where id = $2`, [await bcrypt.hash(nova, 10), req.params.id]);
     await banco.q(`delete from sessoes where conta_id = $1`, [req.params.id]);
     return { ok: true };
+  }));
+
+  /** Todas as perguntas ao "Pergunte", sem identificação, para estudar o padrão das dúvidas (CSV). */
+  adm.get("/perguntas.csv", rota(async (_req, res) => {
+    const linhas = await banco.q<{ pergunta: string; tipo: string; resposta: string; fluxo: string; criado_em: unknown; nome: string; nascimento: string; responsaveis: string | null }>(
+      `select p.pergunta, p.tipo, p.resposta, p.fluxo, p.criado_em, k.nome, k.nascimento::text as nascimento,
+              (select string_agg(c.nome, ' ') from responsaveis r join contas c on c.id = r.conta_id where r.crianca_id = k.id) as responsaveis
+         from perguntas p join criancas k on k.id = p.crianca_id order by p.criado_em`,
+    );
+    const csv = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`;
+    const DIAS = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
+    const corpo = [["dia_da_semana", "hora", "idade_meses", "tipo_resposta", "fluxo", "pergunta", "resposta"].join(",")];
+    for (const l of linhas) {
+      const quando = new Date(iso(l.criado_em)!);
+      const sp = new Date(quando.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" }));
+      const meses = Math.max(0, Math.floor((quando.getTime() - new Date(`${l.nascimento}T12:00:00`).getTime()) / (30.4375 * 864e5)));
+      const nomes = [l.nome, l.responsaveis ?? ""];
+      corpo.push([DIAS[sp.getDay()], `${String(sp.getHours()).padStart(2, "0")}:00`, meses, l.tipo, l.fluxo, mascarar(l.pergunta, nomes), mascarar(l.resposta, nomes)].map(csv).join(","));
+    }
+    res.setHeader("content-type", "text/csv; charset=utf-8");
+    res.setHeader("content-disposition", `attachment; filename="perguntas-anonimas.csv"`);
+    res.end("\uFEFF" + corpo.join("\n"));
   }));
 
   /** Números do uso, sugestões e erros recentes. */

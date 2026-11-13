@@ -8,6 +8,7 @@ import type { Banco } from "./banco";
 import type { LeitorCarteira } from "./leitura";
 import { mensagem, type Carteiro } from "./email";
 import { assinaturaConfere, segredoLembretes } from "./lembretes";
+import { rotasDocumentosFamilia, rotasProntuario } from "./prontuario";
 import { emergenciaDe, type Assistente } from "./pergunta";
 import { docValido, juntarDocs, type Doc } from "../src/lib/sinc";
 import { docInicial, docParaVista, type Crianca } from "../src/lib/familia";
@@ -31,8 +32,8 @@ export type Opcoes = {
   urlBase?: string;
 };
 
-type Conta = { id: string; email: string; nome: string; dono: boolean; pediatra: boolean; registro: string | null; titulo: string | null; whatsapp: string | null; telefone: string | null; local: string | null; consentimento_versao?: string | null; lembretes?: boolean };
-type Req = Request & { conta?: Conta };
+export type Conta = { id: string; email: string; nome: string; dono: boolean; pediatra: boolean; registro: string | null; titulo: string | null; whatsapp: string | null; telefone: string | null; local: string | null; consentimento_versao?: string | null; lembretes?: boolean };
+export type Req = Request & { conta?: Conta };
 
 const COOKIE = "tq";
 const DIAS_SESSAO = 365;
@@ -430,16 +431,33 @@ export function criarApp(o: Opcoes) {
       geradoEm: new Date().toISOString(),
       conta: { ...dados, criado_em: iso(dados.criado_em), email_verificado_em: dados.email_verificado_em ? iso(dados.email_verificado_em) : null, consentimento_em: dados.consentimento_em ? iso(dados.consentimento_em) : null },
       criancas: criancasExp,
-      ...(c.pediatra ? { pacientesQueAcompanho: pacientes, financeiro: await lerDoc(`financeiro:${c.id}`) } : {}),
+      ...(c.pediatra ? { pacientesQueAcompanho: pacientes, financeiro: await lerDoc(`financeiro:${c.id}`), prontuario: await exportarProntuario(c.id) } : {}),
       sugestoes: sugestoes.map((x) => ({ texto: x.texto, em: iso(x.em) })),
     };
   }));
+
+  async function exportarProntuario(pediatraId: string) {
+    const ps = await banco.q<Record<string, unknown>>(`select id, nome, nascimento::text as nascimento, sexo, responsavel, telefone, alergias, antecedentes, semanas_gestacao, criado_em from prontuario_pacientes where pediatra_id = $1 order by nome`, [pediatraId]);
+    const saida = [];
+    for (const p of ps) {
+      const regs = await banco.q<Record<string, unknown>>(`select tipo, referente_a, data::text as data, conteudo, criado_em, finalizado_em from prontuario_registros where paciente_id = $1 order by data, criado_em`, [p.id]);
+      const docs = await banco.q<Record<string, unknown>>(`select tipo, conteudo, criado_em, enviado_em from prontuario_documentos where paciente_id = $1 order by criado_em`, [p.id]);
+      saida.push({
+        ...p, criado_em: iso(p.criado_em),
+        registros: regs.map((g) => ({ ...g, conteudo: comoJson(g.conteudo), criado_em: iso(g.criado_em), finalizado_em: iso(g.finalizado_em) })),
+        documentos: docs.map((d) => ({ ...d, conteudo: comoJson(d.conteudo), criado_em: iso(d.criado_em), enviado_em: iso(d.enviado_em) })),
+      });
+    }
+    return saida;
+  }
 
   /** LGPD (art. 18): excluir a conta. Crianças sem outro responsável são apagadas junto. */
   conta.post("/excluir", rota(async (req, res) => {
     const c = req.conta!;
     const [h] = await banco.q<{ senha_hash: string }>(`select senha_hash from contas where id = $1`, [c.id]);
     if (!(await bcrypt.compare(typeof (req.body as { senha?: unknown }).senha === "string" ? (req.body as { senha: string }).senha : "", h.senha_hash))) throw new Erro(400, "A senha não confere.");
+    const [{ np }] = await banco.q<{ np: number }>(`select count(*)::int as np from prontuario_pacientes where pediatra_id = $1`, [c.id]);
+    if (Number(np)) throw new Erro(400, "Você tem prontuários guardados, e a lei manda guardar por pelo menos 20 anos (Lei 13.787/2018). Baixe seus dados e fale com a administração do Tranquilim para combinar a guarda antes de excluir a conta.");
     if (c.dono) {
       const [{ n }] = await banco.q<{ n: number }>(`select count(*)::int as n from contas where dono and id <> $1`, [c.id]);
       if (!Number(n)) throw new Erro(400, "Você é o único administrador. Torne outra conta administradora antes de excluir a sua.");
@@ -639,6 +657,18 @@ export function criarApp(o: Opcoes) {
   ped.put("/financeiro", rota(async (req) => ({ doc: await juntarDoc(`financeiro:${req.conta!.id}`, docDoCorpo(req)) })));
 
   app.use("/api/pediatra", ped);
+
+  // ---------- prontuário (só o pediatra) e documentos enviados à família ----------
+  const ctxProntuario = { banco, rota, Erro, logado, soPediatra, json, juntarDoc: juntarDoc };
+  app.use("/api/prontuario", rotasProntuario(ctxProntuario));
+  app.use("/api/criancas", rotasDocumentosFamilia({
+    ...ctxProntuario,
+    acessoFamilia: async (req, id) => {
+      const a = await acessoACrianca((req as Req).conta!, id);
+      if (a.como !== "familia") throw new Erro(404, "Criança não encontrada.");
+      return a;
+    },
+  }));
 
   // ---------- administração (dono) ----------
   const adm = express.Router();

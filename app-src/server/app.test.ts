@@ -360,3 +360,92 @@ describe("prematuro: semanas de gestação no cadastro", () => {
     expect((await f("GET", "/api/conta")).corpo.criancas[0].crianca.semanasGestacao).toBeUndefined();
   });
 });
+
+describe("prontuário do pediatra", () => {
+  it("só o pediatra vê; atendimento finalizado não muda; adendo; documentos; família recebe só o que for enviado", async () => {
+    const adm = navegador();
+    await adm("POST", "/api/conta/entrar", { email: "dono@x.com", senha: "segredo123" });
+    const ped = navegador();
+    await ped("POST", "/api/conta/cadastro", { nome: "Dra. Paula", email: "paula@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
+    const outro = navegador();
+    await outro("POST", "/api/conta/cadastro", { nome: "Dr. Outro", email: "outro@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
+    const fam = navegador();
+    await fam("POST", "/api/conta/cadastro", { nome: "Carol", email: "carol@x.com", senha: "segredo123", aceite: VERSAO_TERMOS });
+    const contas = (await adm("GET", "/api/admin/contas?busca=")).corpo.contas as { id: string; email: string }[];
+    for (const e of ["paula@x.com", "outro@x.com"]) await adm("PUT", `/api/admin/contas/${contas.find((c) => c.email === e)!.id}`, { pediatra: true, registro: "CRM-SP 1" });
+    const paulaId = contas.find((c) => c.email === "paula@x.com")!.id;
+
+    // Família não acessa o prontuário.
+    expect((await fam("GET", "/api/prontuario/pacientes")).status).toBe(403);
+
+    // Paciente sem conta no app.
+    const avulso = (await ped("POST", "/api/prontuario/pacientes", { nome: "Bento Lima", nascimento: "2025-02-10", sexo: "menino", responsavel: "Rosa", alergias: "Dipirona" })).corpo.id;
+    // Paciente do app: precisa ser acompanhado.
+    const k = (await fam("POST", "/api/criancas", { crianca: { nome: "Nina", nascimento: "2025-06-01", sexo: "menina" } })).corpo.id;
+    expect((await ped("POST", "/api/prontuario/pacientes", { criancaId: k })).status).toBe(404);
+    await fam("POST", `/api/criancas/${k}/pediatra`, { pediatraId: paulaId });
+    const nina = (await ped("POST", "/api/prontuario/pacientes", { criancaId: k })).corpo.id;
+    expect((await ped("POST", "/api/prontuario/pacientes", { criancaId: k })).corpo.id).toBe(nina);
+    expect((await ped("GET", "/api/prontuario/pacientes")).corpo.pacientes.map((p: { nome: string }) => p.nome)).toEqual(["Bento Lima", "Nina"]);
+    expect((await outro("GET", "/api/prontuario/pacientes")).corpo.pacientes).toHaveLength(0);
+    expect((await outro("GET", `/api/prontuario/pacientes/${nina}`)).status).toBe(404);
+
+    // Atendimento: rascunho editável; finalizado não muda; medidas vão para a curva da família.
+    const at = (await ped("POST", `/api/prontuario/pacientes/${nina}/atendimentos`, { data: "2026-11-10", conteudo: { motivo: "Puericultura" } })).corpo.id;
+    await ped("PUT", `/api/prontuario/registros/${at}`, { conteudo: { motivo: "Puericultura", historia: "Mamando bem", pesoKg: 8.4 } });
+    expect((await ped("POST", `/api/prontuario/registros/${at}/adendo`, { texto: "x" })).status).toBe(400);
+    await ped("POST", `/api/prontuario/registros/${at}/finalizar`, { levarMedidas: true });
+    expect((await ped("PUT", `/api/prontuario/registros/${at}`, { conteudo: { motivo: "mudou" } })).status).toBe(409);
+    expect((await ped("DELETE", `/api/prontuario/registros/${at}`)).status).toBe(409);
+    expect((await ped("POST", `/api/prontuario/registros/${at}/adendo`, { texto: "Corrigindo: peso aferido sem roupa." })).status).toBe(200);
+    const ficha = (await ped("GET", `/api/prontuario/pacientes/${nina}`)).corpo;
+    expect(ficha.noApp).toBe(true);
+    expect(ficha.registros.map((g: { tipo: string }) => g.tipo).sort()).toEqual(["adendo", "atendimento"]);
+    expect(ficha.registros.find((g: { tipo: string }) => g.tipo === "atendimento").conteudo.historia).toBe("Mamando bem");
+    const docFam = docParaVista((await fam("GET", `/api/criancas/${k}/doc`)).corpo.doc);
+    expect(docFam.medidas.find((m) => m.origem === "consulta")?.pesoKg).toBe(8.4);
+
+    // Documentos.
+    expect((await ped("POST", `/api/prontuario/pacientes/${nina}/documentos`, { tipo: "receita", itens: [] })).status).toBe(400);
+    expect((await ped("POST", `/api/prontuario/pacientes/${nina}/documentos`, { tipo: "atestado", dias: 2, aPartirDe: "2026-11-10", cid: "J06.9" })).status).toBe(400);
+    const rec = (await ped("POST", `/api/prontuario/pacientes/${nina}/documentos`, {
+      tipo: "receita", antimicrobiano: true, itens: [{ medicamento: "Medicamento de teste", quantidade: "1 frasco", posologia: "Conforme orientação" }], orientacoes: "Voltar se piorar",
+    })).corpo.id;
+    const pdf = await fetch(`${base0()}/api/prontuario/documentos/${rec}/pdf`, { headers: { cookie: "" } });
+    expect(pdf.status).toBe(401);
+    // Família ainda não vê.
+    expect((await fam("GET", `/api/criancas/${k}/documentos`)).corpo.documentos).toHaveLength(0);
+    await ped("POST", `/api/prontuario/documentos/${rec}/enviar`);
+    const lista = (await fam("GET", `/api/criancas/${k}/documentos`)).corpo.documentos;
+    expect(lista).toHaveLength(1);
+    expect(lista[0].medico).toBe("Dra. Paula");
+    // Paciente sem app: não envia.
+    const at2 = (await ped("POST", `/api/prontuario/pacientes/${avulso}/documentos`, { tipo: "exame", itens: ["Hemograma"], indicacao: "Palidez" })).corpo.id;
+    expect((await ped("POST", `/api/prontuario/documentos/${at2}/enviar`)).status).toBe(400);
+
+    // Família exclui a conta: o prontuário continua com a pediatra.
+    await fam("POST", "/api/conta/excluir", { senha: "segredo123" });
+    const depois = (await ped("GET", `/api/prontuario/pacientes/${nina}`)).corpo;
+    expect(depois.paciente.criancaId).toBeNull();
+    expect(depois.registros).toHaveLength(2);
+    // Pediatra com prontuário não exclui a conta.
+    expect((await ped("POST", "/api/conta/excluir", { senha: "segredo123" })).status).toBe(400);
+    const exp = (await ped("GET", "/api/conta/exportar")).corpo;
+    expect(exp.prontuario.map((p: { nome: string }) => p.nome).sort()).toEqual(["Bento Lima", "Nina"]);
+  });
+
+  it("gera PDF de cada tipo de documento", async () => {
+    const { gerarPdfDocumento } = await import("./documento-pdf");
+    const medico = { nome: "Dra. Paula Souza", titulo: null, registro: "CRM-SP 1", local: "Marília", telefone: "(14) 99999-0000" };
+    const pac = { nome: "Nina Ávila", nascimento: "2025-06-01", responsavel: "Carol" };
+    for (const c of [
+      { tipo: "receita" as const, itens: [{ medicamento: "Medicamento “teste” – 1", quantidade: "1 frasco", posologia: "Conforme orientação médica" }], orientacoes: "Hidratar.", antimicrobiano: true },
+      { tipo: "atestado" as const, finalidade: "afastamento escolar", dias: 3, aPartirDe: "2026-11-10", observacao: "", cid: "", cidAutorizado: false },
+      { tipo: "comparecimento" as const, responsavel: "Carol", data: "2026-11-10", horaInicio: "14:00", horaFim: "15:00" },
+      { tipo: "exame" as const, itens: ["Hemograma completo", "Ferritina"], indicacao: "Palidez" },
+    ]) {
+      const bytes = await gerarPdfDocumento(c, pac, medico, "2026-11-10");
+      expect(Buffer.from(bytes).subarray(0, 5).toString()).toBe("%PDF-");
+    }
+  });
+});

@@ -222,6 +222,46 @@ const MIGRACOES: string[] = [
    alter table contas add column lembrete_verificado_em timestamptz`,
   // Idade gestacional ao nascer (semanas), para a idade corrigida dos prematuros.
   `alter table criancas add column semanas_gestacao smallint check (semanas_gestacao between 22 and 42)`,
+  // Prontuário do pediatra: só ele vê; não depende da conta da família (guarda de 20 anos).
+  `create table prontuario_pacientes (
+     id uuid primary key,
+     pediatra_id uuid not null references contas(id),
+     crianca_id uuid references criancas(id) on delete set null,
+     nome text not null,
+     nascimento date not null,
+     sexo text not null check (sexo in ('menina','menino')),
+     responsavel text not null default '',
+     telefone text not null default '',
+     alergias text not null default '',
+     antecedentes text not null default '',
+     semanas_gestacao smallint check (semanas_gestacao between 22 and 42),
+     criado_em timestamptz not null default now(),
+     atualizado_em timestamptz not null default now()
+   );
+   create index prontuario_pacientes_pediatra on prontuario_pacientes(pediatra_id);
+   create unique index prontuario_pacientes_crianca on prontuario_pacientes(pediatra_id, crianca_id) where crianca_id is not null;
+   create table prontuario_registros (
+     id uuid primary key,
+     paciente_id uuid not null references prontuario_pacientes(id),
+     pediatra_id uuid not null references contas(id),
+     tipo text not null check (tipo in ('atendimento','adendo')),
+     referente_a uuid references prontuario_registros(id),
+     data date not null,
+     conteudo jsonb not null,
+     criado_em timestamptz not null default now(),
+     finalizado_em timestamptz
+   );
+   create index prontuario_registros_paciente on prontuario_registros(paciente_id, data);
+   create table prontuario_documentos (
+     id uuid primary key,
+     paciente_id uuid not null references prontuario_pacientes(id),
+     pediatra_id uuid not null references contas(id),
+     tipo text not null check (tipo in ('receita','atestado','comparecimento','exame')),
+     conteudo jsonb not null,
+     criado_em timestamptz not null default now(),
+     enviado_em timestamptz
+   );
+   create index prontuario_documentos_paciente on prontuario_documentos(paciente_id)`,
 ];
 
 export async function migrar(banco: Banco): Promise<number> {
